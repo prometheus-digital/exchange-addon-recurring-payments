@@ -239,16 +239,24 @@ class IT_Exchange_Recurring_Payments {
 	/**
 	 * Does the product have the feature?
 	 *
-	 * @since 0.4.0
+	 * @since 1.0.0
 	 * @param mixed $result Not used by core
 	 * @param integer $product_id
 	 * @return boolean
 	*/
-	function product_has_feature( $result, $product_id ) {
+	function product_has_feature( $result, $product_id, $options=array() ) {
+		$defaults['type'] = 'either';
+		$options = ITUtility::merge_defaults( $options, $defaults );
+
 		// Does this product type support this feature?
-		if ( false === $this->product_supports_feature( false, $product_id ) )
+		if ( false === $this->product_supports_feature( false, $product_id, $options ) )
 			return false;
-		return (boolean) $this->get_feature( false, $product_id );
+
+		// If it does support, does it have it?
+		if ( 'on' === $this->get_feature( false, $product_id, $options ) )
+			return true;
+		else
+			return false;
 	}
 
 	/**
@@ -257,20 +265,24 @@ class IT_Exchange_Recurring_Payments {
 	 * This is different than if it has the feature, a product can 
 	 * support a feature but might not have the feature set.
 	 *
-	 * @since 0.4.0
+	 * @since 1.0.0
 	 * @param mixed $result Not used by core
 	 * @param integer $product_id
 	 * @return boolean
 	*/
-	function product_supports_feature( $result, $product_id ) {
+	function product_supports_feature( $result, $product_id, $options=array() ) {
+		$defaults['type'] = 'either';
+		$options = ITUtility::merge_defaults( $options, $defaults );
+
 		// Does this product type support this feature?
 		$product_type = it_exchange_get_product_type( $product_id );
-		if ( ! it_exchange_product_type_supports_feature( $product_type, 'purchase-quantity' ) )
+		if ( ! it_exchange_product_type_supports_feature( $product_type, 'recurring-payments' ) ) 
 			return false;
 
-		// Determine if this product has turned off product quantity
-		if ( 'no' == it_exchange_get_product_feature( $product_id, 'purchase-quantity', array( 'setting' => 'enabled' ) ) )
-			return false;
+		if ( 'auto-renew' === $options['setting'] ) {
+			if ( 'off' === it_exchange_get_product_feature( $product_id, 'recurring-payments', array( 'setting' => $options['setting'] ) ) )
+				return false;
+		}
 
 		return true;
 	}

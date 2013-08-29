@@ -2,6 +2,10 @@
 
 /**
 */
+include( 'lib/api/load.php' );
+
+/**
+*/
 include( 'lib/required-hooks.php' );
 
 /**
