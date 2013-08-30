@@ -17,9 +17,23 @@ class IT_Theme_API_Recurring_Payments implements IT_Theme_API {
 	/**
 	 * The current transaction
 	 * @var array
-	 * @since 0.4.0
+	 * @since 1.0.0
 	*/
 	public $_transaction = false;
+
+	/**
+	 * The current _transaction_product
+	 * @var array
+	 * @since 1.0.0
+	*/
+	public $_transaction_product = false;
+
+	/**
+	 * The current customer
+	 * @var array
+	 * @since 1.0.0
+	*/
+	public $_customer = false;
 	
 	/**
 	 * Maps api tags to methods
@@ -28,6 +42,7 @@ class IT_Theme_API_Recurring_Payments implements IT_Theme_API {
 	*/
 	public $_tag_map = array(
 		'unsubscribe' => 'unsubscribe',
+		'expiration'  => 'expiration',
 	);
 
 	/**
@@ -38,7 +53,10 @@ class IT_Theme_API_Recurring_Payments implements IT_Theme_API {
 	 * @return void
 	*/
 	function IT_Theme_API_Recurring_Payments () {
-		$this->_transaction = empty( $GLOBALS['it_exchange']['transaction'] ) ? false : $GLOBALS['it_exchange']['transaction'];
+		$this->_transaction         = empty( $GLOBALS['it_exchange']['transaction'] ) ? false : $GLOBALS['it_exchange']['transaction'];
+		$this->_transaction_product = empty( $GLOBALS['it_exchange']['transaction_product'] ) ? false : $GLOBALS['it_exchange']['transaction_product'];
+		if ( is_user_logged_in() )
+			$this->_customer = it_exchange_get_current_customer();
 	}
 
 	/**
@@ -61,7 +79,7 @@ class IT_Theme_API_Recurring_Payments implements IT_Theme_API {
 			'before' => '',
 			'after'  => '',
 			'class'  => 'it-exchange-recurring-payments-unsubscribe',
-			'label' => apply_filters( 'it_exchange_recurring_payments_addon_unsubscribe_label', __( 'Cancel this subscription', 'LION' ) ),
+			'label'  => apply_filters( 'it_exchange_recurring_payments_addon_unsubscribe_label', __( 'Cancel this subscription', 'LION' ) ),
 		);
 		$options = ITUtility::merge_defaults( $options, $defaults );
 		$output = '';
@@ -70,6 +88,32 @@ class IT_Theme_API_Recurring_Payments implements IT_Theme_API {
 			$output .= $options['before'];
 			$output .= apply_filters( 'it_exchange_' . $transaction_method . '_unsubscribe_action', '', $options );
 			$output .= $options['after'];
+		}
+		return $output;
+	}
+
+	/**
+	 * @since 1.0.0
+	 * @return string
+	*/
+	function expiration( $options=array() ) {
+		$defaults = array(
+			'date_format'      => get_option( 'date_format' ),
+			'before'           => '',
+			'before'           => '',
+			'after'            => '',
+			'class'            => 'it-exchange-recurring-payments-expiration',
+			'label'            => apply_filters( 'it_exchange_recurring_payments_addon_expiration_label', __( 'Expires', 'LION' ) ),
+			'show_auto_renews' => false,
+		);
+		$options = ITUtility::merge_defaults( $options, $defaults );
+		$output = '';
+		$recurring_payments = $this->_customer->get_customer_meta( 'recurring_payments', true );
+		$product_id = $this->_transaction_product['product_id'];
+		if ( isset( $recurring_payments[$product_id] ) ) {
+			if ( $options['show_auto_renews'] || !$recurring_payments[$product_id]['auto-renews'] ) {
+				$output = $options['label'] . ': ' . date_i18n( $options['date_format'], $recurring_payments[$product_id]['expires'] );
+			}
 		}
 		return $output;
 	}

@@ -245,7 +245,7 @@ class IT_Exchange_Recurring_Payments {
 	 * @return boolean
 	*/
 	function product_has_feature( $result, $product_id, $options=array() ) {
-		$defaults['type'] = 'either';
+		$defaults['setting'] = 'time';
 		$options = ITUtility::merge_defaults( $options, $defaults );
 
 		// Does this product type support this feature?
@@ -271,7 +271,7 @@ class IT_Exchange_Recurring_Payments {
 	 * @return boolean
 	*/
 	function product_supports_feature( $result, $product_id, $options=array() ) {
-		$defaults['type'] = 'either';
+		$defaults['setting'] = 'time';
 		$options = ITUtility::merge_defaults( $options, $defaults );
 
 		// Does this product type support this feature?

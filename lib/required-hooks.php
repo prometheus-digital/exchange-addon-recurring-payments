@@ -15,6 +15,7 @@ add_action( 'it_exchange_admin_wp_enqueue_scripts', 'it_exchange_recurring_payme
 
 function it_exchange_recurring_payments_addon_content_purchases_fields_elements( $elements ) {
 	$elements[] = 'unsubscribe';
+	$elements[] = 'expiration';
 	return $elements;	
 }
 add_filter( 'it_exchange_get_content_purchases_fields_elements', 'it_exchange_recurring_payments_addon_content_purchases_fields_elements' );
@@ -78,3 +79,46 @@ function it_exchange_recurring_payments_multi_item_product_allowed( $allowed, $p
 	return $allowed;
 }
 add_filter( 'it_exchange_multi_item_product_allowed', 'it_exchange_recurring_payments_multi_item_product_allowed', 10, 2 );
+
+function it_exchange_recurring_payments_addon_add_transaction( $transaction_id ) {
+	$cart_object = get_post_meta( $transaction_id, '_it_exchange_cart_object', true );
+		
+	$customer_id = get_post_meta( $transaction_id, '_it_exchange_customer_id', true );
+	$customer = new IT_Exchange_Customer( $customer_id );
+	$recurring_payments = $customer->get_customer_meta( 'recurring_payments' );
+	
+	foreach ( $cart_object->products as $product ) {
+		
+		if ( it_exchange_product_supports_feature( $product['product_id'], 'recurring-payments' ) ) {
+			$time = it_exchange_get_product_feature( $product['product_id'], 'recurring-payments', array( 'setting' => 'time' ) );
+			$renew = it_exchange_get_product_feature( $product['product_id'], 'recurring-payments', array( 'setting' => 'auto-renew' ) );
+			
+			switch( $time ) {
+				
+				case 'forever':
+					$expires = false;
+					break;
+			
+				case 'yearly':
+					$expires = strtotime( '+1 Year' );
+					break;
+			
+				case 'monthly':
+				default:
+					$expires = strtotime( '+1 Month' );
+					break;
+				
+			}
+			$expires = apply_filters( 'it_exchange_recurring_payments_addon_expires_time', $expires, $time );
+			
+			if ( $expires ) {
+				$autorenews = ( 'on' === $renew ) ? true : false;
+				$recurring_payments[$product['product_id']] = array( 'expires' => $expires, 'auto-renews' => $autorenews );
+			}
+			
+		}
+		
+	}
+	$customer->update_customer_meta( 'recurring_payments', $recurring_payments );
+}
+add_action( 'it_exchange_add_transaction_success', 'it_exchange_recurring_payments_addon_add_transaction' );
