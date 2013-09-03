@@ -113,7 +113,7 @@ function it_exchange_recurring_payments_addon_add_transaction( $transaction_id )
 			
 			if ( $expires ) {
 				$autorenews = ( 'on' === $renew ) ? true : false;
-				$recurring_payments[$product['product_id']] = array( 'expires' => $expires, 'auto-renews' => $autorenews );
+				$recurring_payments[$product['product_id']] = array( 'expires' => $expires, 'auto-renews' => $autorenews, 'status' => 'active' );
 			}
 			
 		}

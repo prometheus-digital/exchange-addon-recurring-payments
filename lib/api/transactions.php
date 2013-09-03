@@ -21,6 +21,11 @@ function it_exchange_recurring_payments_addon_update_transaction_subscription_id
 		return false;
 		
 	$transaction->update_transaction_meta( 'subscriber_id', $subscriber_id );
+	
+	$customer = new IT_Exchange_Customer( $transaction->customer_id );
+	$subscription_ids = $customer->get_customer_meta( 'subscription_ids' );
+	$subscription_ids[$subscriber_id]['txn_id'] = $transaction->ID;
+	$customer->update_customer_meta( 'subscription_ids', $subscription_ids );
 
 	do_action( 'it_exchange_recurring_payments_addon_update_transaction_subscriber_id', $transaction, $subscriber_id );
 	do_action( 'it_exchange_recurring_payments_addon_update_transaction_subscriber_id_' . $transaction->transaction_method, $transaction, $subscriber_id );
@@ -48,7 +53,7 @@ function it_exchange_get_recurring_payments_addon_transaction_subscription_id( $
  *
  * @since 1.0.0
 */
-function it_exchange_recurring_payments_addon_update_transaction_subscription_status( $transaction, $subscriber_status ) {
+function it_exchange_recurring_payments_addon_update_transaction_subscription_status( $transaction, $subscriber_id, $subscriber_status ) {
 
 	if ( 'IT_Exchange_Transaction' != get_class( $transaction ) )
 		$transaction = it_exchange_get_transaction( $transaction );
@@ -57,13 +62,18 @@ function it_exchange_recurring_payments_addon_update_transaction_subscription_st
 		return false;
 		
 	$transaction->update_transaction_meta( 'subscriber_status', $subscriber_status );
+	
+	$customer = new IT_Exchange_Customer( $transaction->customer_id );
+	$subscription_ids = $customer->get_customer_meta( 'subscription_ids' );
+	$subscription_ids[$subscriber_id]['status'] = $subscriber_status;
+	$customer->update_customer_meta( 'subscription_ids', $subscription_ids );
 
 	do_action( 'it_exchange_recurring_payments_addon_update_transaction_subscriber_status', $transaction, $subscriber_status );
 	do_action( 'it_exchange_recurring_payments_addon_update_transaction_subscriber_status_' . $transaction->transaction_method, $transaction, $subscriber_status );
 	return $subscriber_status;
 	
 }
-add_action( 'it_exchange_recurring_payments_addon_update_transaction_subscription_status', 'it_exchange_recurring_payments_addon_update_transaction_subscription_status', 10, 2 );
+add_action( 'it_exchange_update_transaction_subscription_status', 'it_exchange_recurring_payments_addon_update_transaction_subscription_status', 10, 3 );
 /**
  * Returns the transaction subscription_status for a specific transaction
  *
