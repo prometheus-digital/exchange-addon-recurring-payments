@@ -14,6 +14,7 @@ function it_exchange_recurring_payments_addon_admin_wp_enqueue_scripts( $hook_su
 add_action( 'it_exchange_admin_wp_enqueue_scripts', 'it_exchange_recurring_payments_addon_admin_wp_enqueue_scripts', 10, 2 );
 
 function it_exchange_recurring_payments_addon_content_purchases_fields_elements( $elements ) {
+	$elements[] = 'payments';
 	$elements[] = 'unsubscribe';
 	$elements[] = 'expiration';
 	return $elements;	
@@ -88,7 +89,6 @@ function it_exchange_recurring_payments_addon_add_transaction( $transaction_id )
 	$recurring_payments = $customer->get_customer_meta( 'recurring_payments' );
 	
 	foreach ( $cart_object->products as $product ) {
-		
 		if ( it_exchange_product_supports_feature( $product['product_id'], 'recurring-payments' ) ) {
 			$time = it_exchange_get_product_feature( $product['product_id'], 'recurring-payments', array( 'setting' => 'time' ) );
 			$renew = it_exchange_get_product_feature( $product['product_id'], 'recurring-payments', array( 'setting' => 'auto-renew' ) );
@@ -110,15 +110,24 @@ function it_exchange_recurring_payments_addon_add_transaction( $transaction_id )
 				
 			}
 			$expires = apply_filters( 'it_exchange_recurring_payments_addon_expires_time', $expires, $time );
-			
 			if ( $expires ) {
 				$autorenews = ( 'on' === $renew ) ? true : false;
 				$recurring_payments[$product['product_id']] = array( 'expires' => $expires, 'auto-renews' => $autorenews, 'status' => 'active' );
 			}
-			
+
 		}
 		
 	}
 	$customer->update_customer_meta( 'recurring_payments', $recurring_payments );
 }
 add_action( 'it_exchange_add_transaction_success', 'it_exchange_recurring_payments_addon_add_transaction' );
+
+function it_exchange_recurring_payments_addon_content_purchases_before_wrap() {
+	add_filter( 'it_exchange_get_transactions_get_posts_args', 'it_exchange_recurring_payments_addon_get_transactions_get_posts_args' );
+}
+add_action( 'it_exchange_content_purchases_before_wrap', 'it_exchange_recurring_payments_addon_content_purchases_before_wrap' );
+
+function it_exchange_recurring_payments_addon_get_transactions_get_posts_args( $args ) {
+	$args['post_parent'] = 0;
+	return $args;	
+}

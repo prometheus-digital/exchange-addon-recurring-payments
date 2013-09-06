@@ -43,6 +43,7 @@ class IT_Theme_API_Recurring_Payments implements IT_Theme_API {
 	public $_tag_map = array(
 		'unsubscribe' => 'unsubscribe',
 		'expiration'  => 'expiration',
+		'payments'    => 'payments',
 	);
 
 	/**
@@ -100,7 +101,6 @@ class IT_Theme_API_Recurring_Payments implements IT_Theme_API {
 		$defaults = array(
 			'date_format'      => get_option( 'date_format' ),
 			'before'           => '',
-			'before'           => '',
 			'after'            => '',
 			'class'            => 'it-exchange-recurring-payments-expiration',
 			'label'            => apply_filters( 'it_exchange_recurring_payments_addon_expiration_label', __( 'Expires', 'LION' ) ),
@@ -110,10 +110,40 @@ class IT_Theme_API_Recurring_Payments implements IT_Theme_API {
 		$output = '';
 		$recurring_payments = $this->_customer->get_customer_meta( 'recurring_payments', true );
 		$product_id = $this->_transaction_product['product_id'];
-		if ( isset( $recurring_payments[$product_id] ) ) {
+		if ( !empty( $recurring_payments[$product_id] ) ) {
 			if ( $options['show_auto_renews'] || !$recurring_payments[$product_id]['auto-renews'] ) {
 				$output = $options['label'] . ': ' . date_i18n( $options['date_format'], $recurring_payments[$product_id]['expires'] );
 			}
+		}
+		return $output;
+	}
+
+	/**
+	 * @since 1.0.0
+	 * @return string
+	*/
+	function payments( $options=array() ) {
+		$defaults = array(
+			'date_format'      => get_option( 'date_format' ),
+			'format_currency'  => true,
+			'before'           => '',
+			'after'            => '',
+			'class'            => 'it-exchange-recurring-payments-payments',
+			'label'            => apply_filters( 'it_exchange_recurring_payments_addon_payments_label', __( 'Payment', 'LION' ) ),
+		);
+		$options = ITUtility::merge_defaults( $options, $defaults );
+		$output = '';
+		if ( $this->_transaction->has_children() ) {
+			$payment_transactions = $this->_transaction->get_children();
+			
+			$output .= $options['before'];
+			$output .= '<ul class="' . $options['class'] . '">';
+			foreach ( $payment_transactions as $transaction ) {
+				$output .= '<li>';
+				$output .= $options['label'] . ' ' . __( 'of', 'LION' ) . ' ' . it_exchange_get_transaction_total( $transaction, $options['format_currency'] ) . ' on ' . it_exchange_get_transaction_date( $transaction, $options['date_format'] ) . ' - ' . it_exchange_get_transaction_status_label( $transaction );
+			}
+			$output .= '</ul>';
+			$output .= $options['after'];
 		}
 		return $output;
 	}
