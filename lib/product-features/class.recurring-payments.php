@@ -120,7 +120,7 @@ class IT_Exchange_Recurring_Payments {
 		);
 		$recurring_options = apply_filters( 'it_exchange_recurring_payment_options', $recurring_options );
 		
-		if ( 'forever' === $product_feature_time ) {
+		if ( !$product_feature_time || 'forever' === $product_feature_time ) {
 			$hidden = 'hidden';
 			$product_feature_auto_renew = 'off';
 		} else {
