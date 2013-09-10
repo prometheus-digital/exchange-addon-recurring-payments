@@ -47,7 +47,6 @@ function it_exchange_get_recurring_payments_addon_transaction_subscription_id( $
     return apply_filters( 'it_exchange_recurring_payments_addon_get_transaction_transaction_subscription_id', $subscription_id, $transaction );
 }
 
-
 /**
  * Updates a transaction with a new subscriber_status
  *
@@ -67,6 +66,18 @@ function it_exchange_recurring_payments_addon_update_transaction_subscription_st
 	$subscription_ids = $customer->get_customer_meta( 'subscription_ids' );
 	$subscription_ids[$subscriber_id]['status'] = $subscriber_status;
 	$customer->update_customer_meta( 'subscription_ids', $subscription_ids );
+	
+	switch ( $subscriber_status ) {
+	
+		case 'deactivated' :
+			it_exchange_recurring_payments_customer_notification( $customer, 'deactivate' );
+			break;
+			
+		case 'cancelled' :
+			it_exchange_recurring_payments_customer_notification( $customer, 'cancel' );
+			break;
+		
+	}
 
 	do_action( 'it_exchange_recurring_payments_addon_update_transaction_subscriber_status', $transaction, $subscriber_status );
 	do_action( 'it_exchange_recurring_payments_addon_update_transaction_subscriber_status_' . $transaction->transaction_method, $transaction, $subscriber_status );
