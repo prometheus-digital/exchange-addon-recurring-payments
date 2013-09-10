@@ -31,14 +31,14 @@ function it_exchange_recurring_payments_addon_settings_callback() {
 function it_exchange_recurring_payments_addon_default_settings( $values ) {
     $defaults = array(
         'recurring-payments-cancel-subject'   => __( 'Cancellation Notification', 'LION' ),
-        'recurring-payments-cancel-body'      => __( 'Hello [it_exchange_email show=fullname],
+        'recurring-payments-cancel-body'      => __( 'Hello [it_exchange_email show=name],
 
 Your recurring payment has been cancelled.
 
 Thank you.
 [it_exchange_email show=sitename]', 'LION' ),
         'recurring-payments-expire-subject'   => __( 'Expiration Notification', 'LION' ),
-        'recurring-payments-expire-body'      => __( 'Hello [it_exchange_email show=fullname],
+        'recurring-payments-expire-body'      => __( 'Hello [it_exchange_email show=name],
 
 Your recurring payment has expired.
 
@@ -172,7 +172,7 @@ class IT_Exchange_Recurring_Payments_Add_On {
                 <label for="recurring-payments-cancel-body"><?php _e( 'Email Message', 'LION' ); ?> <span class="tip" title="<?php _e( 'The message you want users who have cancelled their subscriptions to receive.', 'LION' ); ?>">i</span></label>
                 <?php
                 if ( $wp_version >= 3.3 && function_exists( 'wp_editor' ) ) {
-                    echo wp_editor( $settings['recurring-payments-cancel-body'], 'recurring-payments-cancel-body', array( 'textarea_name' => 'it_exchange_recurring_payments_settings-recurring-payments-expire-body', 'textarea_rows' => 10, 'textarea_cols' => 30, 'editor_class' => 'large-text' ) );
+                    echo wp_editor( $settings['recurring-payments-cancel-body'], 'recurring-payments-cancel-body', array( 'textarea_name' => 'it-exchange-add-on-recurring_payments-recurring-payments-cancel-body', 'textarea_rows' => 10, 'textarea_cols' => 30, 'editor_class' => 'large-text' ) );
 					
 					//We do this for some ITForm trickery... just to add recurring-payments-cancel-body to the used inputs field
 					$form->get_text_area( 'recurring-payments-cancel-body', array( 'rows' => 10, 'cols' => 30, 'class' => 'large-text' ) );
@@ -191,7 +191,7 @@ class IT_Exchange_Recurring_Payments_Add_On {
                 <label for="recurring-payments-expire-body"><?php _e( 'Email Message', 'LION' ); ?> <span class="tip" title="<?php _e( 'The message you want users who have cancelled their subscriptions to receive.', 'LION' ); ?>">i</span></label>
                 <?php
                 if ( $wp_version >= 3.3 && function_exists( 'wp_editor' ) ) {
-                    echo wp_editor( $settings['recurring-payments-expire-body'], 'recurring-payments-expire-body', array( 'textarea_name' => 'it_exchange_recurring_payments_settings-recurring-payments-expire-body', 'textarea_rows' => 10, 'textarea_cols' => 30, 'editor_class' => 'large-text' ) );
+                    echo wp_editor( $settings['recurring-payments-expire-body'], 'recurring-payments-expire-body', array( 'textarea_name' => 'it-exchange-add-on-recurring_payments-recurring-payments-expire-body', 'textarea_rows' => 10, 'textarea_cols' => 30, 'editor_class' => 'large-text' ) );
 					
 					//We do this for some ITForm trickery... just to add recurring-payments-cancel-body to the used inputs field
 					$form->get_text_area( 'recurring-payments-expire-body', array( 'rows' => 10, 'cols' => 30, 'class' => 'large-text' ) );
