@@ -25,10 +25,8 @@ function it_exchange_recurring_payments_customer_notification( $customer, $statu
 			break;
 		
 	}
-	
-	wp_mail( 'lew@ithemes.com', $subject, $content );
-	
+		
 	do_action( 'it_exchange_recurring_payments_customer_notification', $customer, $status );
-	do_action( 'it_exchange_send_email_notification', $customer->ID, $subject, $content );
+	do_action( 'it_exchange_send_email_notification', $customer->id, $subject, $content );
 	
 }

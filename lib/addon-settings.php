@@ -146,9 +146,6 @@ class IT_Exchange_Recurring_Payments_Add_On {
         <?php
     }
 
-    /**
-     * @todo verify video link
-     */
     function get_recurring_payments_form_table( $form, $settings = array() ) {
 
 		global $wp_version;
