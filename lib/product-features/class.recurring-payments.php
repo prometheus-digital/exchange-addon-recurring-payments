@@ -114,9 +114,9 @@ class IT_Exchange_Recurring_Payments {
 		$product_feature_time = it_exchange_get_product_feature( $product->ID, 'recurring-payments', array( 'setting' => 'time' ) );
 		
 		$recurring_options = array(
-			'forever'   => _( 'Forever', 'LION' ),
-			'monthly'   => _( 'Monthly', 'LION' ),
-			'yearly'    => _( 'Yearly', 'LION' ),
+			'forever'   => __( 'Forever', 'LION' ),
+			'monthly'   => __( 'Monthly', 'LION' ),
+			'yearly'    => __( 'Yearly', 'LION' ),
 		);
 		$recurring_options = apply_filters( 'it_exchange_recurring_payment_options', $recurring_options );
 		
