@@ -82,11 +82,13 @@ function it_exchange_recurring_payments_multi_item_product_allowed( $allowed, $p
 add_filter( 'it_exchange_multi_item_product_allowed', 'it_exchange_recurring_payments_multi_item_product_allowed', 10, 2 );
 
 function it_exchange_recurring_payments_addon_add_transaction( $transaction_id ) {
-	$cart_object = get_post_meta( $transaction_id, '_it_exchange_cart_object', true );
-		
-	$customer_id = get_post_meta( $transaction_id, '_it_exchange_customer_id', true );
-	$customer = new IT_Exchange_Customer( $customer_id );
-	$recurring_payments = $customer->get_customer_meta( 'recurring_payments' );
+    $transaction = it_exchange_get_transaction( $transaction_id );
+	it_exchange_recurring_payments_addon_update_expirations( $transaction );
+}
+add_action( 'it_exchange_add_transaction_success', 'it_exchange_recurring_payments_addon_add_transaction' );
+
+function it_exchange_recurring_payments_addon_update_expirations( $transaction ) {
+	$cart_object = get_post_meta( $transaction->ID, '_it_exchange_cart_object', true );
 	
 	foreach ( $cart_object->products as $product ) {
 		if ( it_exchange_product_supports_feature( $product['product_id'], 'recurring-payments' ) ) {
@@ -94,33 +96,33 @@ function it_exchange_recurring_payments_addon_add_transaction( $transaction_id )
 			$renew = it_exchange_get_product_feature( $product['product_id'], 'recurring-payments', array( 'setting' => 'auto-renew' ) );
 			
 			switch( $time ) {
-				
-				case 'forever':
-					$expires = false;
-					break;
 			
 				case 'yearly':
-					$expires = strtotime( '+1 Year' );
+					$expires = strtotime( '+1 Year' ) + ( 60 * 60 * 24 ); //1 year plus 1 day
 					break;
 			
 				case 'monthly':
+					$expires = strtotime( '+1 Month' ) + ( 60 * 60 * 24 ); //1 month plus 1 day
+					break;
+				
+				case 'forever':
 				default:
-					$expires = strtotime( '+1 Month' );
+					$expires = false;
 					break;
 				
 			}
+			//The extra day is added just to be safe
 			$expires = apply_filters( 'it_exchange_recurring_payments_addon_expires_time', $expires, $time );
 			if ( $expires ) {
 				$autorenews = ( 'on' === $renew ) ? true : false;
-				$recurring_payments[$product['product_id']] = array( 'expires' => $expires, 'auto-renews' => $autorenews, 'status' => 'active' );
+				$transaction->update_transaction_meta( 'subscription_expires_' . $product['product_id'], $expires );
+				$transaction->update_transaction_meta( 'subscription_autorenew_' . $product['product_id'], $autorenews );
 			}
 
 		}
 		
 	}
-	$customer->update_customer_meta( 'recurring_payments', $recurring_payments );
 }
-add_action( 'it_exchange_add_transaction_success', 'it_exchange_recurring_payments_addon_add_transaction' );
 
 function it_exchange_recurring_payments_addon_content_purchases_before_wrap() {
 	add_filter( 'it_exchange_get_transactions_get_posts_args', 'it_exchange_recurring_payments_addon_get_transactions_get_posts_args' );
@@ -130,4 +132,33 @@ add_action( 'it_exchange_content_purchases_before_wrap', 'it_exchange_recurring_
 function it_exchange_recurring_payments_addon_get_transactions_get_posts_args( $args ) {
 	$args['post_parent'] = 0;
 	return $args;	
+}
+
+function it_exchange_recurring_payments_daily_schedule() {
+	it_exchange_recurring_payments_handle_expired();
+}
+add_action( 'it_exchange_recurring_payments_daily_schedule', 'it_exchange_recurring_payments_daily_schedule' );
+
+function it_exchange_recurring_payments_handle_expired() {
+	global $wpdb;
+	
+	$results = $wpdb->get_results( 
+		$wpdb->prepare( '
+			SELECT post_id, meta_key, meta_value
+			FROM ' . $wpdb->postmeta . ' 
+			WHERE meta_key LIKE %s 
+			  AND meta_value < %d',
+			'_it_exchange_transaction_subscription_expires_%', time() )
+	);
+	
+	foreach ( $results as $result ) {
+		
+		$product_id = str_replace( '_it_exchange_transaction_subscription_expires_', '', $result->meta_key );
+		$transaction = it_exchange_get_transaction( $result->post_id );
+		$transaction->update_transaction_meta( 'subscription_expired_' . $product_id, $result->meta_value );
+		$transaction->delete_transaction_meta( 'subscription_expires_' . $product_id );
+		it_exchange_recurring_payments_addon_update_transaction_subscription_status( $transaction, $transaction->customer_id, 'deactivated' );
+		
+	}
+	
 }

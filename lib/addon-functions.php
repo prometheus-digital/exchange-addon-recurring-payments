@@ -15,8 +15,8 @@ function it_exchange_recurring_payments_customer_notification( $customer, $statu
 	switch ( $status ) {
 	
 		case 'deactivate':
-			$subject = $settings['recurring-payments-expire-subject'];
-			$content = $settings['recurring-payments-cancel-body'];
+			$subject = $settings['recurring-payments-deactivate-subject'];
+			$content = $settings['recurring-payments-deactivate-body'];
 			break;
 			
 		case 'cancel':

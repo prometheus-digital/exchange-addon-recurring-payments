@@ -108,11 +108,12 @@ class IT_Theme_API_Recurring_Payments implements IT_Theme_API {
 		);
 		$options = ITUtility::merge_defaults( $options, $defaults );
 		$output = '';
-		$recurring_payments = $this->_customer->get_customer_meta( 'recurring_payments', true );
 		$product_id = $this->_transaction_product['product_id'];
-		if ( !empty( $recurring_payments[$product_id] ) ) {
-			if ( $options['show_auto_renews'] || !$recurring_payments[$product_id]['auto-renews'] ) {
-				$output = $options['label'] . ': ' . date_i18n( $options['date_format'], $recurring_payments[$product_id]['expires'] );
+		$expire = $this->_transaction->get_transaction_meta( 'subscription_expires_' . $product_id, true );
+		$arenew = $this->_transaction->get_transaction_meta( 'subscription_autorenew_' . $product_id, true );
+		if ( !empty( $expire ) ) {
+			if ( $options['show_auto_renews'] || !$arenew ) {
+				$output = $options['label'] . ': ' . date_i18n( $options['date_format'], $expire );
 			}
 		}
 		return $output;

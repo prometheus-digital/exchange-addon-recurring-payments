@@ -37,8 +37,8 @@ Your recurring payment has been cancelled.
 
 Thank you.
 [it_exchange_email show=sitename]', 'LION' ),
-        'recurring-payments-expire-subject'   => __( 'Expiration Notification', 'LION' ),
-        'recurring-payments-expire-body'      => __( 'Hello [it_exchange_email show=name],
+        'recurring-payments-deactivate-subject'   => __( 'Expiration Notification', 'LION' ),
+        'recurring-payments-deactivate-body'      => __( 'Hello [it_exchange_email show=name],
 
 Your recurring payment has expired.
 
@@ -181,19 +181,19 @@ class IT_Exchange_Recurring_Payments_Add_On {
             
             <h4><?php _e( 'Recurring Payment Expired Email', 'LION' ); ?></h4>
             <p>
-                <label for="recurring-payments-expire-subject"><?php _e( 'Email Subject', 'LION' ); ?> <span class="tip" title="<?php _e( 'The subject you want users who have cancelled their subscriptions to receive.', 'LION' ); ?>">i</span></label>
-                <?php $form->add_text_box( 'recurring-payments-expire-subject' ); ?>
+                <label for="recurring-payments-deactivate-subject"><?php _e( 'Email Subject', 'LION' ); ?> <span class="tip" title="<?php _e( 'The subject you want users who have cancelled their subscriptions to receive.', 'LION' ); ?>">i</span></label>
+                <?php $form->add_text_box( 'recurring-payments-deactivate-subject' ); ?>
             </p>
             <p>
-                <label for="recurring-payments-expire-body"><?php _e( 'Email Message', 'LION' ); ?> <span class="tip" title="<?php _e( 'The message you want users who have cancelled their subscriptions to receive.', 'LION' ); ?>">i</span></label>
+                <label for="recurring-payments-deactivate-body"><?php _e( 'Email Message', 'LION' ); ?> <span class="tip" title="<?php _e( 'The message you want users who have cancelled their subscriptions to receive.', 'LION' ); ?>">i</span></label>
                 <?php
                 if ( $wp_version >= 3.3 && function_exists( 'wp_editor' ) ) {
-                    echo wp_editor( $settings['recurring-payments-expire-body'], 'recurring-payments-expire-body', array( 'textarea_name' => 'it-exchange-add-on-recurring_payments-recurring-payments-expire-body', 'textarea_rows' => 10, 'textarea_cols' => 30, 'editor_class' => 'large-text' ) );
+                    echo wp_editor( $settings['recurring-payments-deactivate-body'], 'recurring-payments-deactivate-body', array( 'textarea_name' => 'it-exchange-add-on-recurring_payments-recurring-payments-deactivate-body', 'textarea_rows' => 10, 'textarea_cols' => 30, 'editor_class' => 'large-text' ) );
 					
 					//We do this for some ITForm trickery... just to add recurring-payments-cancel-body to the used inputs field
-					$form->get_text_area( 'recurring-payments-expire-body', array( 'rows' => 10, 'cols' => 30, 'class' => 'large-text' ) );
+					$form->get_text_area( 'recurring-payments-deactivate-body', array( 'rows' => 10, 'cols' => 30, 'class' => 'large-text' ) );
                 } else {
-                    $form->add_text_area( 'recurring-payments-expire-body', array( 'rows' => 10, 'cols' => 30, 'class' => 'large-text' ) );
+                    $form->add_text_area( 'recurring-payments-deactivate-body', array( 'rows' => 10, 'cols' => 30, 'class' => 'large-text' ) );
 				}
 				?>
             </p>
@@ -259,9 +259,9 @@ class IT_Exchange_Recurring_Payments_Add_On {
             $errors[] = __( 'Please include an email subject for cancellations', 'LION' );
         if ( empty( $values['recurring-payments-cancel-body'] ) )
             $errors[] = __( 'Please include an email body for cancellations', 'LION' );
-        if ( empty( $values['recurring-payments-expire-subject'] ) )
+        if ( empty( $values['recurring-payments-deactivate-subject'] ) )
             $errors[] = __( 'Please include an email subject for expirations', 'LION' );
-        if ( empty( $values['recurring-payments-expire-body'] ) )
+        if ( empty( $values['recurring-payments-deactivate-body'] ) )
             $errors[] = __( 'Please include an email body for expirations', 'LION' );
 
         return $errors;

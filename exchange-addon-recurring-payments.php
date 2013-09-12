@@ -67,3 +67,23 @@ function ithemes_exchange_addon_stripe_updater_register( $updater ) {
 add_action( 'ithemes_updater_register', 'ithemes_exchange_addon_membership_updater_register' );
 require( dirname( __FILE__ ) . '/lib/updater/load.php' );
 */
+
+/**
+ * On activation, set a time, frequency and name of an action hook to be scheduled.
+ *
+ * @since 1.0.0
+ */
+function it_exchange_recurring_payments_activation() {
+	wp_schedule_event( strtotime( 'Tomorrow 4AM' ), 'daily', 'it_exchange_recurring_payments_daily_schedule' );
+}
+register_activation_hook( __FILE__, 'it_exchange_recurring_payments_activation' );
+
+/**
+ * On deactivation, remove all functions from the scheduled action hook.
+ *
+ * @since 1.0.0
+ */
+function it_exchange_recurring_payments_deactivation() {
+	wp_clear_scheduled_hook( 'it_exchange_recurring_payments_daily_schedule' );
+}
+register_deactivation_hook( __FILE__, 'it_exchange_recurring_payments_deactivation' );

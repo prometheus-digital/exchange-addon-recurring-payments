@@ -69,12 +69,16 @@ function it_exchange_recurring_payments_addon_update_transaction_subscription_st
 	
 	switch ( $subscriber_status ) {
 	
-		case 'deactivated' :
+		case 'deactivated' : //expired
 			it_exchange_recurring_payments_customer_notification( $customer, 'deactivate' );
 			break;
 			
 		case 'cancelled' :
 			it_exchange_recurring_payments_customer_notification( $customer, 'cancel' );
+			break;
+			
+		case 'active' :
+			it_exchange_recurring_payments_addon_update_expirations( $transaction );
 			break;
 		
 	}
