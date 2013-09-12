@@ -85,9 +85,25 @@ class IT_Theme_API_Recurring_Payments implements IT_Theme_API {
 		$options = ITUtility::merge_defaults( $options, $defaults );
 		$output = '';
 		if ( it_exchange_get_recurring_payments_addon_transaction_subscription_id( $this->_transaction ) ) {
-			$transaction_method = it_exchange_get_transaction_method( $this->_transaction );
 			$output .= $options['before'];
-			$output .= apply_filters( 'it_exchange_' . $transaction_method . '_unsubscribe_action', '', $options );
+			$subscription_status = $this->_transaction->get_transaction_meta( 'subscriber_status' );
+			
+			switch( $subscription_status ) {
+				case 'deactivated' :
+					$output .= __( 'Subscription deactivated', 'LION' );
+					break;
+				case 'cancelled' :
+					$output .= __( 'Subscription cancelled', 'LION' );
+					break;
+				case 'suspended' :
+					$output .= __( 'Subscription suspended', 'LION' );
+					break;
+				case 'active' :
+				default:
+					$transaction_method = it_exchange_get_transaction_method( $this->_transaction );
+					$output .= apply_filters( 'it_exchange_' . $transaction_method . '_unsubscribe_action', '', $options );
+					break;
+			}
 			$output .= $options['after'];
 		}
 		return $output;
