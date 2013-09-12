@@ -11,3 +11,7 @@
 #it_exchange_normal-sortables #it-exchange-recurring-payments .it-exchange-recurring-payment-auto-renew{cursor:pointer;margin-top:8px;margin-right:6px;width:18px;height:16px;}
 #it_exchange_normal-sortables #it-exchange-recurring-payments .auto-renew-on{background:url('images/recurring-on.png');}
 #it_exchange_normal-sortables #it-exchange-recurring-payments .auto-renew-off{background:url('images/recurring-off.png');}
+@media screen and (max-width: 1300px) {
+	#it_exchange_normal-sortables #it-exchange-product-title{width:50%;}
+	#it_exchange_normal-sortables #it-exchange-recurring-payments{width:30%;}
+}	
