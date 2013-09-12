@@ -129,13 +129,7 @@ class IT_Exchange_Recurring_Payments {
 
 		// Echo the form field
 		?>
-			<label for="recurring-payments">&nbsp;</label> <!-- Justin I just put this there for spacing, probably not the best solution ;) -->
             <div id="it-exchange-recurring-payment-settings">
-            <span class="it-exchange-recurring-payment-auto-renew <?php echo $hidden; ?> auto-renew-<?php echo $product_feature_auto_renew; ?>" title="<?php printf( __( 'Auto-Renew: %s', 'LION' ), strtoupper( $product_feature_auto_renew ) ); ?>">
-            	&infin;
-            	<input type="hidden" name="it_exchange_recurring_payments_auto_renew" value="<?php echo $product_feature_auto_renew; ?>" />
-            </span>
-            &nbsp;
             <select class="it-exchange-recurring-payment-time-options" name="it_exchange_recurring_payments_time">
 			<?php
 				foreach ( $recurring_options as $key => $name ) {
@@ -143,6 +137,9 @@ class IT_Exchange_Recurring_Payments {
 				}
             ?>
             </select>
+            <span class="it-exchange-recurring-payment-auto-renew <?php echo $hidden; ?> auto-renew-<?php echo $product_feature_auto_renew; ?>" title="<?php printf( __( 'Auto-Renew: %s', 'LION' ), strtoupper( $product_feature_auto_renew ) ); ?>">
+            	<input type="hidden" name="it_exchange_recurring_payments_auto_renew" value="<?php echo $product_feature_auto_renew; ?>" />
+            </span>
             </div>
 		<?php
 	}
