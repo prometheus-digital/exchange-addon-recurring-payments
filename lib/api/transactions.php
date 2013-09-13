@@ -11,6 +11,9 @@
  * Updates a transaction with a new subscriber_id
  *
  * @since 1.0.0
+ * @param mixed $transaction iThemes Exchange Transaction Object or ID
+ * @param string $subscriber_id Payment Gateway Subscription ID
+ * @return string $susbcriber_id
 */
 function it_exchange_recurring_payments_addon_update_transaction_subscription_id( $transaction, $subscriber_id ) {
 
@@ -51,6 +54,10 @@ function it_exchange_get_recurring_payments_addon_transaction_subscription_id( $
  * Updates a transaction with a new subscriber_status
  *
  * @since 1.0.0
+ * @param mixed $transaction iThemes Exchange Transaction Object or ID
+ * @param string $subscriber_id Payment Gateway Subscription ID
+ * @param string $subscriber_status Payment Gateway Subscription status
+ * @return string $subscriber_status
 */
 function it_exchange_recurring_payments_addon_update_transaction_subscription_status( $transaction, $subscriber_id, $subscriber_status ) {
 
@@ -89,6 +96,7 @@ function it_exchange_recurring_payments_addon_update_transaction_subscription_st
 	
 }
 add_action( 'it_exchange_update_transaction_subscription_status', 'it_exchange_recurring_payments_addon_update_transaction_subscription_status', 10, 3 );
+
 /**
  * Returns the transaction subscription_status for a specific transaction
  *

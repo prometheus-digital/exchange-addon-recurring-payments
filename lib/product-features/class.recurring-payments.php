@@ -1,9 +1,8 @@
 <?php
 /**
  * Enable Recurring Payments Options for supporting product types and payment gateways
- *
- * @since 0.3.8
- * @package IT_Exchange
+ * @package exchange-addon-recurring-payments
+ * @since 1.0.0
 */
 
 
@@ -12,7 +11,7 @@ class IT_Exchange_Recurring_Payments {
 	/**
 	 * Constructor. Registers hooks
 	 *
-	 * @since 0.3.8
+	 * @since 1.0.0
 	 *
 	 * @return void
 	*/
@@ -32,7 +31,7 @@ class IT_Exchange_Recurring_Payments {
 	/**
 	 * Register the product and add it to enabled product-type addons
 	 *
-	 * @since 0.3.8
+	 * @since 1.0.0
 	*/
 	function add_feature_support_to_product_types() {
 		// Register the recurring-payments_addon
@@ -50,7 +49,7 @@ class IT_Exchange_Recurring_Payments {
 	/**
 	 * Register's the metabox for any product type that supports the recurring-payments feature
 	 *
-	 * @since 0.3.8
+	 * @since 1.0.0
 	 * @return void
 	*/
 	function init_feature_metaboxes() {
@@ -91,7 +90,7 @@ class IT_Exchange_Recurring_Payments {
 	 *
 	 * Hooked to it_exchange_product_metabox_callback_[product-type] where product type supports recurring-payments
 	 *
-	 * @since 0.3.8
+	 * @since 1.0.0
 	 * @return void
 	*/
 	function register_metabox() {
@@ -101,8 +100,8 @@ class IT_Exchange_Recurring_Payments {
 	/**
 	 * This echos the base price metabox.
 	 *
-	 * @since 0.3.8
-	 * @todo remove unnecessary label (if it is still there)
+	 * @since 1.0.0
+	 * @param object $post Product
 	 * @return void
 	*/
 	function print_metabox( $post ) {
@@ -147,9 +146,8 @@ class IT_Exchange_Recurring_Payments {
 	/**
 	 * This saves the base price value
 	 *
-	 * @since 0.3.8
+	 * @since 1.0.0
 	 *
-	 * @param object $post wp post object
 	 * @return void
 	*/
 	function save_feature_on_product_save() {
@@ -173,10 +171,11 @@ class IT_Exchange_Recurring_Payments {
 	/**
 	 * This updates the base price for a product
 	 *
-	 * @since 0.3.8
+	 * @since 1.0.0
 	 *
 	 * @param integer $product_id the product id
 	 * @param mixed $new_price the new price
+	 * @param array $options Optional arguments used to specify which feature is saved
 	 * @return bolean
 	*/
 	function save_feature( $product_id, $new_value, $options=array() ) {
@@ -206,9 +205,10 @@ class IT_Exchange_Recurring_Payments {
 	/**
 	 * Return the product's base price
 	 *
-	 * @since 0.3.8
+	 * @since 1.0.0
 	 * @param mixed $base_price the values passed in by the WP Filter API. Ignored here.
 	 * @param integer product_id the WordPress post ID
+	 * @param array $options Optional arguments used to specify which feature is gotten
 	 * @return string recurring-payments
 	*/
 	function get_feature( $existing, $product_id, $options=array() ) {
@@ -239,6 +239,7 @@ class IT_Exchange_Recurring_Payments {
 	 * @since 1.0.0
 	 * @param mixed $result Not used by core
 	 * @param integer $product_id
+	 * @param array $options Optional arguments used to specify which feature is checked
 	 * @return boolean
 	*/
 	function product_has_feature( $result, $product_id, $options=array() ) {
@@ -265,6 +266,7 @@ class IT_Exchange_Recurring_Payments {
 	 * @since 1.0.0
 	 * @param mixed $result Not used by core
 	 * @param integer $product_id
+	 * @param array $options Optional arguments used to specify which feature is checked
 	 * @return boolean
 	*/
 	function product_supports_feature( $result, $product_id, $options=array() ) {

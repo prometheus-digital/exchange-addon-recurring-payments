@@ -1,9 +1,17 @@
 <?php
+/**
+ * iThemes Exchange Recurring Payments Add-on
+ * Generic functions
+ * @package exchange-addon-recurring-payments
+ * @since 1.0.0
+*/
 
 /**
  * Sends notification to customer upon specific status changes
  *
  * @since 1.0.0
+ * @param object $customer iThemes Exchange Customer Object
+ * @param string $status Subscription Status
 */
 function it_exchange_recurring_payments_customer_notification( $customer, $status ) {
 	

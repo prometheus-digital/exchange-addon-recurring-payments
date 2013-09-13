@@ -2,6 +2,7 @@
 /**
  * Restricted Content class for THEME API in Membership Add-on
  *
+ * @package exchange-addon-recurring-payments
  * @since 1.0.0
 */
 
