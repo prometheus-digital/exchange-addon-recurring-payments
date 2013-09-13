@@ -31,7 +31,7 @@ function it_exchange_register_recurring_payments_addon() {
 		'description'       => __( 'This add-on turns on recurring payments for supporting payment gateways.', 'LION' ),
 		'author'            => 'iThemes',
 		'author_url'        => 'http://ithemes.com/exchange/recurring-payments/',
-	'icon'              => ITUtility::get_url_from_file( dirname( __FILE__ ) . '/images/recurringpayments50px.png' ),
+		'icon'              => ITUtility::get_url_from_file( dirname( __FILE__ ) . '/lib/images/recurring50px.png' ),
 		'file'              => dirname( __FILE__ ) . '/init.php',
 		'category'          => 'other',
 		'settings-callback' => 'it_exchange_recurring_payments_addon_settings_callback',	
