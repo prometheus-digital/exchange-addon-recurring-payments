@@ -38,3 +38,28 @@ function it_exchange_recurring_payments_customer_notification( $customer, $statu
 	do_action( 'it_exchange_send_email_notification', $customer->id, $subject, $content );
 	
 }
+
+/**
+ * Shows the nag when needed.
+ *
+ * @since 1.0.0
+ *
+ * @return void
+*/
+function it_exchange_addon_recurring_payments_show_version_nag() {
+	if ( $GLOBALS['it_exchange']['version'] < '1.3.0' ) {
+		?>
+		<div id="it-exchange-add-on-min-version-nag" class="it-exchange-nag">
+			<?php printf( __( 'The Recurring Payments add-on requires iThemes Exchange version 1.3.0 or greater. %sPlease upgrade Exchange%s.', 'LION' ), '<a href="' . admin_url( 'update-core.php' ) . '">', '</a>' ); ?>
+		</div>
+		<script type="text/javascript">
+			jQuery( document ).ready( function() {
+				if ( jQuery( '.wrap > h2' ).length == '1' ) {
+					jQuery("#it-exchange-add-on-min-version-nag").insertAfter('.wrap > h2').addClass( 'after-h2' );
+				}
+			});
+		</script>
+		<?php
+	}
+}
+add_action( 'admin_notices', 'it_exchange_addon_recurring_payments_show_version_nag' );
