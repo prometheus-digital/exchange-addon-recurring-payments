@@ -143,6 +143,7 @@ add_action( 'it_exchange_add_transaction_success', 'it_exchange_recurring_paymen
 */
 function it_exchange_recurring_payments_addon_update_expirations( $transaction ) {
 	$cart_object = get_post_meta( $transaction->ID, '_it_exchange_cart_object', true );
+	$transaction_method = it_exchange_get_transaction_method( $transaction->ID );
 	
 	foreach ( $cart_object->products as $product ) {
 		if ( it_exchange_product_supports_feature( $product['product_id'], 'recurring-payments' ) ) {
@@ -167,6 +168,7 @@ function it_exchange_recurring_payments_addon_update_expirations( $transaction )
 			}
 			//The extra day is added just to be safe
 			$expires = apply_filters( 'it_exchange_recurring_payments_addon_expires_time', $expires, $time, $renew );
+			$expires = apply_filters( 'it_exchange_recurring_payments_addon_expires_time_' . $transaction_method, $expires, $time, $renew );
 			if ( $expires ) {
 				$autorenews = ( 'on' === $renew ) ? true : false;
 				$transaction->update_transaction_meta( 'subscription_expires_' . $product['product_id'], $expires );
