@@ -166,7 +166,7 @@ function it_exchange_recurring_payments_addon_update_expirations( $transaction )
 				
 			}
 			//The extra day is added just to be safe
-			$expires = apply_filters( 'it_exchange_recurring_payments_addon_expires_time', $expires, $time );
+			$expires = apply_filters( 'it_exchange_recurring_payments_addon_expires_time', $expires, $time, $renew );
 			if ( $expires ) {
 				$autorenews = ( 'on' === $renew ) ? true : false;
 				$transaction->update_transaction_meta( 'subscription_expires_' . $product['product_id'], $expires );
