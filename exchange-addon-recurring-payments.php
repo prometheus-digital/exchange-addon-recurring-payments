@@ -60,13 +60,11 @@ add_action( 'plugins_loaded', 'it_exchange_recurring_payments_set_textdomain' );
  * @param object $updater ithemes updater object
  * @return void
 */
-/*
-function ithemes_exchange_addon_stripe_updater_register( $updater ) { 
-	    $updater->register( 'exchange-addon-membership', __FILE__ );
+function ithemes_exchange_addon_recurring_payments_updater_register( $updater ) { 
+	    $updater->register( 'exchange-addon-recurring-payments', __FILE__ );
 }
-add_action( 'ithemes_updater_register', 'ithemes_exchange_addon_membership_updater_register' );
+add_action( 'ithemes_updater_register', 'ithemes_exchange_addon_recurring_payments_updater_register' );
 require( dirname( __FILE__ ) . '/lib/updater/load.php' );
-*/
 
 /**
  * On activation, set a time, frequency and name of an action hook to be scheduled.
