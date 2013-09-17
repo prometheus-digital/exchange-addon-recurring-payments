@@ -107,7 +107,7 @@ class IT_Exchange_Recurring_Payments_Add_On {
     /**
      * Prints settings page
      *
-     * @since 0.4.5
+     * @since 1.0.0
      * @return void
     */
     function print_settings_page() {

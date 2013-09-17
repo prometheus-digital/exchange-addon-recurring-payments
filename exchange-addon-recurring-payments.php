@@ -21,7 +21,7 @@ define( 'ITE_RECURRING_PAYMENTS_PLUGIN_PATH', plugin_dir_path( __FILE__ ) );
 /**
  * This registers our plugin as a recurring payments addon
  *
- * @since 0.1.0
+ * @since 1.0.0
  *
  * @return void
 */
