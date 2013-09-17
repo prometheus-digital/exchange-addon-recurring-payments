@@ -237,9 +237,11 @@ function it_exchange_recurring_payments_handle_expired() {
 		
 		$product_id = str_replace( '_it_exchange_transaction_subscription_expires_', '', $result->meta_key );
 		$transaction = it_exchange_get_transaction( $result->post_id );
-		$transaction->update_transaction_meta( 'subscription_expired_' . $product_id, $result->meta_value );
-		$transaction->delete_transaction_meta( 'subscription_expires_' . $product_id );
-		it_exchange_recurring_payments_addon_update_transaction_subscription_status( $transaction, $transaction->customer_id, 'deactivated' );
+		if ( $expired = add_filter( 'it_exchange_recurring_payments_handle_expired', true, $product_id, $transaction ) ) {
+			$transaction->update_transaction_meta( 'subscription_expired_' . $product_id, $result->meta_value );
+			$transaction->delete_transaction_meta( 'subscription_expires_' . $product_id );
+			it_exchange_recurring_payments_addon_update_transaction_subscription_status( $transaction, $transaction->customer_id, 'deactivated' );
+		}
 		
 	}
 	
