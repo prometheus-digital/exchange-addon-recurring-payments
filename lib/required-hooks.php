@@ -246,3 +246,36 @@ function it_exchange_recurring_payments_handle_expired() {
 	}
 	
 }
+
+/**
+ * Modifies the Transaction Payments screen for recurring payments
+ * Adds recurring type to product title
+ *
+ * @since 1.0.1
+ * @param object $post Post Object
+ * @param object $transaction_product iThemes Exchange Transaction Object
+ * @return void
+*/
+function it_exchange_recurring_payments_transaction_print_metabox_after_product_feature_title( $post, $transaction_product ) {
+	$transaction = it_exchange_get_transaction( $post->ID );
+	$time = it_exchange_get_product_feature( $transaction_product['product_id'], 'recurring-payments', array( 'setting' => 'time' ) );
+	echo '<span class="recurring-product-type">' . $time . '</span>';
+	if ( $transaction->get_transaction_meta( 'subscription_autorenew_' . $transaction_product['product_id'], true ) )
+		echo '<span class="recurring-product-autorenew">&infin;</span>';
+}
+add_action( 'it_exchange_transaction_print_metabox_after_product_feature_title', 'it_exchange_recurring_payments_transaction_print_metabox_after_product_feature_title', 10, 2 );
+
+/**
+ * Modifies the Transaction Payments screen for recurring payments
+ * Calls action for payment gateways to add their own cancel URL for auto-renewing payments
+ *
+ * @since 1.0.1
+ * @return void
+*/
+function it_exchange_recurring_payments_addon_after_payment_details() {
+	global $post;
+	$transaction = it_exchange_get_transaction( $post->ID );
+	$transaction_method = it_exchange_get_transaction_method( $transaction->ID );
+	do_action( 'it_exchange_after_payment_details_cancel_url_for_' . $transaction_method, $transaction );	
+}
+add_action( 'it_exchange_after_payment_details', 'it_exchange_recurring_payments_addon_after_payment_details' );
