@@ -261,7 +261,7 @@ function it_exchange_recurring_payments_transaction_print_metabox_after_product_
 	$time = it_exchange_get_product_feature( $transaction_product['product_id'], 'recurring-payments', array( 'setting' => 'time' ) );
 	echo '<span class="recurring-product-type">' . $time . '</span>';
 	if ( $transaction->get_transaction_meta( 'subscription_autorenew_' . $transaction_product['product_id'], true ) )
-		echo '<span class="recurring-product-autorenew">&infin;</span>';
+		echo '<span class="recurring-product-autorenew"></span>';
 }
 add_action( 'it_exchange_transaction_print_metabox_after_product_feature_title', 'it_exchange_recurring_payments_transaction_print_metabox_after_product_feature_title', 10, 2 );
 
