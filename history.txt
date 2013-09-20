@@ -1,2 +1,4 @@
+1.0.1 - 2013-09-19 - Lew Ayotte
+	Added hooks and styling to modify Payments Edit screen to show recurring details
 1.0.0 - 2013-09-17 - Lew Ayotte
 	Initial Release
