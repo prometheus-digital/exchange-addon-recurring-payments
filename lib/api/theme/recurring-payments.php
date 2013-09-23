@@ -102,7 +102,7 @@ class IT_Theme_API_Recurring_Payments implements IT_Theme_API {
 				case 'active' :
 				default:
 					$transaction_method = it_exchange_get_transaction_method( $this->_transaction );
-					$output .= apply_filters( 'it_exchange_' . $transaction_method . '_unsubscribe_action', '', $options );
+					$output .= apply_filters( 'it_exchange_' . $transaction_method . '_unsubscribe_action', '', $options, $this->_transaction );
 					break;
 			}
 			$output .= $options['after'];
