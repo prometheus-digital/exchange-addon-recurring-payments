@@ -1,7 +1,7 @@
 <?php
 /*
  * Plugin Name: iThemes Exchange - Recurring Payments Add-on
- * Version: 1.0.5
+ * Version: 1.0.6
  * Description: Adds the recurring payments abilities to iThemes Exchange
  * Plugin URI: http://ithemes.com/exchange/recurring-payments/
  * Author: iThemes
@@ -48,7 +48,7 @@ add_action( 'it_exchange_register_addons', 'it_exchange_register_recurring_payme
  * @return void
 */
 function it_exchange_recurring_payments_set_textdomain() {
-	load_plugin_textdomain( 'LION', false, plugin_basename( __FILE__  ) . '/lang/' );
+	load_plugin_textdomain( 'LION', false, dirname( plugin_basename( __FILE__  ) ) . '/lang/' );
 }
 add_action( 'plugins_loaded', 'it_exchange_recurring_payments_set_textdomain' );
 
