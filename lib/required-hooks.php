@@ -31,6 +31,8 @@ add_action( 'it_exchange_admin_wp_enqueue_styles', 'it_exchange_recurring_paymen
  * @param string $post_type WordPress Post Type
 */
 function it_exchange_recurring_payments_addon_admin_wp_enqueue_scripts( $hook_suffix, $post_type ) {
+	if ( empty( $post_type ) || 'it_exchange_prod' != $post_type )
+		return;
 	$deps = array( 'post', 'jquery-ui-sortable', 'jquery-ui-droppable', 'jquery-ui-tabs', 'jquery-ui-tooltip', 'jquery-ui-datepicker', 'autosave' );
 	wp_enqueue_script( 'it-exchange-recurring-payments-addon-add-edit-product', ITUtility::get_url_from_file( dirname( __FILE__ ) ) . '/js/add-edit-product.js', $deps );
 }
