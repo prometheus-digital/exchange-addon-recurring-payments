@@ -21,4 +21,4 @@
 	Enhancement: Using the ithemes-updater-force-minor-update query string variable will now force a data flush, allowing any available quick release updates to appear instantly.
 	Enhancement: Added "License" links to the Plugins and Themes pages for the Network Admin Dashboard of multisite installs.
 1.0.8 - 2013-11-05 - Glenn Ansley
-	Only load product JS on add/edit product page.
+	Only load product JS on add/edit product page
