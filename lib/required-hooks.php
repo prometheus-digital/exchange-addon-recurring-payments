@@ -14,8 +14,14 @@
  * @param string $post_type WordPress Post Type
 */
 function it_exchange_recurring_payments_addon_admin_wp_enqueue_styles( $hook_suffix, $post_type ) {
+	global $wp_version;
+	
 	if ( isset( $post_type ) && 'it_exchange_prod' === $post_type ) {
 		wp_enqueue_style( 'it-exchange-recurring-payments-addon-add-edit-product', ITUtility::get_url_from_file( dirname( __FILE__ ) ) . '/styles/add-edit-product.css' );
+		
+		if ( $wp_version <= 3.7 ) {
+			wp_enqueue_style( 'it-exchange-recurring-payments-addon-add-edit-product-pre-3-8', ITUtility::get_url_from_file( dirname( __FILE__ ) ) . '/styles/add-edit-product-pre-3-8.css' );
+		}
 	} else if ( isset( $post_type ) && 'it_exchange_tran' === $post_type ) {
 		wp_enqueue_style( 'it-exchange-recurring-payments-addon-transaction-details-css', ITUtility::get_url_from_file( dirname( __FILE__ ) ) . '/styles/transaction-details.css' );
 	}
