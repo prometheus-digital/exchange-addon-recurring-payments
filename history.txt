@@ -22,3 +22,6 @@
 	Enhancement: Added "License" links to the Plugins and Themes pages for the Network Admin Dashboard of multisite installs.
 1.0.8 - 2013-11-05 - Glenn Ansley
 	Only load product JS on add/edit product page
+1.0.9 - 2013-12-09 - Justin Kopepasah
+	Added styles for 3.8 & pre 3.8.
+	Changes height on the settings section.
