@@ -63,3 +63,30 @@ function it_exchange_addon_recurring_payments_show_version_nag() {
 	}
 }
 add_action( 'admin_notices', 'it_exchange_addon_recurring_payments_show_version_nag' );
+
+/**
+ * Generates a recurring label
+ *
+ * @since CHANGEME
+ * @param int $product_id iThemes Exchange Product ID
+ * @return string iThemes Exchange recurring label
+*/
+function it_exchange_recurring_payments_addon_recurring_label( $product_id ) {
+	$label = '';
+	if ( it_exchange_product_has_feature( $product_id, 'recurring-payments', array( 'setting' => 'time' ) ) ) {
+		if ( 'forever' !== $time = it_exchange_get_product_feature( $product_id, 'recurring-payments', array( 'setting' => 'time' ) ) ) {
+			switch( $time ) {
+				case 'yearly':
+					$label = '/' . __( 'yr', 'LION' );
+					break;
+			
+				case 'monthly':
+					$label = '/' . __( 'mo', 'LION' );
+					break;
+			}
+			//The extra day is added just to be safe
+			$label = apply_filters( 'it_exchange_recurring_payments_addon_expires_time_label', $label, $time, $product_id );
+		}
+	}
+	return $label;
+}

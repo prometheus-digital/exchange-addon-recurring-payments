@@ -251,7 +251,8 @@ class IT_Exchange_Recurring_Payments {
 			return false;
 
 		// If it does support, does it have it?
-		if ( 'on' === $this->get_feature( false, $product_id, $options ) )
+		$feature = $this->get_feature( false, $product_id, $options );
+		if ( !empty( $feature ) )
 			return true;
 		else
 			return false;

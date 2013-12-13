@@ -290,3 +290,15 @@ function it_exchange_recurring_payments_addon_after_payment_details() {
 	do_action( 'it_exchange_after_payment_details_cancel_url_for_' . $transaction_method, $transaction );	
 }
 add_action( 'it_exchange_after_payment_details', 'it_exchange_recurring_payments_addon_after_payment_details' );
+
+/**
+ * Returns base price with recurring label
+ *
+ * @since CHANGEME
+ * @param int $product_id iThemes Exchange Product ID
+ * @return string iThemes Exchange recurring label
+*/
+function it_exchange_recurring_payments_api_theme_product_base_price( $base_price, $product_id ) {
+	return $base_price . it_exchange_recurring_payments_addon_recurring_label( $product_id );
+}
+add_filter( 'it_exchange_api_theme_product_base_price', 'it_exchange_recurring_payments_api_theme_product_base_price', 10, 2 );
