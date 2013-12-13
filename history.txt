@@ -25,3 +25,5 @@
 1.0.9 - 2013-12-09 - Justin Kopepasah
 	Added styles for 3.8 & pre 3.8.
 	Changes height on the settings section.
+1.0.10 - 2013-12-13 - Lew Ayotte
+	Added label on base price to signify a product is recurring
