@@ -270,6 +270,8 @@ function it_exchange_recurring_payments_handle_expired() {
 function it_exchange_recurring_payments_transaction_print_metabox_after_product_feature_title( $post, $transaction_product ) {
 	$transaction = it_exchange_get_transaction( $post->ID );
 	$time = it_exchange_get_product_feature( $transaction_product['product_id'], 'recurring-payments', array( 'setting' => 'time' ) );
+	if ( empty( $time ) )
+		$time = __( 'forever', 'LION' );
 	echo '<span class="recurring-product-type">' . $time . '</span>';
 	if ( $transaction->get_transaction_meta( 'subscription_autorenew_' . $transaction_product['product_id'], true ) )
 		echo '<span class="recurring-product-autorenew"></span>';
