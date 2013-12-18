@@ -36,3 +36,5 @@
 	Added default 'forever' time for products added before recurring products addon was enabled
 1.0.13 - 2013-12-18 - Lew Ayotte
 	Fixing tagged version
+1.0.14 - 2013-12-18 - Packaging Bot (lib/updater)
+	Bug Fix: Removed unneeded check on package-info.ithemes.com which was causing performance issues on some sites.
