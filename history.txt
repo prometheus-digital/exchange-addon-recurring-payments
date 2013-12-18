@@ -32,3 +32,5 @@
 	Enhancement: Added alternate line styling to the listings on the licensing page.
 	Enhancement: Products with iThemes in the name will now properly capitalize the name.
 	Enhancement: The updater and licensing system now handle iThemes server outages without causing long page delays or by reporting confusing error messages.
+1.0.12 - 2013-12-18 - Lew Ayotte
+	Added default 'forever' time for products added before recurring products addon was enabled
