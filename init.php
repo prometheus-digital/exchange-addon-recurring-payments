@@ -8,7 +8,7 @@
 /**
  * New API functions.
 */
-include( 'lib/api/load.php' );
+include( 'api/load.php' );
 
 /**
  * New Product Features.
