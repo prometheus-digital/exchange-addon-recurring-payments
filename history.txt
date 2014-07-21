@@ -44,3 +44,5 @@
 	Bug Fix: Licensing on SSL-enabled sites now works properly.
 1.0.17 - 2014-02-27 - Lew Ayotte
 	Updating recurring payments price css
+1.0.18 - 2014-07-21 - Lew Ayotte
+	Fix for version compare
