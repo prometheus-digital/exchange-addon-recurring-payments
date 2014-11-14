@@ -46,3 +46,6 @@
 	Updating recurring payments price css
 1.0.18 - 2014-07-21 - Lew Ayotte
 	Fix for version compare
+1.0.19 - 2014-11-14 - Packaging Bot (lib/updater)
+	Enhancement: Reduced caching to allow updates to appear more quickly.
+	Enhancement: Authenticating users now uses the new authentication system.
