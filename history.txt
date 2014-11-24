@@ -49,3 +49,5 @@
 1.0.19 - 2014-11-14 - Packaging Bot (lib/updater)
 	Enhancement: Reduced caching to allow updates to appear more quickly.
 	Enhancement: Authenticating users now uses the new authentication system.
+1.0.20 - 2014-11-24 - Lew Ayotte
+	Change out .live() calls for .on() calls in JS
