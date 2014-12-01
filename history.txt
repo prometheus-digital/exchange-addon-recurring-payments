@@ -51,3 +51,5 @@
 	Enhancement: Authenticating users now uses the new authentication system.
 1.0.20 - 2014-11-24 - Lew Ayotte
 	Change out .live() calls for .on() calls in JS
+1.0.21 - 2014-12-01 - Lew Ayotte
+	Properly get Customer ID when settings subscription status to 'deactivated'
