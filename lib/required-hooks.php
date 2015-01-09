@@ -157,33 +157,36 @@ function it_exchange_recurring_payments_addon_update_expirations( $transaction )
 	$transaction_method = it_exchange_get_transaction_method( $transaction->ID );
 	
 	foreach ( $cart_object->products as $product ) {
-		if ( it_exchange_product_supports_feature( $product['product_id'], 'recurring-payments' ) ) {
-			$time = it_exchange_get_product_feature( $product['product_id'], 'recurring-payments', array( 'setting' => 'time' ) );
-			$renew = it_exchange_get_product_feature( $product['product_id'], 'recurring-payments', array( 'setting' => 'auto-renew' ) );
-			
-			switch( $time ) {
-			
-				case 'yearly':
-					$expires = strtotime( '+1 Year' ) + ( 60 * 60 * 24 ); //1 year plus 1 day
-					break;
-			
-				case 'monthly':
-					$expires = strtotime( '+1 Month' ) + ( 60 * 60 * 24 ); //1 month plus 1 day
-					break;
+		if ( it_exchange_product_supports_feature( $product['product_id'], 'recurring-payments' ) ) {			
+			if ( it_exchange_get_product_feature( $product['product_id'], 'recurring-payments', array( 'setting' => 'recurring-enabled' ) ) ) {
+					
+				$trial_enabled = it_exchange_get_product_feature( $product['product_id'], 'recurring-payments', array( 'setting' => 'trial-enabled' ) );
+				$trial_interval = it_exchange_get_product_feature( $product['product_id'], 'recurring-payments', array( 'setting' => 'trial-interval' ) );
+				$trial_interval_count = it_exchange_get_product_feature( $product['product_id'], 'recurring-payments', array( 'setting' => 'trial-interval-count' ) );
+				$auto_renew = it_exchange_get_product_feature( $product['product_id'], 'recurring-payments', array( 'setting' => 'auto-renew' ) );
+				$interval = it_exchange_get_product_feature( $product['product_id'], 'recurring-payments', array( 'setting' => 'interval' ) );
+				$interval_count = it_exchange_get_product_feature( $product['product_id'], 'recurring-payments', array( 'setting' => 'interval-count' ) );
 				
-				case 'forever':
-				default:
-					$expires = false;
-					break;
+				if ( 0 < $trial_interval_count ) { //This product has a trial period associated with it
 				
-			}
-			//The extra day is added just to be safe
-			$expires = apply_filters( 'it_exchange_recurring_payments_addon_expires_time', $expires, $time, $renew );
-			$expires = apply_filters( 'it_exchange_recurring_payments_addon_expires_time_' . $transaction_method, $expires, $time, $renew );
-			if ( $expires ) {
-				$autorenews = ( 'on' === $renew ) ? true : false;
-				$transaction->update_transaction_meta( 'subscription_expires_' . $product['product_id'], $expires );
-				$transaction->update_transaction_meta( 'subscription_autorenew_' . $product['product_id'], $autorenews );
+					if ( empty( get_post_ancestors( $transaction->ID ) ) ) { //This is the first and it's a trial period
+						
+						$interval = $trial_interval;
+						$interval_count = $trial_interval_count;
+						
+					}
+					
+				}
+				$expires = strtotime( sprintf( '+%d %s', $interval_count, $interval ) ) + ( 60 * 60 * 24 ); //plus 1 day
+
+				//The extra day is added just to be safe
+				$expires = apply_filters( 'it_exchange_recurring_payments_addon_expires_time', $expires, $interval, $interval_count, $auto_renew );
+				$expires = apply_filters( 'it_exchange_recurring_payments_addon_expires_time_' . $transaction_method, $expires, $interval, $interval_count, $auto_renew );
+				if ( $expires ) {
+					$autorenews = ( 'on' === $auto_renew ) ? true : false;
+					$transaction->update_transaction_meta( 'subscription_expires_' . $product['product_id'], $expires );
+					$transaction->update_transaction_meta( 'subscription_autorenew_' . $product['product_id'], $autorenews );
+				}
 			}
 
 		}
@@ -268,14 +271,15 @@ function it_exchange_recurring_payments_handle_expired() {
  * @param object $transaction_product iThemes Exchange Transaction Object
  * @return void
 */
-function it_exchange_recurring_payments_transaction_print_metabox_after_product_feature_title( $post, $transaction_product ) {
+function it_exchange_recurring_payments_transaction_print_metabox_after_product_feature_title( $post, $product ) {
 	$transaction = it_exchange_get_transaction( $post->ID );
-	$time = it_exchange_get_product_feature( $transaction_product['product_id'], 'recurring-payments', array( 'setting' => 'time' ) );
-	if ( empty( $time ) )
+	$enabled = it_exchange_get_product_feature( $product['product_id'], 'recurring-payments', array( 'setting' => 'recurring-enabled' ) );	
+	if ( empty( $enabled ) ) {
 		$time = __( 'forever', 'LION' );
-	echo '<span class="recurring-product-type">' . $time . '</span>';
-	if ( $transaction->get_transaction_meta( 'subscription_autorenew_' . $transaction_product['product_id'], true ) )
+		echo '<span class="recurring-product-type">' . $time . '</span>';
+	} else if ( $transaction->get_transaction_meta( 'subscription_autorenew_' . $product['product_id'], true ) ) {
 		echo '<span class="recurring-product-autorenew"></span>';
+	}
 }
 add_action( 'it_exchange_transaction_print_metabox_after_product_feature_title', 'it_exchange_recurring_payments_transaction_print_metabox_after_product_feature_title', 10, 2 );
 
@@ -304,4 +308,4 @@ add_action( 'it_exchange_after_payment_details', 'it_exchange_recurring_payments
 function it_exchange_recurring_payments_api_theme_product_base_price( $base_price, $product_id ) {
 	return $base_price . it_exchange_recurring_payments_addon_recurring_label( $product_id );
 }
-add_filter( 'it_exchange_api_theme_product_base_price', 'it_exchange_recurring_payments_api_theme_product_base_price', 10, 2 );
+//add_filter( 'it_exchange_api_theme_product_base_price', 'it_exchange_recurring_payments_api_theme_product_base_price', 10, 2 );
