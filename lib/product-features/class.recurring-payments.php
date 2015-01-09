@@ -142,8 +142,25 @@ class IT_Exchange_Recurring_Payments {
 		        <label for="it-exchange-recurring-payments-trial-enabled"><?php _e( "Enable a Trial Period?", 'LION' ); ?>
 					<input id="it-exchange-recurring-payments-trial-enabled" type="checkbox" name="it_exchange_recurring_payments_trial_enabled" <?php checked( $trial_enabled ); ?> />
 		        </label>
+		        <p>
+			        <label for="it-exchange-recurring-payments-interval">
+				        <?php _e( 'Recurs every...', 'LION' ); ?>
+			        </label>
+			        &nbsp;
+			        <input id="it-exchange-recurring-payments-interval-count" type="number" class="small-input" name="it_exchange_recurring_payments_interval_count" value="<?php echo $interval_count; ?>" placeholder="#" />
+			        <select id="it-exchange-recurring-payments-interval" name="it_exchange_recurring_payments_interval">
+				        <?php
+					    foreach( $interval_types as $name => $label ) {
+						    echo '<option value="' . $name . '" ' . selected( $interval, $name, false ) . '>' . $label . '</option>';
+					    }  
+						?>
+			        </select>
+		        </p>
+		        <label for="it-exchange-recurring-payments-auto-renew"><?php _e( "Enable Auto-Renewing?", 'LION' ); ?>
+		        	<input id="it-exchange-recurring-payments-auto-renew" type="checkbox" name="it_exchange_recurring_payments_auto_renewing" <?php checked( $auto_renew, 'on' ); ?> />
+		        </label>
 		        <?php
-				if ( !$trial_enabled ) {
+				if ( !$trial_enabled || 'on' !== $auto_renew ) {
 					$trial_hidden = 'hidden';
 				} else {
 					$trial_hidden = '';
@@ -159,23 +176,6 @@ class IT_Exchange_Recurring_Payments {
 				        <?php
 					    foreach( $interval_types as $name => $label ) {
 						    echo '<option value="' . $name . '" ' . selected( $trial_interval, $name, false ) . '>' . $label . '</option>';
-					    }  
-						?>
-			        </select>
-		        </p>
-		        <label for="it-exchange-recurring-payments-auto-renew"><?php _e( "Enable Auto-Renewing?", 'LION' ); ?>
-		        	<input id="it-exchange-recurring-payments-auto-renew" type="checkbox" name="it_exchange_recurring_payments_auto_renewing" <?php checked( $auto_renew, 'on' ); ?> />
-		        </label>
-		        <p>
-			        <label for="it-exchange-recurring-payments-interval">
-				        <?php _e( 'Recurs every...', 'LION' ); ?>
-			        </label>
-			        &nbsp;
-			        <input id="it-exchange-recurring-payments-interval-count" type="number" class="small-input" name="it_exchange_recurring_payments_interval_count" value="<?php echo $interval_count; ?>" placeholder="#" />
-			        <select id="it-exchange-recurring-payments-interval" name="it_exchange_recurring_payments_interval">
-				        <?php
-					    foreach( $interval_types as $name => $label ) {
-						    echo '<option value="' . $name . '" ' . selected( $interval, $name, false ) . '>' . $label . '</option>';
 					    }  
 						?>
 			        </select>
