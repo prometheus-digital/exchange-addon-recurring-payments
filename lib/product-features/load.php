@@ -7,4 +7,3 @@
 
 // Product Feature: Recurring Payments
 require( 'class.recurring-payments.php' );
-require( 'class.recurring-payments-info.php' ); //just an info icon to state that the settings have moved
