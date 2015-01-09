@@ -64,6 +64,16 @@ function it_exchange_addon_recurring_payments_show_version_nag() {
 }
 add_action( 'admin_notices', 'it_exchange_addon_recurring_payments_show_version_nag' );
 
+function it_exchange_recurring_payments_addon_interval_string( $interval, $count ) {
+	
+	if ( 1 < $count ) {
+		return $interval . 's';
+	} else {
+		return $interval;
+	}
+	
+}
+
 /**
  * Generates a recurring label
  *
@@ -73,19 +83,24 @@ add_action( 'admin_notices', 'it_exchange_addon_recurring_payments_show_version_
 */
 function it_exchange_recurring_payments_addon_recurring_label( $product_id ) {
 	$label = '';
-	if ( it_exchange_product_has_feature( $product_id, 'recurring-payments', array( 'setting' => 'time' ) ) ) {
-		if ( 'forever' !== $time = it_exchange_get_product_feature( $product_id, 'recurring-payments', array( 'setting' => 'time' ) ) ) {
-			switch( $time ) {
-				case 'yearly':
-					$label = '/' . __( 'yr', 'LION' );
-					break;
+	if ( it_exchange_product_has_feature( $product_id, 'recurring-payments', array( 'setting' => 'recurring-enabled' ) ) ) {
+		if ( it_exchange_get_product_feature( $product_id, 'recurring-payments', array( 'setting' => 'recurring-enabled' ) ) ) {
+			$trial_enabled = it_exchange_get_product_feature( $product_id, 'recurring-payments', array( 'setting' => 'trial-enabled' ) );
+			$trial_interval = it_exchange_get_product_feature( $product_id, 'recurring-payments', array( 'setting' => 'trial-interval' ) );
+			$trial_interval_count = it_exchange_get_product_feature( $product_id, 'recurring-payments', array( 'setting' => 'trial-interval-count' ) );
+			$auto_renew = it_exchange_get_product_feature( $product_id, 'recurring-payments', array( 'setting' => 'auto-renew' ) );
+			$interval = it_exchange_get_product_feature( $product_id, 'recurring-payments', array( 'setting' => 'interval' ) );
+			$interval_count = it_exchange_get_product_feature( $product_id, 'recurring-payments', array( 'setting' => 'interval-count' ) );
 			
-				case 'monthly':
-					$label = '/' . __( 'mo', 'LION' );
-					break;
+			if ( 0 < $interval_count ) {
+				$label .= '&nbsp;' . sprintf( __( 'every %s %s', 'LION' ), $trial_interval_count, it_exchange_recurring_payments_addon_interval_string( $interval, $interval_count ) );
 			}
-			//The extra day is added just to be safe
-			$label = apply_filters( 'it_exchange_recurring_payments_addon_expires_time_label', $label, $time, $product_id );
+
+			if ( 0 < $trial_interval_count ) {
+				$label .= '&nbsp;' . sprintf( __( '(after %s %s free)', 'LION' ), $trial_interval_count, it_exchange_recurring_payments_addon_interval_string( $trial_interval, $trial_interval_count ) );
+			}
+			
+			$label = apply_filters( 'it_exchange_recurring_payments_addon_expires_time_label', $label, $product_id );
 		}
 	}
 	return $label;
