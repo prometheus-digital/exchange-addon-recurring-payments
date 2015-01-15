@@ -139,9 +139,6 @@ class IT_Exchange_Recurring_Payments {
 	        	<input id="it-exchange-recurring-payments-enabled" type="checkbox" name="it_exchange_recurring_payments_enabled" <?php checked( $enabled ); ?> />
 	        </label>
 	        <div id="recurring-payment-options" class="<?php echo $hidden; ?>">
-		        <label for="it-exchange-recurring-payments-trial-enabled"><?php _e( "Enable a Trial Period?", 'LION' ); ?>
-					<input id="it-exchange-recurring-payments-trial-enabled" type="checkbox" name="it_exchange_recurring_payments_trial_enabled" <?php checked( $trial_enabled ); ?> />
-		        </label>
 		        <p>
 			        <label for="it-exchange-recurring-payments-interval">
 				        <?php _e( 'Recurs every...', 'LION' ); ?>
@@ -157,7 +154,7 @@ class IT_Exchange_Recurring_Payments {
 			        </select>
 		        </p>
 		        <label for="it-exchange-recurring-payments-auto-renew"><?php _e( "Enable Auto-Renewing?", 'LION' ); ?>
-		        	<input id="it-exchange-recurring-payments-auto-renew" type="checkbox" name="it_exchange_recurring_payments_auto_renewing" <?php checked( $auto_renew, 'on' ); ?> />
+		        	<input id="it-exchange-recurring-payments-auto-renew" type="checkbox" name="it_exchange_recurring_payments_auto_renew" <?php checked( $auto_renew, 'on' ); ?> />
 		        </label>
 		        <?php
 				if ( !$trial_enabled || 'on' !== $auto_renew ) {
@@ -166,20 +163,35 @@ class IT_Exchange_Recurring_Payments {
 					$trial_hidden = '';
 				}
 				?>
-		        <p id="trial-period-options" class="<?php echo $trial_hidden; ?>">
-			        <label for="it-exchange-recurring-payments-trial-interval-count">
-				        <?php _e( 'Free trial for...', 'LION' ); ?>
+		        <div id="trial-period-settings" class="<?php echo $trial_hidden; ?>">
+			        <!-- We only show trial period settings for Membership products -->
+					<?php if ( 'membership-product-type' === it_exchange_get_product_type( $product->ID ) || apply_filters( 'it_exchange_recurring_payments_free_trial_allowed', false, $product ) ) { ?>
+			        <label for="it-exchange-recurring-payments-trial-enabled"><?php _e( "Enable a Trial Period?", 'LION' ); ?>
+						<input id="it-exchange-recurring-payments-trial-enabled" type="checkbox" name="it_exchange_recurring_payments_trial_enabled" <?php checked( $trial_enabled ); ?> />
 			        </label>
-			        &nbsp;
-			        <input id="it-exchange-recurring-payments-trial-interval-count" type="number" class="small-input" name="it_exchange_recurring_payments_trial_interval_count" value="<?php echo $trial_interval_count; ?>" placeholder="#" />
-			        <select id="it-exchange-recurring-payments-trial-interval" name="it_exchange_recurring_payments_trial_interval">
-				        <?php
-					    foreach( $interval_types as $name => $label ) {
-						    echo '<option value="' . $name . '" ' . selected( $trial_interval, $name, false ) . '>' . $label . '</option>';
-					    }  
-						?>
-			        </select>
-		        </p>
+			        <?php
+					if ( !$trial_enabled ) {
+						$trail_options_hidden = 'hidden';
+					} else {
+						$trail_options_hidden = '';
+					}
+					?>
+			        <p id="trial-period-options" class="<?php echo $trail_options_hidden; ?>">
+				        <label for="it-exchange-recurring-payments-trial-interval-count">
+					        <?php _e( 'Free trial for...', 'LION' ); ?>
+				        </label>
+				        &nbsp;
+				        <input id="it-exchange-recurring-payments-trial-interval-count" type="number" class="small-input" name="it_exchange_recurring_payments_trial_interval_count" value="<?php echo $trial_interval_count; ?>" placeholder="#" />
+				        <select id="it-exchange-recurring-payments-trial-interval" name="it_exchange_recurring_payments_trial_interval">
+					        <?php
+						    foreach( $interval_types as $name => $label ) {
+							    echo '<option value="' . $name . '" ' . selected( $trial_interval, $name, false ) . '>' . $label . '</option>';
+						    }  
+							?>
+				        </select>
+			        </p>
+				    <?php } ?>
+		        </div>
 	        </div>
         </div>
         <?php
@@ -206,11 +218,18 @@ class IT_Exchange_Recurring_Payments {
 		if ( ! it_exchange_product_type_supports_feature( $product_type, 'recurring-payments' ) )
 			return;
 
-		it_exchange_update_product_feature( $product_id, 'recurring-payments', $_POST['it_exchange_recurring_payments_enabled'], array( 'setting' => 'recurring-enabled' ) );
-		it_exchange_update_product_feature( $product_id, 'recurring-payments', $_POST['it_exchange_recurring_payments_trial_enabled'], array( 'setting' => 'trial-enabled' ) );
+		$enabled = !empty( $_POST['it_exchange_recurring_payments_enabled'] ) ? 'on' : 'off';
+		it_exchange_update_product_feature( $product_id, 'recurring-payments', $enabled, array( 'setting' => 'recurring-enabled' ) );
+		
+		$enabled = !empty( $_POST['it_exchange_recurring_payments_trial_enabled'] ) ? 'on' : 'off';
+		it_exchange_update_product_feature( $product_id, 'recurring-payments', $enabled, array( 'setting' => 'trial-enabled' ) );
+		
 		it_exchange_update_product_feature( $product_id, 'recurring-payments', $_POST['it_exchange_recurring_payments_trial_interval'], array( 'setting' => 'trial-interval' ) );
 		it_exchange_update_product_feature( $product_id, 'recurring-payments', $_POST['it_exchange_recurring_payments_trial_interval_count'], array( 'setting' => 'trial-interval-count' ) );
-		it_exchange_update_product_feature( $product_id, 'recurring-payments', $_POST['it_exchange_recurring_payments_auto_renew'], array( 'setting' => 'auto-renew' ) );
+		
+		$enabled = !empty( $_POST['it_exchange_recurring_payments_auto_renew'] ) ? 'on' : 'off';
+		it_exchange_update_product_feature( $product_id, 'recurring-payments', $enabled, array( 'setting' => 'auto-renew' ) );
+		
 		it_exchange_update_product_feature( $product_id, 'recurring-payments', $_POST['it_exchange_recurring_payments_interval'], array( 'setting' => 'interval' ) );
 		it_exchange_update_product_feature( $product_id, 'recurring-payments', $_POST['it_exchange_recurring_payments_interval_count'], array( 'setting' => 'interval-count' ) );
 		
@@ -260,19 +279,15 @@ class IT_Exchange_Recurring_Payments {
 				break;
 				
 			case 'trial-enabled':
-				if ( 'on' === $new_value ) {
-					update_post_meta( $product_id, '_it-exchange-product-recurring-trial-enabled', true );
-				} else {
-					update_post_meta( $product_id, '_it-exchange-product-recurring-trial-enabled', false );
-				}
+				if ( ! in_array( $new_value, array( 'on', 'off' ) ) )
+					$new_value = 'off';
+				update_post_meta( $product_id, '_it-exchange-product-recurring-trial-enabled', $new_value );
 				break;
 			
 			case 'recurring-enabled':
-				if ( 'on' === $new_value ) {
-					update_post_meta( $product_id, '_it-exchange-product-recurring-enabled', true );
-				} else {
-					update_post_meta( $product_id, '_it-exchange-product-recurring-enabled', false );
-				}
+				if ( ! in_array( $new_value, array( 'on', 'off' ) ) )
+					$new_value = 'off';
+				update_post_meta( $product_id, '_it-exchange-product-recurring-enabled', $new_value );
 				break;
 			
 		}
@@ -301,20 +316,41 @@ class IT_Exchange_Recurring_Payments {
 		$options = ITUtility::merge_defaults( $options, $defaults );
 		
 		switch ( $options['setting'] ) {
-			
-			
 							
 			case 'interval-count':
-				return get_post_meta( $product_id, '_it-exchange-product-recurring-interval-count', true );
-				
+				if ( $interval_count = get_post_meta( $product_id, '_it-exchange-product-recurring-interval-count', true ) ) {
+					return $interval_count;
+				} else if ( $time = get_post_meta( $product_id, '_it-exchange-product-recurring-time', true ) ) {
+					return 1;
+				}
+				return false;				
+
 			case 'interval':
-				return get_post_meta( $product_id, '_it-exchange-product-recurring-interval', true );
+				if ( $interval = get_post_meta( $product_id, '_it-exchange-product-recurring-interval', true ) ) {
+					return $interval;
+				} else if ( $time = get_post_meta( $product_id, '_it-exchange-product-recurring-time', true ) ) {
+					switch ( $time ) {
+						case 'monthly':
+							update_post_meta( $product_id, '_it-exchange-product-recurring-interval', 'month' );
+							return 'month';
+						case 'yearly':
+							update_post_meta( $product_id, '_it-exchange-product-recurring-interval', 'year' );
+							return 'year';
+						default:
+							return $time;
+					}
+				}
+				return false;
 
 			case 'auto-renew':
-				$autorenew = get_post_meta( $product_id, '_it-exchange-product-recurring-auto-renew', true );
-				if ( ! in_array( $autorenew, array( 'on', 'off' ) ) )
-					$autorenew = 'off';
-				return $autorenew;
+				$enabled = get_post_meta( $product_id, '_it-exchange-product-recurring-auto-renew', true );
+				switch ( $enabled ) {
+					case 'on':
+						return 'on';
+					case 'off':
+					default:
+						return 'off';
+				}
 				
 			case 'trial-interval-count':
 				return get_post_meta( $product_id, '_it-exchange-product-recurring-trial-interval-count', true );
@@ -323,10 +359,41 @@ class IT_Exchange_Recurring_Payments {
 				return get_post_meta( $product_id, '_it-exchange-product-recurring-trial-interval', true );
 				
 			case 'trial-enabled':
-				return (bool)get_post_meta( $product_id, '_it-exchange-product-recurring-trial-enabled', true );
+				$enabled = get_post_meta( $product_id, '_it-exchange-product-recurring-trial-enabled', true );
+				switch ( $enabled ) {
+					case 'on':
+						return true;
+					case 'off':
+					default:
+						return false;
+				}
 				
 			case 'recurring-enabled':
-				return (bool)get_post_meta( $product_id, '_it-exchange-product-recurring-enabled', true );
+				$enabled = get_post_meta( $product_id, '_it-exchange-product-recurring-enabled', true );
+				if ( !empty( $enabled ) ) {
+					switch ( $enabled ) {
+						case 'on':
+							return true;
+						case 'off':
+						default:
+							return false;
+					}
+				} else if ( $time = get_post_meta( $product_id, '_it-exchange-product-recurring-time', true ) ) {
+					return true;
+				}
+				
+			case 'time':
+				if ( $time = get_post_meta( $product_id, '_it-exchange-product-recurring-interval', true ) ) {
+					switch ( $time ) {
+						case 'month':
+							return 'monthly';
+						case 'year':
+							return 'yearly';
+						default:
+							return $time;
+					}
+				}
+				return get_post_meta( $product_id, '_it-exchange-product-recurring-time', true );
 			
 		}
 		return false;
