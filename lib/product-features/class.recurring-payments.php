@@ -379,7 +379,11 @@ class IT_Exchange_Recurring_Payments {
 							return false;
 					}
 				} else if ( $time = get_post_meta( $product_id, '_it-exchange-product-recurring-time', true ) ) {
-					return true;
+					if ( 'forever' === $time ) {
+						return false;
+					} else {
+						return true;
+					}
 				}
 				
 			case 'time':

@@ -7,6 +7,33 @@
 */
 
 /**
+ * Shows the nag when needed.
+ *
+ * @since CHANGEME
+ *
+ * @return void
+*/
+function it_exchange_recurring_payments_addon_show_membership_version_nag() {
+	if ( is_plugin_active( 'exchange-addon-membership/exchange-addon-membership.php' ) ) {
+		if ( !function_exists( 'it_exchange_membership_addon_get_all_the_children' ) ) {
+			?>
+			<div id="it-exchange-add-on-min-version-nag" class="it-exchange-nag">
+				<?php printf( __( 'Your version of the Membership add-on is not compatible with your Recurring Payments add-on. Please update to version 1.2.16 or greater. %sClick here to upgrade the Membership add-on%s.', 'LION' ), '<a href="' . admin_url( 'update-core.php' ) . '">', '</a>' ); ?>
+			</div>
+			<script type="text/javascript">
+				jQuery( document ).ready( function() {
+					if ( jQuery( '.wrap > h2' ).length == '1' ) {
+						jQuery("#it-exchange-add-on-min-version-nag").insertAfter('.wrap > h2').addClass( 'after-h2' );
+					}
+				});
+			</script>
+			<?php
+		}
+	}
+}
+add_action( 'admin_notices', 'it_exchange_recurring_payments_addon_show_membership_version_nag' );
+
+/**
  * Enqueues styles for Recurring Payments pages
  *
  * @since 1.0.0

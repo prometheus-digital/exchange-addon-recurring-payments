@@ -93,8 +93,10 @@ function it_exchange_recurring_payments_addon_recurring_label( $product_id ) {
 			$interval_count       = it_exchange_get_product_feature( $product_id, 'recurring-payments', array( 'setting' => 'interval-count' ) );
 			$show_trial = true;
 			
-			if ( 0 < $interval_count ) {
-				$label .= '&nbsp;' . sprintf( __( 'every %s %s', 'LION' ), $trial_interval_count, it_exchange_recurring_payments_addon_interval_string( $interval, $interval_count ) );
+			if ( 1 == $interval_count ) {
+				$label .= '&nbsp;' . sprintf( __( 'every %s', 'LION' ), it_exchange_recurring_payments_addon_interval_string( $interval, $interval_count ) );
+			} else if ( 0 < $interval_count ) {
+				$label .= '&nbsp;' . sprintf( __( 'every %s %s', 'LION' ), $interval_count, it_exchange_recurring_payments_addon_interval_string( $interval, $interval_count ) );
 			}
 			
 			if ( 'membership-product-type' === it_exchange_get_product_type( $product_id ) ) {
