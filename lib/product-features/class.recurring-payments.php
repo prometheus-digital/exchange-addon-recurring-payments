@@ -157,7 +157,9 @@ class IT_Exchange_Recurring_Payments {
 		        	<input id="it-exchange-recurring-payments-auto-renew" type="checkbox" name="it_exchange_recurring_payments_auto_renew" <?php checked( $auto_renew, 'on' ); ?> />
 		        </label>
 		        <?php
-				if ( !$trial_enabled || 'on' !== $auto_renew ) {
+				if ( 'on' === $auto_renew ) {
+					$trial_hidden = '';
+				} else if ( !$trial_enabled ) {
 					$trial_hidden = 'hidden';
 				} else {
 					$trial_hidden = '';
