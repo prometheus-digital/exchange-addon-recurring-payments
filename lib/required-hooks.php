@@ -186,7 +186,6 @@ function it_exchange_recurring_payments_addon_update_expirations( $transaction )
 	foreach ( $cart_object->products as $product ) {
 		if ( it_exchange_product_supports_feature( $product['product_id'], 'recurring-payments' ) ) {			
 			if ( it_exchange_get_product_feature( $product['product_id'], 'recurring-payments', array( 'setting' => 'recurring-enabled' ) ) ) {
-					
 				$trial_enabled = it_exchange_get_product_feature( $product['product_id'], 'recurring-payments', array( 'setting' => 'trial-enabled' ) );
 				$trial_interval = it_exchange_get_product_feature( $product['product_id'], 'recurring-payments', array( 'setting' => 'trial-interval' ) );
 				$trial_interval_count = it_exchange_get_product_feature( $product['product_id'], 'recurring-payments', array( 'setting' => 'trial-interval-count' ) );
@@ -194,15 +193,17 @@ function it_exchange_recurring_payments_addon_update_expirations( $transaction )
 				$interval = it_exchange_get_product_feature( $product['product_id'], 'recurring-payments', array( 'setting' => 'interval' ) );
 				$interval_count = it_exchange_get_product_feature( $product['product_id'], 'recurring-payments', array( 'setting' => 'interval-count' ) );
 				
-				if ( 0 < $trial_interval_count ) { //This product has a trial period associated with it
-				
-					if ( empty( get_post_ancestors( $transaction->ID ) ) ) { //This is the first and it's a trial period
-						
-						$interval = $trial_interval;
-						$interval_count = $trial_interval_count;
+				if ( $trial_enabled ) {
+					if ( 0 < $trial_interval_count ) { //This product has a trial period associated with it
+					
+						if ( empty( get_post_ancestors( $transaction->ID ) ) ) { //This is the first and it's a trial period
+							
+							$interval = $trial_interval;
+							$interval_count = $trial_interval_count;
+							
+						}
 						
 					}
-					
 				}
 				$expires = strtotime( sprintf( '+%d %s', $interval_count, $interval ) ) + ( 60 * 60 * 24 ); //plus 1 day
 

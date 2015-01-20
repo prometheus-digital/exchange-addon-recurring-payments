@@ -91,34 +91,36 @@ function it_exchange_recurring_payments_addon_recurring_label( $product_id ) {
 			$auto_renew           = it_exchange_get_product_feature( $product_id, 'recurring-payments', array( 'setting' => 'auto-renew' ) );
 			$interval             = it_exchange_get_product_feature( $product_id, 'recurring-payments', array( 'setting' => 'interval' ) );
 			$interval_count       = it_exchange_get_product_feature( $product_id, 'recurring-payments', array( 'setting' => 'interval-count' ) );
-			$show_trial = true;
-			
+		
 			if ( 1 == $interval_count ) {
 				$label .= '&nbsp;' . sprintf( __( 'every %s', 'LION' ), it_exchange_recurring_payments_addon_interval_string( $interval, $interval_count ) );
 			} else if ( 0 < $interval_count ) {
 				$label .= '&nbsp;' . sprintf( __( 'every %s %s', 'LION' ), $interval_count, it_exchange_recurring_payments_addon_interval_string( $interval, $interval_count ) );
 			}
-			
-			if ( 'membership-product-type' === it_exchange_get_product_type( $product_id ) ) {
-				if ( is_user_logged_in() ) {
-					if ( function_exists( 'it_exchange_get_session_data' ) ) {
-						$member_access = it_exchange_get_session_data( 'member_access' );
-						$children = (array)it_exchange_membership_addon_get_all_the_children( $product_id );
-						$parents = (array)it_exchange_membership_addon_get_all_the_parents( $product_id );
-						foreach( $member_access as $prod_id => $txn_id ) {
-							if ( $prod_id === $product_id || in_array( $prod_id, $children ) || in_array( $prod_id, $parents ) ) {
-								$show_trial = false;
-								break;
-							}								
+
+			if ( $trial_enabled ) {	
+				$show_trial = true;
+				if ( 'membership-product-type' === it_exchange_get_product_type( $product_id ) ) {
+					if ( is_user_logged_in() ) {
+						if ( function_exists( 'it_exchange_get_session_data' ) ) {
+							$member_access = it_exchange_get_session_data( 'member_access' );
+							$children = (array)it_exchange_membership_addon_get_all_the_children( $product_id );
+							$parents = (array)it_exchange_membership_addon_get_all_the_parents( $product_id );
+							foreach( $member_access as $prod_id => $txn_id ) {
+								if ( $prod_id === $product_id || in_array( $prod_id, $children ) || in_array( $prod_id, $parents ) ) {
+									$show_trial = false;
+									break;
+								}								
+							}
 						}
 					}
 				}
-			}
-			
-			$show_trial = apply_filters( 'it_exchange_recurring_payments_addon_recurring_label_show_trial', $show_trial, $product_id );
-
-			if ( $show_trial && 0 < $trial_interval_count ) {
-				$label .= '&nbsp;' . sprintf( __( '(after %s %s free)', 'LION' ), $trial_interval_count, it_exchange_recurring_payments_addon_interval_string( $trial_interval, $trial_interval_count ) );
+				
+				$show_trial = apply_filters( 'it_exchange_recurring_payments_addon_recurring_label_show_trial', $show_trial, $product_id );
+	
+				if ( $show_trial && 0 < $trial_interval_count ) {
+					$label .= '&nbsp;' . sprintf( __( '(after %s %s free)', 'LION' ), $trial_interval_count, it_exchange_recurring_payments_addon_interval_string( $trial_interval, $trial_interval_count ) );
+				}
 			}
 			
 			$label = apply_filters( 'it_exchange_recurring_payments_addon_expires_time_label', $label, $product_id );
