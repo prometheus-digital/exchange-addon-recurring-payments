@@ -55,3 +55,5 @@
 	Updating for new Recurring Payments options
 1.0.22.1 - 2015-02-02 - Lew Ayotte
     Fixing issue with empty() call on function
+1.0.23 - 2015-02-02 - Lew Ayotte
+	Tagging new version
