@@ -53,3 +53,5 @@
 	Change out .live() calls for .on() calls in JS
 1.0.22 - 2015-02-02 - Lew Ayotte
 	Updating for new Recurring Payments options
+1.0.22.1 - 2015-02-02 - Lew Ayotte
+    Fixing issue with empty() call on function
