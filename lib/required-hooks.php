@@ -195,8 +195,10 @@ function it_exchange_recurring_payments_addon_update_expirations( $transaction )
 				
 				if ( $trial_enabled ) {
 					if ( 0 < $trial_interval_count ) { //This product has a trial period associated with it
+						
+						$ancestors = get_post_ancestors( $transaction->ID );
 					
-						if ( empty( get_post_ancestors( $transaction->ID ) ) ) { //This is the first and it's a trial period
+						if ( empty( $ancestors ) ) { //This is the first and it's a trial period
 							
 							$interval = $trial_interval;
 							$interval_count = $trial_interval_count;
