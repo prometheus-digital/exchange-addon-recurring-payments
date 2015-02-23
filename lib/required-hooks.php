@@ -119,18 +119,30 @@ function it_exchange_recurring_payments_multi_item_cart_allowed( $allowed ) {
 	if ( it_exchange_is_product( $post ) ) {
 		$product = it_exchange_get_product( $post );
 		
-		if ( it_exchange_product_supports_feature( $product->ID, 'recurring-payments', array( 'setting' => 'auto-renew' ) ) )
-			if ( it_exchange_product_has_feature( $product->ID, 'recurring-payments', array( 'setting' => 'auto-renew' ) ) )
-				return false; //multi-cart should be disabled if product has auto-renewing feature
+		if ( it_exchange_product_supports_feature( $product->ID, 'recurring-payments', array( 'setting' => 'recurring-enabled' ) ) ) {
+			if ( it_exchange_product_has_feature( $product->ID, 'recurring-payments', array( 'setting' => 'recurring-enabled' ) ) ) {
+				if ( it_exchange_product_supports_feature( $product->ID, 'recurring-payments', array( 'setting' => 'auto-renew' ) ) ) {
+					if ( it_exchange_product_has_feature( $product->ID, 'recurring-payments', array( 'setting' => 'auto-renew' ) ) ) {
+						return false; //multi-cart should be disabled if product has auto-renewing feature
+					}
+				}
+			}
+		}
 	}
 	
 	$cart = it_exchange_get_cart_products();
 	
 	if ( !empty( $cart ) ) {
 		foreach( $cart as $product ) {
-			if ( it_exchange_product_supports_feature( $product['product_id'], 'recurring-payments', array( 'setting' => 'auto-renew' ) ) )
-				if ( it_exchange_product_has_feature( $product['product_id'], 'recurring-payments', array( 'setting' => 'auto-renew' ) ) )
-					return false;
+			if ( it_exchange_product_supports_feature( $product['product_id'], 'recurring-payments', array( 'setting' => 'recurring-enabled' ) ) ) {
+				if ( it_exchange_product_has_feature( $product['product_id'], 'recurring-payments', array( 'setting' => 'recurring-enabled' ) ) ) {
+					if ( it_exchange_product_supports_feature( $product['product_id'], 'recurring-payments', array( 'setting' => 'auto-renew' ) ) ) {
+						if ( it_exchange_product_has_feature( $product['product_id'], 'recurring-payments', array( 'setting' => 'auto-renew' ) ) ) {
+							return false;
+						}
+					}
+				}
+			}
 		}
 	}
 		
