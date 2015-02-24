@@ -377,8 +377,14 @@ function it_exchange_recurring_payments_after_payment_details_recurring_payments
 				$subscriber_status = $transaction->get_transaction_meta( 'subscriber_status', true );
 				$expires = $transaction->get_transaction_meta( 'subscription_expires_' . $product['product_id'], true );
 				$expired = $transaction->get_transaction_meta( 'subscription_expired_' . $product['product_id'], true );
-				if ( empty( $expires ) && !empty( $expired ) ) {
-					$expires = date_i18n( $dateformat, $expired );
+				if ( empty( $expires ) ) {
+					if ( !empty( $expired ) ) {
+						$expires = date_i18n( $dateformat, $expired );
+					} else {
+						$expires = '';
+					}
+				} else {
+					$expires = date_i18n( $dateformat, $expires );
 				}
 				?>
 				<div class="transaction-recurring-options clearfix spacing-wrapper">
@@ -410,7 +416,7 @@ function it_exchange_recurring_payments_after_payment_details_recurring_payments
 							
 							<p>
 							<label for="recurring-payment-subscriber-expires"><?php _e( 'Subscription Expiration', 'LION' ); ?> <span class="tip" title="<?php _e( 'Set this to change what Exchange sees as the customer expiration date, the Payment processor will still send webhooks if the payment expires or if new payments come through.', 'LION' ); ?>">i</span></label>
-							<input type="text" id="recurring-payment-subscriber-expires" class="datepicker" name="recurring-payment-subscriber-expires" value="<?php esc_attr_e( date_i18n( $dateformat, $expires ) ); ?>" />
+							<input type="text" id="recurring-payment-subscriber-expires" class="datepicker" name="recurring-payment-subscriber-expires" value="<?php esc_attr_e( $expires ); ?>" />
 							<input type="hidden" name="it_exchange_recurring-payment_date_picker_format" value="<?php echo $jquery_date_format; ?>" />
 							</p>
 							<p class="description">
