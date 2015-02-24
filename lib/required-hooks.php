@@ -420,7 +420,7 @@ function it_exchange_recurring_payments_after_payment_details_recurring_payments
 							<input type="hidden" name="it_exchange_recurring-payment_date_picker_format" value="<?php echo $jquery_date_format; ?>" />
 							</p>
 							<p class="description">
-							<?php _e( "Warning, changes to these options could seriously screw up this customer's experience on your website. Make sure you are filling out the correct information before saving any changes.", 'LION' ); ?>
+							<?php _e( "Warning:  Changes to these settings can potentially remove this customer's access to their products.", 'LION' ); ?>
 							</p>
 							<?php submit_button( 'Save Subscription Settings', 'secondary-button', 'recurring-payments-save' ); ?>
 							<?php wp_nonce_field( 'transaction-recurring-options', 'transaction-recurring-options-nonce', true ) ?>
