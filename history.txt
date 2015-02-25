@@ -57,3 +57,7 @@
     Fixing issue with empty() call on function
 1.0.23 - 2015-02-02 - Lew Ayotte
 	Tagging new version
+1.0.24 - 2015-02-25 - Lew Ayotte
+	Fixed bug when changing recurring settings w/ multicart enabled
+	Adding Subscriber ID, Subscriber Status, and Expiration fields to transaction post-edit screen... editable for customers who need to modify their customer's details
+
