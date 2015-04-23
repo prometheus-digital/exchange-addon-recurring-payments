@@ -62,3 +62,5 @@
 	Adding Subscriber ID, Subscriber Status, and Expiration fields to transaction post-edit screen... editable for customers who need to modify their customer's details
 1.0.25 - 2015-04-22 - Lew Ayotte
 	Remove the expired meta if payment comes through
+1.0.26 - 2015-04-23 - Packaging Bot (lib/updater)
+	Compatibility Fix: Updated plugin and theme update data format to match changes in WordPress 4.2.
