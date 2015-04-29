@@ -193,9 +193,6 @@ add_action( 'it_exchange_add_transaction_success', 'it_exchange_recurring_paymen
  * @return void
 */
 function it_exchange_recurring_payments_addon_update_expirations( $transaction ) {
-	global $ite_child_transaction;
-	
-	wp_mail( 'lew@ithemes.com', '$transaction 1', print_r( $transaction, true ) );
 	$transaction_method = it_exchange_get_transaction_method( $transaction->ID );
 	$ancestors = get_post_ancestors( $transaction->ID );
 	if ( !empty( $ancestors ) ) {
@@ -208,10 +205,6 @@ function it_exchange_recurring_payments_addon_update_expirations( $transaction )
 		$cart_object = get_post_meta( $transaction->ID, '_it_exchange_cart_object', true );
 	}
 	
-	wp_mail( 'lew@ithemes.com', '$transaction 2', print_r( $transaction, true ) );
-	wp_mail( 'lew@ithemes.com', '$ancestors', print_r( $ancestors, true ) );
-	wp_mail( 'lew@ithemes.com', '$cart_object', print_r( $cart_object, true ) );
-
 	foreach ( $cart_object->products as $product ) {
 		if ( it_exchange_product_supports_feature( $product['product_id'], 'recurring-payments' ) ) {			
 			if ( it_exchange_get_product_feature( $product['product_id'], 'recurring-payments', array( 'setting' => 'recurring-enabled' ) ) ) {
@@ -220,7 +213,7 @@ function it_exchange_recurring_payments_addon_update_expirations( $transaction )
 				$interval = it_exchange_get_product_feature( $product['product_id'], 'recurring-payments', array( 'setting' => 'interval' ) );
 				$interval_count = it_exchange_get_product_feature( $product['product_id'], 'recurring-payments', array( 'setting' => 'interval-count' ) );
 			
-				if ( $trial_enabled && empty( $ite_child_transaction ) ) {
+				if ( $trial_enabled && empty( $GLOBALS['it_exchange']['child_transaction'] ) ) {
 					$trial_interval_count = it_exchange_get_product_feature( $product['product_id'], 'recurring-payments', array( 'setting' => 'trial-interval-count' ) );
 					if ( 0 < $trial_interval_count ) { //This product has a trial period associated with it
 						$trial_interval = it_exchange_get_product_feature( $product['product_id'], 'recurring-payments', array( 'setting' => 'trial-interval' ) );
