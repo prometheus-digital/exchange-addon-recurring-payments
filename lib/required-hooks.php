@@ -194,7 +194,6 @@ add_action( 'it_exchange_add_transaction_success', 'it_exchange_recurring_paymen
 */
 function it_exchange_recurring_payments_addon_update_expirations( $transaction ) {
 	global $ite_child_transaction;
-	$ite_child_transaction = true;
 	
 	wp_mail( 'lew@ithemes.com', '$transaction 1', print_r( $transaction, true ) );
 	$transaction_method = it_exchange_get_transaction_method( $transaction->ID );
@@ -221,7 +220,7 @@ function it_exchange_recurring_payments_addon_update_expirations( $transaction )
 				$interval = it_exchange_get_product_feature( $product['product_id'], 'recurring-payments', array( 'setting' => 'interval' ) );
 				$interval_count = it_exchange_get_product_feature( $product['product_id'], 'recurring-payments', array( 'setting' => 'interval-count' ) );
 			
-				if ( $trial_enabled && !empty( $ite_child_transaction ) ) {
+				if ( $trial_enabled && empty( $ite_child_transaction ) ) {
 					$trial_interval_count = it_exchange_get_product_feature( $product['product_id'], 'recurring-payments', array( 'setting' => 'trial-interval-count' ) );
 					if ( 0 < $trial_interval_count ) { //This product has a trial period associated with it
 						$trial_interval = it_exchange_get_product_feature( $product['product_id'], 'recurring-payments', array( 'setting' => 'trial-interval' ) );
