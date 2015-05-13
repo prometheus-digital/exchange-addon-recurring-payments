@@ -64,3 +64,5 @@
 	Remove the expired meta if payment comes through
 1.0.26 - 2015-04-23 - Packaging Bot (lib/updater)
 	Compatibility Fix: Updated plugin and theme update data format to match changes in WordPress 4.2.
+1.1.0 - 2015-05-13 - Lew Ayotte
+	Fixes for Recurring Payments bugs
