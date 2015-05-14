@@ -66,3 +66,5 @@
 	Compatibility Fix: Updated plugin and theme update data format to match changes in WordPress 4.2.
 1.1.0 - 2015-05-13 - Lew Ayotte
 	Fixes for Recurring Payments bugs
+1.1.1 - 2015-05-14 - Lew Ayotte
+	Fix for quantity bug when auto-renew was enabled, but recurring was disabled
