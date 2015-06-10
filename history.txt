@@ -68,3 +68,5 @@
 	Fixes for Recurring Payments bugs
 1.1.1 - 2015-05-14 - Lew Ayotte
 	Fix for quantity bug when auto-renew was enabled, but recurring was disabled
+1.1.2 - 2015-06-10 - Lew Ayotte
+	Fixing some undefined indices
