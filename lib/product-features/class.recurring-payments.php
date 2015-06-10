@@ -226,14 +226,18 @@ class IT_Exchange_Recurring_Payments {
 		$enabled = !empty( $_POST['it_exchange_recurring_payments_trial_enabled'] ) ? 'on' : 'off';
 		it_exchange_update_product_feature( $product_id, 'recurring-payments', $enabled, array( 'setting' => 'trial-enabled' ) );
 		
-		it_exchange_update_product_feature( $product_id, 'recurring-payments', $_POST['it_exchange_recurring_payments_trial_interval'], array( 'setting' => 'trial-interval' ) );
-		it_exchange_update_product_feature( $product_id, 'recurring-payments', $_POST['it_exchange_recurring_payments_trial_interval_count'], array( 'setting' => 'trial-interval-count' ) );
+		$trial_interval = !empty( $_POST['it_exchange_recurring_payments_trial_interval'] ) ? $_POST['it_exchange_recurring_payments_trial_interval'] : false;
+		it_exchange_update_product_feature( $product_id, 'recurring-payments', $trial_interval, array( 'setting' => 'trial-interval' ) );
+		$trial_interval_count = !empty( $_POST['it_exchange_recurring_payments_trial_interval_count'] ) ? $_POST['it_exchange_recurring_payments_trial_interval_count'] : false;
+		it_exchange_update_product_feature( $product_id, 'recurring-payments', $trial_interval_count, array( 'setting' => 'trial-interval-count' ) );
 		
 		$enabled = !empty( $_POST['it_exchange_recurring_payments_auto_renew'] ) ? 'on' : 'off';
 		it_exchange_update_product_feature( $product_id, 'recurring-payments', $enabled, array( 'setting' => 'auto-renew' ) );
 		
-		it_exchange_update_product_feature( $product_id, 'recurring-payments', $_POST['it_exchange_recurring_payments_interval'], array( 'setting' => 'interval' ) );
-		it_exchange_update_product_feature( $product_id, 'recurring-payments', $_POST['it_exchange_recurring_payments_interval_count'], array( 'setting' => 'interval-count' ) );
+		$interval = !empty( $_POST['it_exchange_recurring_payments_interval'] ) ? $_POST['it_exchange_recurring_payments_interval'] : false;
+		it_exchange_update_product_feature( $product_id, 'recurring-payments', $interval, array( 'setting' => 'interval' ) );
+		$interval_count = !empty( $_POST['it_exchange_recurring_payments_interval_count'] ) ? $_POST['it_exchange_recurring_payments_interval_count'] : false;
+		it_exchange_update_product_feature( $product_id, 'recurring-payments', $interval_count, array( 'setting' => 'interval-count' ) );
 		
 	}
 
