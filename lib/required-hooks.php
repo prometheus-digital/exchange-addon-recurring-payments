@@ -165,11 +165,14 @@ add_filter( 'it_exchange_multi_item_cart_allowed', 'it_exchange_recurring_paymen
 function it_exchange_recurring_payments_multi_item_product_allowed( $allowed, $product_id ) {
 	if ( !$allowed )
 		return $allowed;
-	if ( it_exchange_product_supports_feature( $product_id, 'recurring-payments', array( 'setting' => 'recurring-enabled' ) ) ) {
-		if ( it_exchange_product_has_feature( $product_id, 'recurring-payments', array( 'setting' => 'recurring-enabled' ) ) ) {
-			if ( it_exchange_product_supports_feature( $product_id, 'recurring-payments', array( 'setting' => 'auto-renew' ) ) ) {
-				if ( it_exchange_product_has_feature( $product_id, 'recurring-payments', array( 'setting' => 'auto-renew' ) ) ) {
-					return false; //multi-cart should be disabled if product has auto-renewing feature
+	
+	if ( 'membership-product-type' === it_exchange_get_product_type( $product_id ) ) {		
+		if ( it_exchange_product_supports_feature( $product_id, 'recurring-payments', array( 'setting' => 'recurring-enabled' ) ) ) {
+			if ( it_exchange_product_has_feature( $product_id, 'recurring-payments', array( 'setting' => 'recurring-enabled' ) ) ) {
+				if ( it_exchange_product_supports_feature( $product_id, 'recurring-payments', array( 'setting' => 'auto-renew' ) ) ) {
+					if ( it_exchange_product_has_feature( $product_id, 'recurring-payments', array( 'setting' => 'auto-renew' ) ) ) {
+						return false; //multi-cart should be disabled if product has auto-renewing feature
+					}
 				}
 			}
 		}
