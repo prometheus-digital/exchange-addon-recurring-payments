@@ -70,3 +70,5 @@
 	Fix for quantity bug when auto-renew was enabled, but recurring was disabled
 1.1.2 - 2015-06-10 - Lew Ayotte
 	Fixing some undefined indices
+1.2.0 - 2015-06-30 - Lew Ayotte
+	Only limit autorenewing product quantity changes to membership products
