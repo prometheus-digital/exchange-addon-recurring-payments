@@ -12,8 +12,9 @@
  * @since 1.0.0
  * @param object $customer iThemes Exchange Customer Object
  * @param string $status Subscription Status
+ * @param object $transaction Transaction
 */
-function it_exchange_recurring_payments_customer_notification( $customer, $status ) {
+function it_exchange_recurring_payments_customer_notification( $customer, $status, $transaction=false ) {
 	
 	$settings = it_exchange_get_option( 'addon_recurring_payments', true );
 	
@@ -34,7 +35,7 @@ function it_exchange_recurring_payments_customer_notification( $customer, $statu
 		
 	}
 		
-	do_action( 'it_exchange_recurring_payments_customer_notification', $customer, $status );
+	do_action( 'it_exchange_recurring_payments_customer_notification', $customer, $status, $transaction );
 	do_action( 'it_exchange_send_email_notification', $customer->id, $subject, $content );
 	
 }
