@@ -72,3 +72,5 @@
 	Fixing some undefined indices
 1.2.0 - 2015-06-30 - Lew Ayotte
 	Only limit autorenewing product quantity changes to membership products
+1.3.0 - 2015-07-07 - Lew Ayotte
+	Adding new variable to email notification and action hook to help with email shortcodes
