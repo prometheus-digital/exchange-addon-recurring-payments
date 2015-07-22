@@ -363,12 +363,10 @@ add_action( 'it_exchange_after_payment_details', 'it_exchange_recurring_payments
  * @return string iThemes Exchange recurring label
 */
 function it_exchange_recurring_payments_api_theme_product_base_price( $base_price, $product_id ) {
-	if ( 'it_exchange_prod' === get_post_type() )
-		return $base_price . it_exchange_recurring_payments_addon_recurring_label( $product_id );
-	else
-		return $base_price;
+	return $base_price . it_exchange_recurring_payments_addon_recurring_label( $product_id );
 }
-add_filter( 'it_exchange_api_theme_product_base_price', 'it_exchange_recurring_payments_api_theme_product_base_price', 10, 2 );
+add_filter( 'it_exchange_api_theme_product_base_price', 'it_exchange_recurring_payments_api_theme_product_base_price', 100, 2 );
+add_filter( 'it_exchange_customer_pricing_product_price', 'it_exchange_recurring_payments_api_theme_product_base_price', 10, 2 );
 
 /**
  * Returns the transaction customer's Recurring Payments Autorenewal details
