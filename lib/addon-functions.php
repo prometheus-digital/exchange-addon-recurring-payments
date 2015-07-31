@@ -92,11 +92,19 @@ function it_exchange_recurring_payments_addon_recurring_label( $product_id ) {
 			$auto_renew           = it_exchange_get_product_feature( $product_id, 'recurring-payments', array( 'setting' => 'auto-renew' ) );
 			$interval             = it_exchange_get_product_feature( $product_id, 'recurring-payments', array( 'setting' => 'interval' ) );
 			$interval_count       = it_exchange_get_product_feature( $product_id, 'recurring-payments', array( 'setting' => 'interval-count' ) );
+			
+		    $interval_types = array(
+			    'day'   => __( 'Day', 'LION' ),
+			    'week'  => __( 'Week', 'LION' ),
+			    'month' => __( 'Month', 'LION' ),
+			    'year'  => __( 'Year', 'LION' ),
+			);
+			$interval_types = apply_filters( 'it_exchange_recurring_payments_interval_types_labels', $interval_types );
 		
 			if ( 1 == $interval_count ) {
-				$label .= '&nbsp;' . sprintf( __( 'every %s', 'LION' ), it_exchange_recurring_payments_addon_interval_string( $interval, $interval_count ) );
+				$label .= '&nbsp;' . sprintf( __( 'every %s', 'LION' ), it_exchange_recurring_payments_addon_interval_string( $interval_types[$interval], $interval_count ) );
 			} else if ( 0 < $interval_count ) {
-				$label .= '&nbsp;' . sprintf( __( 'every %s %s', 'LION' ), $interval_count, it_exchange_recurring_payments_addon_interval_string( $interval, $interval_count ) );
+				$label .= '&nbsp;' . sprintf( __( 'every %s %s', 'LION' ), $interval_count, it_exchange_recurring_payments_addon_interval_string( $interval_types[$interval], $interval_count ) );
 			}
 
 			if ( $trial_enabled ) {	
@@ -120,7 +128,7 @@ function it_exchange_recurring_payments_addon_recurring_label( $product_id ) {
 				$show_trial = apply_filters( 'it_exchange_recurring_payments_addon_recurring_label_show_trial', $show_trial, $product_id );
 	
 				if ( $show_trial && 0 < $trial_interval_count ) {
-					$label .= '&nbsp;' . sprintf( __( '(after %s %s free)', 'LION' ), $trial_interval_count, it_exchange_recurring_payments_addon_interval_string( $trial_interval, $trial_interval_count ) );
+					$label .= '&nbsp;' . sprintf( __( '(after %s %s free)', 'LION' ), $trial_interval_count, it_exchange_recurring_payments_addon_interval_string( $interval_types[$trial_interval], $trial_interval_count ) );
 				}
 			}
 			
