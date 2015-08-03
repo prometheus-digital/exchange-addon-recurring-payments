@@ -1,7 +1,7 @@
-1.0.1 - 2013-09-19 - Lew Ayotte
-	Added hooks and styling to modify Payments Edit screen to show recurring details
 1.0.0 - 2013-09-17 - Lew Ayotte
 	Initial Release
+1.0.1 - 2013-09-19 - Lew Ayotte
+	Added hooks and styling to modify Payments Edit screen to show recurring details
 1.0.2 - 2013-09-20 - Packaging Bot
 	Updated lib/updater to version 1.0.3
 1.0.3 - 2013-10-02 - Packaging Bot (lib/updater)
@@ -78,3 +78,5 @@
 	Enhancement: Updated link to iThemes support.
 1.4.0 - 2015-07-27 - Lew Ayotte
 	Adding functionality to show recurring payment labels on customer pricing
+1.4.1 - 2015-08-03 - Lew Ayotte
+	Fixing daily, weekly, monthly, yearly labels
