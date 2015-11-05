@@ -15,7 +15,7 @@ class IT_Exchange_Recurring_Payments {
 	 *
 	 * @return void
 	*/
-	function IT_Exchange_Recurring_Payments() {
+	function __construct() {
 		if ( is_admin() ) {
 			add_action( 'load-post-new.php', array( $this, 'init_feature_metaboxes' ) );
 			add_action( 'load-post.php', array( $this, 'init_feature_metaboxes' ) );
@@ -26,6 +26,17 @@ class IT_Exchange_Recurring_Payments {
 		add_action( 'it_exchange_enabled_addons_loaded', array( $this, 'add_feature_support_to_product_types' ) );
 		add_filter( 'it_exchange_product_has_feature_recurring-payments', array( $this, 'product_has_feature') , 9, 3 );
 		add_filter( 'it_exchange_product_supports_feature_recurring-payments', array( $this, 'product_supports_feature') , 9, 3 );
+	}
+
+	/**
+	 * Deprecated Constructor. Registers hooks
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return void
+	*/
+	function IT_Exchange_Recurring_Payments() {
+		self::__construct();
 	}
 
 	/**

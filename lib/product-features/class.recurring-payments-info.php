@@ -15,12 +15,23 @@ class IT_Exchange_Recurring_Payments_Info {
 	 *
 	 * @return void
 	*/
-	function IT_Exchange_Recurring_Payments_Info() {
+	function __construct() {
 		if ( is_admin() ) {
 			add_action( 'load-post-new.php', array( $this, 'init_feature_metaboxes' ) );
 			add_action( 'load-post.php', array( $this, 'init_feature_metaboxes' ) );
 		}
 		add_action( 'it_exchange_enabled_addons_loaded', array( $this, 'add_feature_support_to_product_types' ) );
+	}
+
+	/**
+	 * Deprecated Constructor. Registers hooks
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return void
+	*/
+	function IT_Exchange_Recurring_Payments_Info() {
+		self::__construct();
 	}
 
 	/**

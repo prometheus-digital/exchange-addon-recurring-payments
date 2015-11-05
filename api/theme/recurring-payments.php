@@ -54,11 +54,22 @@ class IT_Theme_API_Recurring_Payments implements IT_Theme_API {
 	 *
 	 * @return void
 	*/
-	function IT_Theme_API_Recurring_Payments () {
+	function __construct () {
 		$this->_transaction         = empty( $GLOBALS['it_exchange']['transaction'] ) ? false : $GLOBALS['it_exchange']['transaction'];
 		$this->_transaction_product = empty( $GLOBALS['it_exchange']['transaction_product'] ) ? false : $GLOBALS['it_exchange']['transaction_product'];
 		if ( is_user_logged_in() )
 			$this->_customer = it_exchange_get_current_customer();
+	}
+
+	/**
+	 * Deprecated Constructor
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return void
+	*/
+	function IT_Theme_API_Recurring_Payments () {
+		self::__construct();
 	}
 
 	/**
