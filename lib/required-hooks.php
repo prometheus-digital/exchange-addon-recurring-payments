@@ -44,7 +44,8 @@ function it_exchange_recurring_payments_addon_admin_wp_enqueue_styles( $hook_suf
 	global $wp_version;
 	
 	if ( isset( $post_type ) && 'it_exchange_prod' === $post_type ) {
-		wp_enqueue_style( 'it-exchange-recurring-payments-addon-add-edit-product', ITUtility::get_url_from_file( dirname( __FILE__ ) ) . '/styles/add-edit-product.css' );
+		// no longer needed as of 1.6.1
+		//wp_enqueue_style( 'it-exchange-recurring-payments-addon-add-edit-product', ITUtility::get_url_from_file( dirname( __FILE__ ) ) . '/styles/add-edit-product.css' );
 		
 		if ( $wp_version <= 3.7 ) {
 			wp_enqueue_style( 'it-exchange-recurring-payments-addon-add-edit-product-pre-3-8', ITUtility::get_url_from_file( dirname( __FILE__ ) ) . '/styles/add-edit-product-pre-3-8.css' );

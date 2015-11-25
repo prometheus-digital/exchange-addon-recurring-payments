@@ -6,14 +6,17 @@
 */
 
 
+/**
+ * Class IT_Exchange_Recurring_Payments_Info
+ *
+ * @deprecated
+ */
 class IT_Exchange_Recurring_Payments_Info {
 
 	/**
 	 * Constructor. Registers hooks
 	 *
 	 * @since 1.0.0
-	 *
-	 * @return void
 	*/
 	function __construct() {
 		if ( is_admin() ) {
@@ -120,4 +123,4 @@ class IT_Exchange_Recurring_Payments_Info {
 		<?php
 	}
 }
-$IT_Exchange_Recurring_Payments_Info = new IT_Exchange_Recurring_Payments_Info();
+//$IT_Exchange_Recurring_Payments_Info = new IT_Exchange_Recurring_Payments_Info();
