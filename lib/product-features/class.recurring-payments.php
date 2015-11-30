@@ -155,7 +155,7 @@ class IT_Exchange_Recurring_Payments {
 				        <?php _e( 'Recurs every...', 'LION' ); ?>
 			        </label>
 			        &nbsp;
-			        <input id="it-exchange-recurring-payments-interval-count" type="number" min="1" class="small-input" name="it_exchange_recurring_payments_interval_count" value="<?php echo $interval_count; ?>" placeholder="#" />
+			        <input id="it-exchange-recurring-payments-interval-count" type="number" min="0" class="small-input" name="it_exchange_recurring_payments_interval_count" value="<?php echo $interval_count; ?>" placeholder="#" />
 			        <select id="it-exchange-recurring-payments-interval" name="it_exchange_recurring_payments_interval">
 				        <?php
 					    foreach( $interval_types as $name => $label ) {
@@ -194,7 +194,7 @@ class IT_Exchange_Recurring_Payments {
 					        <?php _e( 'Free trial for...', 'LION' ); ?>
 				        </label>
 				        &nbsp;
-				        <input id="it-exchange-recurring-payments-trial-interval-count" type="number" min="1" class="small-input" name="it_exchange_recurring_payments_trial_interval_count" value="<?php echo $trial_interval_count; ?>" placeholder="#" />
+				        <input id="it-exchange-recurring-payments-trial-interval-count" type="number" min="0" class="small-input" name="it_exchange_recurring_payments_trial_interval_count" value="<?php echo $trial_interval_count; ?>" placeholder="#" />
 				        <select id="it-exchange-recurring-payments-trial-interval" name="it_exchange_recurring_payments_trial_interval">
 					        <?php
 						    foreach( $interval_types as $name => $label ) {
