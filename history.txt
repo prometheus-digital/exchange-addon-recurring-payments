@@ -84,3 +84,6 @@
 	Updating Updater script
 1.6.0 - 2015-11-05 - Lew Ayotte
 	PHP7 Updates
+1.7.0 - 2015-11-30 - Timothy Jacobs, Lew Ayotte
+	Set min=0 for recurs every... input
+	Remove 'Recurring Payments has moved' notice
