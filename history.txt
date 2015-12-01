@@ -87,3 +87,5 @@
 1.7.0 - 2015-11-30 - Timothy Jacobs, Lew Ayotte
 	Set min=0 for recurs every... input
 	Remove 'Recurring Payments has moved' notice
+1.7.1 - 2015-12-01 - Lew AYotte
+	Fixing typo in min='0'
