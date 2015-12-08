@@ -368,6 +368,7 @@ function it_exchange_recurring_payments_api_theme_product_base_price( $base_pric
 }
 add_filter( 'it_exchange_api_theme_product_base_price', 'it_exchange_recurring_payments_api_theme_product_base_price', 100, 2 );
 add_filter( 'it_exchange_customer_pricing_product_price', 'it_exchange_recurring_payments_api_theme_product_base_price', 10, 2 );
+add_filter( 'it_exchange_admin_product_list_price_column', 'it_exchange_recurring_payments_api_theme_product_base_price', 10, 2 );
 
 /**
  * Returns the transaction customer's Recurring Payments Autorenewal details
