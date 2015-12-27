@@ -402,7 +402,7 @@ function it_exchange_recurring_payments_after_payment_details_recurring_payments
 				}
 				?>
 				<div class="transaction-recurring-options clearfix spacing-wrapper">
-					<div class="recurring-options left">
+					<div class="recurring-options">
 						<h3><?php _e( 'Subscription Settings', 'LION' ); ?></h3>
 						<form action="" method="POST">
 							<?php
