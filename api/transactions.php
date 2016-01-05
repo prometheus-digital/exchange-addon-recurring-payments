@@ -71,6 +71,7 @@ function it_exchange_recurring_payments_addon_update_transaction_subscription_st
 	
 	$customer = new IT_Exchange_Customer( $transaction->customer_id );
 	$subscription_ids = $customer->get_customer_meta( 'subscription_ids' );
+	$old_status = $subscription_ids[$subscriber_id]['status'];
 	$subscription_ids[$subscriber_id]['status'] = $subscriber_status;
 	$customer->update_customer_meta( 'subscription_ids', $subscription_ids );
 	
@@ -90,8 +91,8 @@ function it_exchange_recurring_payments_addon_update_transaction_subscription_st
 		
 	}
 
-	do_action( 'it_exchange_recurring_payments_addon_update_transaction_subscriber_status', $transaction, $subscriber_status );
-	do_action( 'it_exchange_recurring_payments_addon_update_transaction_subscriber_status_' . $transaction->transaction_method, $transaction, $subscriber_status );
+	do_action( 'it_exchange_recurring_payments_addon_update_transaction_subscriber_status', $transaction, $subscriber_status, $old_status );
+	do_action( 'it_exchange_recurring_payments_addon_update_transaction_subscriber_status_' . $transaction->transaction_method, $transaction, $subscriber_status, $old_status );
 	return $subscriber_status;
 	
 }
