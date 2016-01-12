@@ -89,3 +89,6 @@
 	Remove 'Recurring Payments has moved' notice
 1.7.1 - 2015-12-01 - Lew AYotte
 	Fixing typo in min='0'
+1.7.2 - 2016-01-12 - Timothy Jacobs
+	Tweak: Display reccurring price label in products table
+	Tweak: Add old status to update subscription status hook
