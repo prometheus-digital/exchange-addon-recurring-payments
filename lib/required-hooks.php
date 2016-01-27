@@ -200,7 +200,9 @@ add_action( 'it_exchange_add_transaction_success', 'it_exchange_recurring_paymen
  * Updates Expirations dates upon successful payments of recurring products
  *
  * @since 1.0.0
- * @param int $transaction iThemes Exchange Transaction Object 
+ *
+ * @param IT_Exchange_Transaction $transaction iThemes Exchange Transaction Object
+ *
  * @return void
 */
 function it_exchange_recurring_payments_addon_update_expirations( $transaction ) {

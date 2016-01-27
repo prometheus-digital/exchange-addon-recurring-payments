@@ -17,12 +17,75 @@ class IT_Exchange_Subscription {
 	private $transaction;
 
 	/**
+	 * @var IT_Exchange_Recurring_Profile
+	 */
+	private $recurring_profile;
+
+	/**
+	 * @var IT_Exchange_Recurring_Profile
+	 */
+	private $trial_profile;
+
+	/**
 	 * IT_Exchange_Subscription constructor.
 	 *
 	 * @param IT_Exchange_Transaction $transaction
 	 */
 	public function __construct( IT_Exchange_Transaction $transaction ) {
 		$this->transaction = $transaction;
+
+		$type  = $transaction->get_transaction_meta( 'interval' );
+		$count = $transaction->get_transaction_meta( 'interval_count' );
+
+		if ( $count > 0 ) {
+			$this->recurring_profile = new IT_Exchange_Recurring_Profile( $type, $count );
+
+			if ( $transaction->get_transaction_meta( 'has_trial' ) ) {
+				$this->trial_profile = new IT_Exchange_Recurring_Profile( $type, $count );
+			}
+		}
+	}
+
+	/**
+	 * Create the Subscription data.
+	 *
+	 * @since 1.8
+	 *
+	 * @param IT_Exchange_Transaction $transaction
+	 *
+	 * @return IT_Exchange_Subscription
+	 */
+	public static function create( IT_Exchange_Transaction $transaction ) {
+
+		foreach ( $transaction->get_products() as $product ) {
+
+			$product = it_exchange_get_product( $product['product_id'] );
+
+			break;
+		}
+
+		if ( ! isset( $product ) ) {
+			throw new UnexpectedValueException();
+		}
+
+		if ( ! $product->supports_feature( 'recurring-payments' ) ) {
+			throw new UnexpectedValueException();
+		}
+
+		if ( $product->get_feature( 'recurring-payments', array( 'setting' => 'recurring-enabled' ) ) ) {
+
+			$trial_enabled  = $product->get_feature( 'recurring-payments', array( 'setting' => 'trial-enabled' ) );
+			$auto_renew     = $product->get_feature( 'recurring-payments', array( 'setting' => 'auto-renew' ) );
+			$interval       = $product->get_feature( 'recurring-payments', array( 'setting' => 'interval' ) );
+			$interval_count = $product->get_feature( 'recurring-payments', array( 'setting' => 'interval-count' ) );
+
+			$transaction->update_transaction_meta( 'has_trial', $trial_enabled );
+			$transaction->update_transaction_meta( 'is_auto_renewing', $auto_renew );
+			$transaction->update_transaction_meta( 'interval', $interval );
+			$transaction->update_transaction_meta( 'interval_count', $interval_count );
+		}
+
+		return new self( $transaction );
 	}
 
 	/**
@@ -57,10 +120,10 @@ class IT_Exchange_Subscription {
 	 *
 	 * @since 1.8
 	 *
-	 * @return IT_Exchange_Recurring_Profile
+	 * @return IT_Exchange_Recurring_Profile|null
 	 */
 	public function get_recurring_profile() {
-
+		return $this->recurring_profile;
 	}
 
 	/**
@@ -71,6 +134,7 @@ class IT_Exchange_Subscription {
 	 * @return IT_Exchange_Recurring_Profile|null
 	 */
 	public function get_trial_profile() {
+		return $this->trial_profile;
 	}
 
 	/**
@@ -82,6 +146,15 @@ class IT_Exchange_Subscription {
 	 */
 	public function is_trial_period() {
 
+		if ( ! $this->get_trial_profile() ) {
+			return false;
+		}
+
+		$start         = (int) $this->get_start_date()->format( 'U' );
+		$now           = time();
+		$trial_seconds = $this->get_trial_profile()->get_interval_seconds();
+
+		return $now < ( $start + $trial_seconds );
 	}
 
 	/**
