@@ -54,6 +54,9 @@ function it_exchange_get_recurring_payments_addon_transaction_subscription_id( $
  * Updates a transaction with a new subscriber_status
  *
  * @since 1.0.0
+ *
+ * @deprecated 1.8
+ *
  * @param mixed $transaction iThemes Exchange Transaction Object or ID
  * @param string $subscriber_id Payment Gateway Subscription ID
  * @param string $subscriber_status Payment Gateway Subscription status
@@ -61,38 +64,23 @@ function it_exchange_get_recurring_payments_addon_transaction_subscription_id( $
 */
 function it_exchange_recurring_payments_addon_update_transaction_subscription_status( $transaction, $subscriber_id, $subscriber_status ) {
 
-	if ( 'IT_Exchange_Transaction' != get_class( $transaction ) )
-		$transaction = it_exchange_get_transaction( $transaction );
+	_deprecated_function( 'it_exchange_recurring_payments_addon_update_transaction_subscription_status',
+		'1.8', 'IT_Exchange_Subscription::set_status' );
 
-	if ( ! $transaction->ID )
+	$transaction = it_exchange_get_transaction( $transaction );
+
+	if ( ! $transaction->ID ) {
 		return false;
-		
-	$transaction->update_transaction_meta( 'subscriber_status', $subscriber_status );
-	
-	$customer = new IT_Exchange_Customer( $transaction->customer_id );
-	$subscription_ids = $customer->get_customer_meta( 'subscription_ids' );
-	$old_status = isset( $subscription_ids[$subscriber_id]['status'] ) ? $subscription_ids[$subscriber_id]['status'] : '';
-	$subscription_ids[$subscriber_id]['status'] = $subscriber_status;
-	$customer->update_customer_meta( 'subscription_ids', $subscription_ids );
-	
-	switch ( $subscriber_status ) {
-	
-		case 'deactivated' : //expired
-			it_exchange_recurring_payments_customer_notification( $customer, 'deactivate', $transaction );
-			break;
-			
-		case 'cancelled' :
-			it_exchange_recurring_payments_customer_notification( $customer, 'cancel', $transaction );
-			break;
-			
-		case 'active' :
-			it_exchange_recurring_payments_addon_update_expirations( $transaction );
-			break;
-		
 	}
 
-	do_action( 'it_exchange_recurring_payments_addon_update_transaction_subscriber_status', $transaction, $subscriber_status, $old_status );
-	do_action( 'it_exchange_recurring_payments_addon_update_transaction_subscriber_status_' . $transaction->transaction_method, $transaction, $subscriber_status, $old_status );
+	$subscription = new IT_Exchange_Subscription( $transaction );
+
+	if ( $subscription->get_status() === $subscriber_status ) {
+		return false;
+	}
+
+	$subscription->set_status( $subscriber_status );
+
 	return $subscriber_status;
 	
 }

@@ -94,7 +94,7 @@ class IT_Exchange_Recurring_Profile {
 				$seconds = DAY_IN_SECONDS * 7;
 				break;
 			case self::TYPE_MONTH:
-				$seconds = MONTH_IN_SECONDS;
+				$seconds = DAY_IN_SECONDS * 30;
 				break;
 			case self::TYPE_YEAR:
 				$seconds = YEAR_IN_SECONDS;

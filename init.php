@@ -5,6 +5,9 @@
  * @since 1.0.0
 */
 
+require_once ( dirname( __FILE__ ) . '/lib/class.recurring-profile.php' );
+require_once ( dirname( __FILE__ ) . '/lib/class.subscription.php' );
+
 /**
  * New API functions.
 */

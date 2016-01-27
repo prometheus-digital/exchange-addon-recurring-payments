@@ -255,6 +255,77 @@ function it_exchange_recurring_payments_addon_update_expirations( $transaction )
 }
 
 /**
+ * Update the status when the status hook is fired.
+ *
+ * This really is for BC as IT_Exchange_Subscription::set_status() should always be used.
+ *
+ * @since 1.8
+ *
+ * @param IT_Exchange_Transaction $transaction
+ * @param string $sub_id
+ * @param string $subscriber_status
+ */
+function it_exchange_recurring_payments_update_status( $transaction, $sub_id, $subscriber_status ) {
+
+	$subscription = new IT_Exchange_Subscription( it_exchange_get_transaction( $transaction ) );
+	$subscription->set_status( $subscriber_status );
+}
+
+add_action( 'it_exchange_update_transaction_subscription_status', 'it_exchange_recurring_payments_update_status', 10, 3 );
+
+/**
+ * Send status notifications whenever a subscription status changes.
+ *
+ * @since 1.8
+ *
+ * @param string                   $new_status
+ * @param string                   $old_status
+ * @param IT_Exchange_Subscription $subscription
+ */
+function it_exchange_recurring_payments_send_status_notifications( $new_status, $old_status, IT_Exchange_Subscription $subscription ) {
+
+	$transaction = $subscription->get_transaction();
+	$customer = $subscription->get_customer();
+
+	switch ( $new_status ) {
+
+		case 'deactivated' : //expired
+			it_exchange_recurring_payments_customer_notification( $customer, 'deactivate', $transaction );
+			break;
+
+		case 'cancelled' :
+			it_exchange_recurring_payments_customer_notification( $customer, 'cancel', $transaction );
+			break;
+
+		case 'active' :
+			it_exchange_recurring_payments_addon_update_expirations( $transaction );
+			break;
+
+	}
+}
+
+add_action( 'it_exchange_transition_subscription_status', 'it_exchange_recurring_payments_send_status_notifications', 10, 3 );
+
+/**
+ * Fire deprecated hooks.
+ *
+ * @since 1.8
+ *
+ * @param string                   $new_status
+ * @param string                   $old_status
+ * @param IT_Exchange_Subscription $subscription
+ */
+function it_exchange_recurring_payments_deprecated_hooks( $new_status, $old_status, IT_Exchange_Subscription $subscription ) {
+
+	$transaction = $subscription->get_transaction();
+
+	do_action( 'it_exchange_recurring_payments_addon_update_transaction_subscriber_status', $transaction, $new_status, $old_status );
+	do_action( 'it_exchange_recurring_payments_addon_update_transaction_subscriber_status_' . $transaction->transaction_method, $transaction, $new_status, $old_status );
+}
+
+add_action( 'it_exchange_transition_subscription_status', 'it_exchange_recurring_payments_deprecated_hooks', 10, 3 );
+
+/**
  * Special hook that adds a filter to another hook at the right place in the theme API
  *
  * @since 1.0.0
@@ -315,11 +386,11 @@ function it_exchange_recurring_payments_handle_expired() {
 			$transaction->update_transaction_meta( 'subscription_expired_' . $product_id, $result->meta_value );
 			$transaction->delete_transaction_meta( 'subscription_expires_' . $product_id );
 			$customer = it_exchange_get_transaction_customer( $transaction->ID );
-			it_exchange_recurring_payments_addon_update_transaction_subscription_status( $transaction, $customer->id, 'deactivated' );
+
+			$subscription = new IT_Exchange_Subscription( $transaction );
+			$subscription->set_status( IT_Exchange_Subscription::STATUS_DEACTIVATED );
 		}
-		
 	}
-	
 }
 
 /**

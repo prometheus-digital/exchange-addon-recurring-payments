@@ -11,6 +11,11 @@
  */
 class IT_Exchange_Subscription {
 
+	const STATUS_ACTIVE = 'active';
+	const STATUS_SUSPENDED = 'suspended';
+	const STATUS_CANCELLED = 'cancelled';
+	const STATUS_DEACTIVATED = 'deactivated';
+
 	/**
 	 * @var IT_Exchange_Transaction
 	 */
@@ -150,11 +155,7 @@ class IT_Exchange_Subscription {
 			return false;
 		}
 
-		$start         = (int) $this->get_start_date()->format( 'U' );
-		$now           = time();
-		$trial_seconds = $this->get_trial_profile()->get_interval_seconds();
-
-		return $now < ( $start + $trial_seconds );
+		return ! $this->get_transaction()->has_children();
 	}
 
 	/**
@@ -229,6 +230,67 @@ class IT_Exchange_Subscription {
 	}
 
 	/**
+	 * Get the subscription status.
+	 *
+	 * @since 1.8
+	 *
+	 * @param bool $label
+	 *
+	 * @return string
+	 */
+	public function get_status( $label = false ) {
+
+		$status = $this->get_transaction()->get_transaction_meta( 'subscriber_status' );
+
+		if ( $label ) {
+			$labels = self::get_statuses();
+
+			return $labels[ $status ];
+		}
+
+		return $status;
+	}
+
+	/**
+	 * Set the subscriber status.
+	 *
+	 * @since 1.8
+	 *
+	 * @param string $new_status
+	 *
+	 * @return string
+	 */
+	public function set_status( $new_status ) {
+
+		if ( $new_status === $this->get_status() ) {
+			throw new InvalidArgumentException( '$new_status === $old_status' );
+		}
+
+		$subscriber_id = $this->get_subscriber_id();
+
+		$this->get_transaction()->update_transaction_meta( 'subscriber_status', $new_status );
+		$subscriptions = $this->get_customer()->get_customer_meta( 'subscription_ids' );
+
+		$old_status = isset( $subscriptions[ $subscriber_id ]['status'] ) ? $subscriptions[ $subscriber_id ]['status'] : '';
+
+		$subscriptions[ $this->get_subscriber_id() ]['status'] = $new_status;
+		$this->get_customer()->update_customer_meta( 'subscription_ids', $subscriptions );
+
+		/**
+		 * Fires when a subscription's status is changed.
+		 *
+		 * @since 1.8
+		 *
+		 * @param string                   $new_status
+		 * @param string                   $old_status
+		 * @param IT_Exchange_Subscription $this
+		 */
+		do_action( 'it_exchange_transition_subscription_status', $new_status, $old_status, $this );
+
+		return $old_status;
+	}
+
+	/**
 	 * Cancel this subscription.
 	 *
 	 * @since 1.8
@@ -288,5 +350,14 @@ class IT_Exchange_Subscription {
 	 * @throws UnexpectedValueException If this subscription does not have an installment plan.
 	 */
 	public function get_number_installments_remaining() {
+	}
+
+	public static function get_statuses() {
+		return array(
+			self::STATUS_ACTIVE      => __( 'Active', 'LION' ),
+			self::STATUS_SUSPENDED   => __( 'Suspended', 'LION' ),
+			self::STATUS_DEACTIVATED => __( 'Deactivated', 'LION' ),
+			self::STATUS_CANCELLED   => __( 'Cancelled', 'LION' )
+		);
 	}
 }
