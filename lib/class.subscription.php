@@ -46,13 +46,23 @@ class IT_Exchange_Subscription {
 		$this->transaction = $transaction;
 		$this->product     = $product;
 
-		$type  = $transaction->get_transaction_meta( 'interval_' . $product->ID );
-		$count = $transaction->get_transaction_meta( 'interval_count_' . $product->ID );
+		if ( ! $transaction->meta_exists( 'interval_' . $product->ID ) ) {
+			$interval = $product->get_feature( 'recurring-payments', array( 'setting' => 'interval' ) );
+			$transaction->update_meta( 'interval_' . $product->ID, $interval );
+		}
+
+		if ( ! $transaction->meta_exists( 'interval_count_' . $product->ID ) ) {
+			$interval_count = $product->get_feature( 'recurring-payments', array( 'setting' => 'interval-count' ) );
+			$transaction->update_meta( 'interval_count_' . $product->ID, $interval_count );
+		}
+
+		$type  = $transaction->get_meta( 'interval_' . $product->ID );
+		$count = $transaction->get_meta( 'interval_count_' . $product->ID );
 
 		if ( $count > 0 ) {
 			$this->recurring_profile = new IT_Exchange_Recurring_Profile( $type, $count );
 
-			if ( $transaction->get_transaction_meta( 'has_trial' ) ) {
+			if ( $transaction->get_meta( 'has_trial' ) ) {
 				$this->trial_profile = new IT_Exchange_Recurring_Profile( $type, $count );
 			}
 		}
@@ -110,10 +120,10 @@ class IT_Exchange_Subscription {
 		$interval       = $product->get_feature( 'recurring-payments', array( 'setting' => 'interval' ) );
 		$interval_count = $product->get_feature( 'recurring-payments', array( 'setting' => 'interval-count' ) );
 
-		$transaction->update_transaction_meta( 'has_trial_' . $product->ID, $trial_enabled );
-		$transaction->update_transaction_meta( 'is_auto_renewing_' . $product->ID, $auto_renew );
-		$transaction->update_transaction_meta( 'interval_' . $product->ID, $interval );
-		$transaction->update_transaction_meta( 'interval_count_' . $product->ID, $interval_count );
+		$transaction->update_meta( 'has_trial_' . $product->ID, $trial_enabled );
+		$transaction->update_meta( 'is_auto_renewing_' . $product->ID, $auto_renew );
+		$transaction->update_meta( 'interval_' . $product->ID, $interval );
+		$transaction->update_meta( 'interval_count_' . $product->ID, $interval_count );
 
 		return new self( $transaction, $product );
 	}
@@ -198,7 +208,7 @@ class IT_Exchange_Subscription {
 	 */
 	public function get_expiry_date() {
 
-		$expires = $this->get_transaction()->get_transaction_meta( 'subscription_expires_' . $this->get_product()->ID );
+		$expires = $this->get_transaction()->get_meta( 'subscription_expires_' . $this->get_product()->ID );
 
 		if ( $expires ) {
 			return new DateTime( "@$expires", new DateTimeZone( 'UTC' ) );
@@ -215,7 +225,7 @@ class IT_Exchange_Subscription {
 	 * @return string
 	 */
 	public function get_subscriber_id() {
-		return $this->get_transaction()->get_transaction_meta( 'subscriber_id' );
+		return $this->get_transaction()->get_meta( 'subscriber_id' );
 	}
 
 	/**
@@ -246,7 +256,15 @@ class IT_Exchange_Subscription {
 	 * @return bool
 	 */
 	public function is_auto_renewing() {
-		return (bool) $this->get_transaction()->get_transaction_meta( 'subscription_autorenew_' . $this->get_product()->ID );
+
+		if ( ! $this->get_transaction()->meta_exists( 'subscription_autorenew_' . $this->get_product()->ID ) ) {
+
+			$auto_renew = (bool) $this->get_product()->get_feature( 'recurring-payments', array( 'setting' => 'auto-renew' ) );
+
+			$this->get_transaction()->update_meta( 'subscription_autorenew_' . $this->get_product()->ID, $auto_renew );
+		}
+
+		return (bool) $this->get_transaction()->get_meta( 'subscription_autorenew_' . $this->get_product()->ID );
 	}
 
 	/**
@@ -260,7 +278,7 @@ class IT_Exchange_Subscription {
 	 */
 	public function get_status( $label = false ) {
 
-		$status = $this->get_transaction()->get_transaction_meta( 'subscriber_status' );
+		$status = $this->get_transaction()->get_meta( 'subscriber_status' );
 
 		if ( $label ) {
 			$labels = self::get_statuses();
@@ -288,7 +306,7 @@ class IT_Exchange_Subscription {
 
 		$subscriber_id = $this->get_subscriber_id();
 
-		$this->get_transaction()->update_transaction_meta( 'subscriber_status', $new_status );
+		$this->get_transaction()->update_meta( 'subscriber_status', $new_status );
 		$subscriptions = $this->get_customer()->get_customer_meta( 'subscription_ids' );
 
 		$old_status = isset( $subscriptions[ $subscriber_id ]['status'] ) ? $subscriptions[ $subscriber_id ]['status'] : '';
