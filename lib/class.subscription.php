@@ -151,6 +151,25 @@ class IT_Exchange_Subscription {
 	}
 
 	/**
+	 * Is this subscription auto-renewing.
+	 *
+	 * @since 1.8
+	 *
+	 * @return bool
+	 */
+	public function is_auto_renewing() {
+
+		if ( ! $this->get_transaction()->meta_exists( 'subscription_autorenew_' . $this->get_product()->ID ) ) {
+
+			$auto_renew = (bool) $this->get_product()->get_feature( 'recurring-payments', array( 'setting' => 'auto-renew' ) );
+
+			$this->get_transaction()->update_meta( 'subscription_autorenew_' . $this->get_product()->ID, $auto_renew );
+		}
+
+		return (bool) $this->get_transaction()->get_meta( 'subscription_autorenew_' . $this->get_product()->ID );
+	}
+
+	/**
 	 * Get the recurring profile.
 	 *
 	 * @since 1.8
@@ -189,46 +208,6 @@ class IT_Exchange_Subscription {
 	}
 
 	/**
-	 * Get the start date of this subscription.
-	 *
-	 * @since 1.8
-	 *
-	 * @return DateTime
-	 */
-	public function get_start_date() {
-		return new DateTime( $this->get_transaction()->post_date_gmt, new DateTimeZone( 'UTC' ) );
-	}
-
-	/**
-	 * Get the expiry date of this subscription.
-	 *
-	 * @since 1.8
-	 *
-	 * @return DateTime
-	 */
-	public function get_expiry_date() {
-
-		$expires = $this->get_transaction()->get_meta( 'subscription_expires_' . $this->get_product()->ID );
-
-		if ( $expires ) {
-			return new DateTime( "@$expires", new DateTimeZone( 'UTC' ) );
-		}
-
-		return null;
-	}
-
-	/**
-	 * Get the subscriber ID.
-	 *
-	 * @since 1.8
-	 *
-	 * @return string
-	 */
-	public function get_subscriber_id() {
-		return $this->get_transaction()->get_meta( 'subscriber_id' );
-	}
-
-	/**
 	 * Get the customer paying for this subscription.
 	 *
 	 * @since 1.8
@@ -249,22 +228,78 @@ class IT_Exchange_Subscription {
 	}
 
 	/**
-	 * Is this subscription auto-renewing.
+	 * Get the start date of this subscription.
 	 *
 	 * @since 1.8
 	 *
-	 * @return bool
+	 * @return DateTime
 	 */
-	public function is_auto_renewing() {
+	public function get_start_date() {
+		return new DateTime( $this->get_transaction()->post_date_gmt, new DateTimeZone( 'UTC' ) );
+	}
 
-		if ( ! $this->get_transaction()->meta_exists( 'subscription_autorenew_' . $this->get_product()->ID ) ) {
+	/**
+	 * Get the expiry date of this subscription.
+	 *
+	 * @since 1.8
+	 *
+	 * @return DateTime
+	 */
+	public function get_expiry_date() {
 
-			$auto_renew = (bool) $this->get_product()->get_feature( 'recurring-payments', array( 'setting' => 'auto-renew' ) );
+		$expires = $this->get_transaction()->get_meta( 'subscription_expired_' . $this->get_product()->ID );
 
-			$this->get_transaction()->update_meta( 'subscription_autorenew_' . $this->get_product()->ID, $auto_renew );
+		if ( ! $expires ) {
+			$expires = $this->get_transaction()->get_meta( 'subscription_expires_' . $this->get_product()->ID );
 		}
 
-		return (bool) $this->get_transaction()->get_meta( 'subscription_autorenew_' . $this->get_product()->ID );
+		if ( $expires ) {
+			return new DateTime( "@$expires", new DateTimeZone( 'UTC' ) );
+		}
+
+		return null;
+	}
+
+	/**
+	 * Set the expiration date.
+	 *
+	 * @since 1.8
+	 *
+	 * @param DateTime $date
+	 */
+	public function set_expiry_date( DateTime $date ) {
+
+		$now = new DateTime( 'now', new DateTimeZone( 'UTC' ) );
+
+		if ( $now < $date ) {
+			$this->get_transaction()->update_meta( 'subscription_expires_' . $this->get_product()->ID, $date->format( 'U' ) );
+			$this->get_transaction()->delete_meta( 'subscription_expired_' . $this->get_product()->ID );
+		} else {
+			$this->get_transaction()->delete_meta( 'subscription_expires_' . $this->get_product()->ID );
+			$this->get_transaction()->update_meta( 'subscription_expired_' . $this->get_product()->ID, $date->format( 'U' ) );
+		}
+	}
+
+	/**
+	 * Get the subscriber ID.
+	 *
+	 * @since 1.8
+	 *
+	 * @return string
+	 */
+	public function get_subscriber_id() {
+		return $this->get_transaction()->get_meta( 'subscriber_id' );
+	}
+
+	/**
+	 * Set the subscriber ID.
+	 *
+	 * @since 1.8
+	 *
+	 * @param string $new_id
+	 */
+	public function set_subscriber_id( $new_id ) {
+		$this->get_transaction()->update_meta( 'subscriber_id', $new_id );
 	}
 
 	/**

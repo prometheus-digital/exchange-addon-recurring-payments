@@ -41,30 +41,33 @@ function it_exchange_recurring_payments_customer_notification( $customer, $statu
 }
 
 /**
- * Shows the nag when needed.
+ * Updates Expirations dates upon successful payments of recurring products
  *
  * @since 1.0.0
  *
+ * @param IT_Exchange_Transaction $transaction iThemes Exchange Transaction Object
+ *
  * @return void
-*/
-function it_exchange_addon_recurring_payments_show_version_nag() {
-	if ( version_compare( $GLOBALS['it_exchange']['version'], '1.3.0', '<' ) ) {
-		?>
-		<div id="it-exchange-add-on-min-version-nag" class="it-exchange-nag">
-			<?php printf( __( 'The Recurring Payments add-on requires iThemes Exchange version 1.3.0 or greater. %sPlease upgrade Exchange%s.', 'LION' ), '<a href="' . admin_url( 'update-core.php' ) . '">', '</a>' ); ?>
-		</div>
-		<script type="text/javascript">
-			jQuery( document ).ready( function() {
-				if ( jQuery( '.wrap > h2' ).length == '1' ) {
-					jQuery("#it-exchange-add-on-min-version-nag").insertAfter('.wrap > h2').addClass( 'after-h2' );
-				}
-			});
-		</script>
-		<?php
+ */
+function it_exchange_recurring_payments_addon_update_expirations( $transaction ) {
+
+	if ( ! empty( $transaction->post_parent ) ) {
+		$transaction = it_exchange_get_transaction( $transaction->post_parent );
+	}
+
+	foreach ( it_exchange_get_transaction_subscriptions( $transaction ) as $subscription ) {
+		$subscription->bump_expiration_date();
 	}
 }
-add_action( 'admin_notices', 'it_exchange_addon_recurring_payments_show_version_nag' );
 
+/**
+ * Build the interval string.
+ *
+ * @param $interval
+ * @param $count
+ *
+ * @return string
+ */
 function it_exchange_recurring_payments_addon_interval_string( $interval, $count ) {
 	
 	if ( 1 < $count ) {
