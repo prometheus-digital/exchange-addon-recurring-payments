@@ -437,7 +437,7 @@ function it_exchange_recurring_payments_after_payment_details_recurring_payments
 
 					<select id="rp-status-<?php echo $pid; ?>" name="rp-status[<?php echo $pid; ?>]">
 						<?php foreach ( IT_Exchange_Subscription::get_statuses() as $slug => $label ): ?>
-							<option value="<?php echo $slug; ?>" <?php selected( $slug, $status, true ); ?>>
+							<option value="<?php echo $slug; ?>" <?php selected( $slug, $status ); ?>>
 								<?php echo $label; ?>
 							</option>
 						<?php endforeach; ?>

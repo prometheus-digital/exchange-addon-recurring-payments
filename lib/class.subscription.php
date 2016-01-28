@@ -313,7 +313,15 @@ class IT_Exchange_Subscription {
 	 */
 	public function get_status( $label = false ) {
 
-		$status = $this->get_transaction()->get_meta( 'subscriber_status' );
+		$status = $this->get_transaction()->get_meta( 'subscriber_status_' . $this->get_product()->ID );
+
+		if ( empty( $status ) ) {
+			$status = $this->get_transaction()->get_meta( 'subscriber_status' );
+
+			if ( $status ) {
+				$this->get_transaction()->update_meta( 'subscriber_status_' . $this->get_product()->ID, $status );
+			}
+		}
 
 		if ( $label ) {
 			$labels = self::get_statuses();
@@ -341,7 +349,8 @@ class IT_Exchange_Subscription {
 
 		$subscriber_id = $this->get_subscriber_id();
 
-		$this->get_transaction()->update_meta( 'subscriber_status', $new_status );
+		$this->get_transaction()->update_meta( 'subscriber_status_' . $this->get_product()->ID, $new_status );
+		$this->get_transaction()->update_meta( 'subscriber_status', $new_status ); // back-compat
 		$subscriptions = $this->get_customer()->get_customer_meta( 'subscription_ids' );
 
 		$old_status = isset( $subscriptions[ $subscriber_id ]['status'] ) ? $subscriptions[ $subscriber_id ]['status'] : '';

@@ -40,8 +40,7 @@ add_action( 'it_exchange_transition_subscription_status', 'it_exchange_recurring
  */
 function it_exchange_recurring_payments_addon_update_transaction_subscription_status( $transaction, $subscriber_id, $subscriber_status ) {
 
-	_deprecated_function( 'it_exchange_recurring_payments_addon_update_transaction_subscription_status',
-		'1.8', 'IT_Exchange_Subscription::set_status' );
+	_deprecated_function( __FUNCTION__,	'1.8', 'IT_Exchange_Subscription::set_status' );
 
 	$transaction = it_exchange_get_transaction( $transaction );
 
