@@ -47,6 +47,11 @@ class IT_Exchange_Subscription {
 		$this->product     = $product;
 
 		if ( ! $transaction->meta_exists( 'interval_' . $product->ID ) ) {
+
+			if ( ! $product->get_feature( 'recurring-payments', array( 'setting' => 'recurring-enabled' ) ) ) {
+				throw new InvalidArgumentException();
+			}
+
 			$interval = $product->get_feature( 'recurring-payments', array( 'setting' => 'interval' ) );
 			$transaction->update_meta( 'interval_' . $product->ID, $interval );
 		}
@@ -161,7 +166,7 @@ class IT_Exchange_Subscription {
 
 		if ( ! $this->get_transaction()->meta_exists( 'subscription_autorenew_' . $this->get_product()->ID ) ) {
 
-			$auto_renew = (bool) $this->get_product()->get_feature( 'recurring-payments', array( 'setting' => 'auto-renew' ) );
+			$auto_renew = $this->get_product()->get_feature( 'recurring-payments', array( 'setting' => 'auto-renew' ) ) === 'on';
 
 			$this->get_transaction()->update_meta( 'subscription_autorenew_' . $this->get_product()->ID, $auto_renew );
 		}

@@ -130,14 +130,33 @@ class IT_Exchange_Recurring_Profile {
 	 * @return string
 	 */
 	public function __toString() {
+		return $this->get_label();
+	}
+
+	/**
+	 * Get the interval label.
+	 *
+	 * @param bool $trial
+	 *
+	 * @return string
+	 */
+	public function get_label( $trial = false ) {
 
 		$interval_label = $this->get_interval_type( true );
 		$interval_count = $this->get_interval_count();
 
 		if ( $interval_count === 1 ) {
-			$label = sprintf( __( 'every %s', 'LION' ), $interval_label );
+			if ( $trial ) {
+				$label = sprintf( __( '1 %s free', 'LION' ), $interval_label );
+			} else {
+				$label = sprintf( __( 'every %s', 'LION' ), $interval_label );
+			}
 		} else {
-			$label = sprintf( __( 'every %d %s', 'LION' ), $interval_count, $interval_label . 's' );
+			if ( $trial ) {
+				$label = sprintf( __( '%d %ss free', 'LION' ), $interval_count, $interval_label );
+			} else {
+				$label = sprintf( __( 'every %d %s', 'LION' ), $interval_count, $interval_label . 's' );
+			}
 		}
 
 		return $label;

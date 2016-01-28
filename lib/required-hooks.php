@@ -331,16 +331,25 @@ function it_exchange_recurring_payments_handle_expired() {
  *
  * @since 1.0.1
  * @param object $post Post Object
- * @param object $transaction_product iThemes Exchange Transaction Object
+ * @param array $product Cart Product
+ *
  * @return void
 */
 function it_exchange_recurring_payments_transaction_print_metabox_after_product_feature_title( $post, $product ) {
+
 	$transaction = it_exchange_get_transaction( $post->ID );
-	$enabled = it_exchange_get_product_feature( $product['product_id'], 'recurring-payments', array( 'setting' => 'recurring-enabled' ) );
-	if ( empty( $enabled ) ) {
+
+	try {
+		$subscription = it_exchange_get_subscription( $transaction, it_exchange_get_product( $product['product_id'] ) );
+	} catch ( Exception $e ) {
+
 		$time = __( 'forever', 'LION' );
 		echo '<span class="recurring-product-type">' . $time . '</span>';
-	} else if ( $transaction->get_transaction_meta( 'subscription_autorenew_' . $product['product_id'], true ) ) {
+
+		return;
+	}
+
+	if ( $subscription->is_auto_renewing() ) {
 		echo '<span class="recurring-product-autorenew"></span>';
 	}
 }
