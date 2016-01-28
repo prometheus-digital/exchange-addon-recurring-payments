@@ -329,6 +329,48 @@ class IT_Exchange_Subscription {
 	}
 
 	/**
+	 * Bump the expiration date.
+	 *
+	 * @since 1.8
+	 */
+	public function bump_expiration_date() {
+
+		if ( $this->get_trial_profile() && count( $this->get_transaction()->get_children( array( 'numberposts' => 2 ) ) ) === 1 ) {
+			$profile = $this->get_trial_profile();
+		} else {
+			$profile = $this->get_recurring_profile();
+		}
+
+		$time = strtotime( $profile->get_interval() ) + DAY_IN_SECONDS;
+
+		/**
+		 * Filter the new expiration date.
+		 *
+		 * @since 1.8
+		 *
+		 * @param int                      $time
+		 * @param IT_Exchange_Subscription $this
+		 */
+		$time = apply_filters( 'it_exchange_bump_subscription_new_expiration_date', $time, $this );
+
+		if ( ! $time ) {
+			return;
+		}
+
+		$this->transaction->update_meta( 'subscription_expires_' . $this->get_product()->ID, $time );
+		$this->transaction->delete_meta( 'subscription_expired_' . $this->get_product()->ID );
+
+		/**
+		 * Fires when a subscription's expiration date is bumped.
+		 *
+		 * @since 1.8
+		 *
+		 * @param IT_Exchange_Subscription
+		 */
+		do_action( 'it_exchange_bump_subscription_expiration_date', $this );
+	}
+
+	/**
 	 * Cancel this subscription.
 	 *
 	 * @since 1.8

@@ -51,3 +51,29 @@ function it_exchange_get_subscription( IT_Exchange_Transaction $transaction, IT_
 	 */
 	return apply_filters( 'it_exchange_get_subscription', $subscription );
 }
+
+/**
+ * Get all subscriptions for a transaction.
+ *
+ * @since 1.8
+ *
+ * @param IT_Exchange_Transaction $transaction
+ *
+ * @return IT_Exchange_Subscription[]
+ */
+function it_exchange_get_transaction_subscriptions( IT_Exchange_Transaction $transaction ) {
+
+	$subs = array();
+
+	foreach ( $transaction->get_products() as $product ) {
+
+		try {
+			$subs[] = it_exchange_get_subscription( $transaction, it_exchange_get_product( $product['product_id'] ) );
+		}
+		catch ( Exception $e ) {
+
+		}
+	}
+
+	return $subs;
+}

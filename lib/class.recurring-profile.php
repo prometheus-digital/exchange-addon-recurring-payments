@@ -110,6 +110,19 @@ class IT_Exchange_Recurring_Profile {
 	}
 
 	/**
+	 * Get the interval represented as a strtotime compatible string.
+	 *
+	 * Ideally, this would be a DateInterval object, but PHP 5.2
+	 *
+	 * @since 1.8
+	 *
+	 * @return string
+	 */
+	public function get_interval() {
+		return "+ {$this->get_interval_type()} {$this->get_interval_count()}s";
+	}
+
+	/**
 	 * Get a human readable display of this profile.
 	 *
 	 * @since 1.8
