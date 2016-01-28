@@ -267,7 +267,7 @@ function it_exchange_recurring_payments_addon_update_expirations( $transaction )
  */
 function it_exchange_recurring_payments_update_status( $transaction, $sub_id, $subscriber_status ) {
 
-	$subscription = new IT_Exchange_Subscription( it_exchange_get_transaction( $transaction ) );
+	$subscription = it_exchange_get_subscription( it_exchange_get_transaction( $transaction ) );
 	$subscription->set_status( $subscriber_status );
 }
 
@@ -385,9 +385,8 @@ function it_exchange_recurring_payments_handle_expired() {
 		if ( $expired = apply_filters( 'it_exchange_recurring_payments_handle_expired', true, $product_id, $transaction ) ) {
 			$transaction->update_transaction_meta( 'subscription_expired_' . $product_id, $result->meta_value );
 			$transaction->delete_transaction_meta( 'subscription_expires_' . $product_id );
-			$customer = it_exchange_get_transaction_customer( $transaction->ID );
 
-			$subscription = new IT_Exchange_Subscription( $transaction );
+			$subscription = it_exchange_get_subscription( $transaction, it_exchange_get_product( $product_id ) );
 			$subscription->set_status( IT_Exchange_Subscription::STATUS_DEACTIVATED );
 		}
 	}

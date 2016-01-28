@@ -22,6 +22,11 @@ class IT_Exchange_Subscription {
 	private $transaction;
 
 	/**
+	 * @var IT_Exchange_Product
+	 */
+	private $product;
+
+	/**
 	 * @var IT_Exchange_Recurring_Profile
 	 */
 	private $recurring_profile;
@@ -35,12 +40,14 @@ class IT_Exchange_Subscription {
 	 * IT_Exchange_Subscription constructor.
 	 *
 	 * @param IT_Exchange_Transaction $transaction
+	 * @param IT_Exchange_Product     $product
 	 */
-	public function __construct( IT_Exchange_Transaction $transaction ) {
+	public function __construct( IT_Exchange_Transaction $transaction, IT_Exchange_Product $product ) {
 		$this->transaction = $transaction;
+		$this->product     = $product;
 
-		$type  = $transaction->get_transaction_meta( 'interval' );
-		$count = $transaction->get_transaction_meta( 'interval_count' );
+		$type  = $transaction->get_transaction_meta( 'interval_' . $product->ID );
+		$count = $transaction->get_transaction_meta( 'interval_count_' . $product->ID );
 
 		if ( $count > 0 ) {
 			$this->recurring_profile = new IT_Exchange_Recurring_Profile( $type, $count );
@@ -56,41 +63,59 @@ class IT_Exchange_Subscription {
 	 *
 	 * @since 1.8
 	 *
-	 * @param IT_Exchange_Transaction $transaction
+	 * @param IT_Exchange_Transaction  $transaction
+	 * @param IT_Exchange_Product|null $product     Non-auto-renewing products can be purchased simultaneously,
+	 *                                              use this to specify which subscription should be returned.
 	 *
 	 * @return IT_Exchange_Subscription
+	 *
+	 * @throws InvalidArgumentException If which subscription to return is ambiguous.
+	 * @throws UnexpectedValueException If invalid product.
 	 */
-	public static function create( IT_Exchange_Transaction $transaction ) {
+	public static function create( IT_Exchange_Transaction $transaction, IT_Exchange_Product $product = null ) {
 
-		foreach ( $transaction->get_products() as $product ) {
+		if ( $product ) {
+			foreach ( $transaction->get_products() as $cart_product ) {
 
-			$product = it_exchange_get_product( $product['product_id'] );
+				if ( $cart_product['product_id'] == $product->ID ) {
+					$product = it_exchange_get_product( $cart_product['product_id'] );
 
-			break;
+					break;
+				}
+			}
+		} elseif ( count( $transaction->get_products() ) === 1 ) {
+
+			$cart_products = $transaction->get_products();
+			$cart_product  = reset( $cart_products );
+			$product       = it_exchange_get_product( $cart_product['product_id'] );
+
+		} else {
+			throw new InvalidArgumentException( 'Ambiguous product to generate subscriptions for.' );
 		}
 
 		if ( ! isset( $product ) ) {
-			throw new UnexpectedValueException();
+			throw new UnexpectedValueException( 'Product not found.' );
 		}
 
 		if ( ! $product->supports_feature( 'recurring-payments' ) ) {
-			throw new UnexpectedValueException();
+			throw new UnexpectedValueException( 'Product does not support recurring payments.' );
 		}
 
-		if ( $product->get_feature( 'recurring-payments', array( 'setting' => 'recurring-enabled' ) ) ) {
-
-			$trial_enabled  = $product->get_feature( 'recurring-payments', array( 'setting' => 'trial-enabled' ) );
-			$auto_renew     = $product->get_feature( 'recurring-payments', array( 'setting' => 'auto-renew' ) );
-			$interval       = $product->get_feature( 'recurring-payments', array( 'setting' => 'interval' ) );
-			$interval_count = $product->get_feature( 'recurring-payments', array( 'setting' => 'interval-count' ) );
-
-			$transaction->update_transaction_meta( 'has_trial', $trial_enabled );
-			$transaction->update_transaction_meta( 'is_auto_renewing', $auto_renew );
-			$transaction->update_transaction_meta( 'interval', $interval );
-			$transaction->update_transaction_meta( 'interval_count', $interval_count );
+		if ( ! $product->get_feature( 'recurring-payments', array( 'setting' => 'recurring-enabled' ) ) ) {
+			throw new UnexpectedValueException( 'Product does not have recurring enabled.' );
 		}
 
-		return new self( $transaction );
+		$trial_enabled  = $product->get_feature( 'recurring-payments', array( 'setting' => 'trial-enabled' ) );
+		$auto_renew     = $product->get_feature( 'recurring-payments', array( 'setting' => 'auto-renew' ) );
+		$interval       = $product->get_feature( 'recurring-payments', array( 'setting' => 'interval' ) );
+		$interval_count = $product->get_feature( 'recurring-payments', array( 'setting' => 'interval-count' ) );
+
+		$transaction->update_transaction_meta( 'has_trial_' . $product->ID, $trial_enabled );
+		$transaction->update_transaction_meta( 'is_auto_renewing_' . $product->ID, $auto_renew );
+		$transaction->update_transaction_meta( 'interval_' . $product->ID, $interval );
+		$transaction->update_transaction_meta( 'interval_count_' . $product->ID, $interval_count );
+
+		return new self( $transaction, $product );
 	}
 
 	/**
@@ -112,12 +137,7 @@ class IT_Exchange_Subscription {
 	 * @return IT_Exchange_Product
 	 */
 	public function get_product() {
-
-		foreach ( $this->get_transaction()->get_products() as $product ) {
-			return it_exchange_get_product( $product['product_id'] );
-		}
-
-		return null;
+		return $this->product;
 	}
 
 	/**
@@ -352,6 +372,13 @@ class IT_Exchange_Subscription {
 	public function get_number_installments_remaining() {
 	}
 
+	/**
+	 * Get possible subscription statuses.
+	 *
+	 * @since 1.8
+	 *
+	 * @return array
+	 */
 	public static function get_statuses() {
 		return array(
 			self::STATUS_ACTIVE      => __( 'Active', 'LION' ),
