@@ -62,7 +62,7 @@ class IT_Exchange_Subscription {
 		if ( $count > 0 ) {
 			$this->recurring_profile = new IT_Exchange_Recurring_Profile( $type, $count );
 
-			if ( $transaction->get_meta( 'has_trial' ) ) {
+			if ( $transaction->get_meta( 'has_trial_' . $product->ID ) ) {
 				$this->trial_profile = new IT_Exchange_Recurring_Profile( $type, $count );
 			}
 		}
