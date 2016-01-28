@@ -119,7 +119,7 @@ class IT_Exchange_Recurring_Profile {
 	 * @return string
 	 */
 	public function get_interval() {
-		return "+ {$this->get_interval_type()} {$this->get_interval_count()}s";
+		return "+ {$this->get_interval_count()} {$this->get_interval_type()}s";
 	}
 
 	/**
