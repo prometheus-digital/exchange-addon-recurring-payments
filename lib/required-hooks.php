@@ -315,11 +315,11 @@ function it_exchange_recurring_payments_handle_expired() {
 	global $wpdb;
 
 	$results = $wpdb->get_results(
-		$wpdb->prepare( '
+		$wpdb->prepare( "
 			SELECT post_id, meta_key, meta_value
-			FROM ' . $wpdb->postmeta . ' 
-			WHERE meta_key LIKE %s 
-			  AND meta_value < %d',
+			FROM $wpdb->postmeta
+			WHERE meta_key LIKE %s
+			  AND meta_value < %d",
 			'_it_exchange_transaction_subscription_expires_%', time() )
 	);
 
@@ -332,7 +332,12 @@ function it_exchange_recurring_payments_handle_expired() {
 			$transaction->delete_transaction_meta( 'subscription_expires_' . $product_id );
 
 			$subscription = it_exchange_get_subscription( $transaction, it_exchange_get_product( $product_id ) );
-			$subscription->set_status( IT_Exchange_Subscription::STATUS_DEACTIVATED );
+
+			if ( $subscription->get_status() === IT_Exchange_Subscription::STATUS_ACTIVE ) {
+				$subscription->set_status( IT_Exchange_Subscription::STATUS_DEACTIVATED );
+			} else {
+				$subscription->mark_expired();
+			}
 		}
 	}
 }

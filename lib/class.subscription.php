@@ -425,8 +425,6 @@ class IT_Exchange_Subscription {
 			$profile = $this->get_recurring_profile();
 		}
 
-		error_log( print_r( $profile, true ) );
-
 		$time = strtotime( $profile->get_interval() ) + DAY_IN_SECONDS;
 
 		/**
@@ -454,6 +452,24 @@ class IT_Exchange_Subscription {
 		 * @param IT_Exchange_Subscription
 		 */
 		do_action( 'it_exchange_bump_subscription_expiration_date', $this );
+	}
+
+	/**
+	 * Mark this subscription as expired.
+	 *
+	 * This does not toggle the status, but changed the date storage.
+	 *
+	 * @since 1.8
+	 */
+	public function mark_expired() {
+
+		$expires = $this->get_expiry_date();
+
+		$this->transaction->delete_meta( 'subscription_expires_' . $this->get_product()->ID );
+
+		if ( $expires ) {
+			$this->transaction->update_meta( 'subscription_expired_' . $this->get_product()->ID, $expires->format( 'U' ) );
+		}
 	}
 
 	/**
