@@ -62,24 +62,6 @@ function it_exchange_recurring_payments_addon_update_expirations( $transaction )
 }
 
 /**
- * Build the interval string.
- *
- * @param $interval
- * @param $count
- *
- * @return string
- */
-function it_exchange_recurring_payments_addon_interval_string( $interval, $count ) {
-
-	if ( 1 < $count ) {
-		return $interval . 's';
-	} else {
-		return $interval;
-	}
-
-}
-
-/**
  * Generates a recurring label
  *
  * @since CHANGEME

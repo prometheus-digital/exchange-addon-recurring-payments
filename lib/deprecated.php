@@ -95,3 +95,26 @@ function it_exchange_recurring_payments_deprecated_expirations_filters( $time, I
 }
 
 add_filter( 'it_exchange_bump_subscription_new_expiration_date', 'it_exchange_recurring_payments_deprecated_expirations_filters', 10, 2 );
+
+
+/**
+ * Build the interval string.
+ *
+ * @deprecated 1.8
+ *
+ * @param $interval
+ * @param $count
+ *
+ * @return string
+ */
+function it_exchange_recurring_payments_addon_interval_string( $interval, $count ) {
+
+	_deprecated_function( __FUNCTION__, '1.8' );
+
+	if ( 1 < $count ) {
+		return $interval . 's';
+	} else {
+		return $interval;
+	}
+
+}
