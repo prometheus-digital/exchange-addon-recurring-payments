@@ -115,19 +115,9 @@ function it_exchange_recurring_payments_addon_recurring_label( $product_id ) {
 
 	if ( $trial_enabled ) {
 		$show_trial = true;
-		if ( 'membership-product-type' === it_exchange_get_product_type( $product_id ) ) {
+		if ( 'membership-product-type' === it_exchange_get_product_type( $product_id ) && function_exists( 'it_exchange_is_customer_eligible_for_trial' ) ) {
 			if ( is_user_logged_in() ) {
-				if ( function_exists( 'it_exchange_get_session_data' ) ) {
-					$member_access = it_exchange_get_session_data( 'member_access' );
-					$children      = (array) it_exchange_membership_addon_get_all_the_children( $product_id );
-					$parents       = (array) it_exchange_membership_addon_get_all_the_parents( $product_id );
-					foreach ( $member_access as $prod_id => $txn_id ) {
-						if ( $prod_id === $product_id || in_array( $prod_id, $children ) || in_array( $prod_id, $parents ) ) {
-							$show_trial = false;
-							break;
-						}
-					}
-				}
+				$show_trial = it_exchange_is_customer_eligible_for_trial( it_exchange_get_product( $product_id ) );
 			}
 		}
 
