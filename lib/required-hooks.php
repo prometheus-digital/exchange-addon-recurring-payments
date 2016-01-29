@@ -207,6 +207,22 @@ function it_exchange_recurring_payments_addon_add_transaction( $transaction_id )
 add_action( 'it_exchange_add_transaction_success', 'it_exchange_recurring_payments_addon_add_transaction' );
 
 /**
+ * Bump expirations when a child transaction occurs.
+ *
+ * @since 1.8
+ *
+ * @param int $transaction_id
+ */
+function it_exchange_recurring_payments_bump_expiration_on_child_transaction( $transaction_id ) {
+
+	$parent = wp_get_post_parent_id( $transaction_id );
+
+	it_exchange_recurring_payments_addon_update_expirations( it_exchange_get_transaction( $parent ) );
+}
+
+add_action( 'it_exchange_add_child_transaction_success', 'it_exchange_recurring_payments_bump_expiration_on_child_transaction' );
+
+/**
  * Update the status when the status hook is fired.
  *
  * This really is for BC as IT_Exchange_Subscription::set_status() should always be used.
@@ -247,10 +263,6 @@ function it_exchange_recurring_payments_send_status_notifications( $new_status, 
 
 		case 'cancelled' :
 			it_exchange_recurring_payments_customer_notification( $customer, 'cancel', $transaction );
-			break;
-
-		case 'active' :
-			it_exchange_recurring_payments_addon_update_expirations( $transaction );
 			break;
 
 	}
