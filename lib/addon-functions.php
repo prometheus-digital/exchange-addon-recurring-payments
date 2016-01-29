@@ -73,7 +73,6 @@ function it_exchange_recurring_payments_addon_update_expirations( $transaction )
 function it_exchange_recurring_payments_addon_recurring_label( $product_id ) {
 
 	if ( ! it_exchange_product_has_feature( $product_id, 'recurring-payments', array( 'setting' => 'recurring-enabled' ) ) ) {
-
 		return '';
 	}
 

@@ -204,7 +204,7 @@ function it_exchange_recurring_payments_addon_add_transaction( $transaction_id )
 
 	it_exchange_recurring_payments_addon_update_expirations( $transaction );
 }
-add_action( 'it_exchange_add_transaction_success', 'it_exchange_recurring_payments_addon_add_transaction' );
+add_action( 'it_exchange_add_transaction_success', 'it_exchange_recurring_payments_addon_add_transaction', 0 );
 
 /**
  * Bump expirations when a child transaction occurs.
