@@ -61,6 +61,11 @@ class IT_Exchange_Subscription {
 			$transaction->update_meta( 'interval_count_' . $product->ID, $interval_count );
 		}
 
+		if ( ! $transaction->meta_exists( 'has_trial_' . $product->ID ) ) {
+			$has_trial = $product->get_feature( 'recurring-payments', array( 'setting' => 'trial-enabled' ) );
+			$transaction->update_meta( 'has_trial_' . $product->ID, $has_trial );
+		}
+
 		$type  = $transaction->get_meta( 'interval_' . $product->ID );
 		$count = $transaction->get_meta( 'interval_count_' . $product->ID );
 
@@ -68,6 +73,20 @@ class IT_Exchange_Subscription {
 			$this->recurring_profile = new IT_Exchange_Recurring_Profile( $type, $count );
 
 			if ( $transaction->get_meta( 'has_trial_' . $product->ID ) ) {
+
+				if ( ! $transaction->meta_exists( 'trial_interval_' . $product->ID ) ) {
+					$trial_interval = $product->get_feature( 'recurring-payments', array( 'setting' => 'interval' ) );
+					$transaction->update_meta( 'trial_interval_' . $product->ID, $trial_interval );
+				}
+
+				if ( ! $transaction->meta_exists( 'trial_interval_count_' . $product->ID ) ) {
+					$trial_interval_count = $product->get_feature( 'recurring-payments', array( 'setting' => 'trial-interval-count' ) );
+					$transaction->update_meta( 'trial_interval_count_' . $product->ID, $trial_interval_count );
+				}
+
+				$type  = $transaction->get_meta( 'trial_interval_' . $product->ID );
+				$count = $transaction->get_meta( 'trial_interval_count_' . $product->ID );
+
 				$this->trial_profile = new IT_Exchange_Recurring_Profile( $type, $count );
 			}
 		}
@@ -120,15 +139,22 @@ class IT_Exchange_Subscription {
 			throw new UnexpectedValueException( 'Product does not have recurring enabled.' );
 		}
 
-		$trial_enabled  = $product->get_feature( 'recurring-payments', array( 'setting' => 'trial-enabled' ) );
-		$auto_renew     = $product->get_feature( 'recurring-payments', array( 'setting' => 'auto-renew' ) );
-		$interval       = $product->get_feature( 'recurring-payments', array( 'setting' => 'interval' ) );
-		$interval_count = $product->get_feature( 'recurring-payments', array( 'setting' => 'interval-count' ) );
+		$trial_enabled        = $product->get_feature( 'recurring-payments', array( 'setting' => 'trial-enabled' ) );
+		$auto_renew           = $product->get_feature( 'recurring-payments', array( 'setting' => 'auto-renew' ) );
+		$interval             = $product->get_feature( 'recurring-payments', array( 'setting' => 'interval' ) );
+		$interval_count       = $product->get_feature( 'recurring-payments', array( 'setting' => 'interval-count' ) );
+		$trial_interval       = $product->get_feature( 'recurring-payments', array( 'setting' => 'trial-interval' ) );
+		$trial_interval_count = $product->get_feature( 'recurring-payments', array( 'setting' => 'trial-interval-count' ) );
 
 		$transaction->update_meta( 'has_trial_' . $product->ID, $trial_enabled );
 		$transaction->update_meta( 'is_auto_renewing_' . $product->ID, $auto_renew );
 		$transaction->update_meta( 'interval_' . $product->ID, $interval );
 		$transaction->update_meta( 'interval_count_' . $product->ID, $interval_count );
+
+		if ( $trial_enabled ) {
+			$transaction->update_meta( 'trial_interval_' . $product->ID, $trial_interval );
+			$transaction->update_meta( 'trial_interval_count_' . $product->ID, $trial_interval_count );
+		}
 
 		return new self( $transaction, $product );
 	}
@@ -384,7 +410,7 @@ class IT_Exchange_Subscription {
 	 */
 	public function bump_expiration_date() {
 
-		if ( $this->get_trial_profile() && count( $this->get_transaction()->get_children( array( 'numberposts' => 2 ) ) ) === 1 ) {
+		if ( $this->get_trial_profile() && ! $this->get_transaction()->has_children() ) {
 			$profile = $this->get_trial_profile();
 		} else {
 			$profile = $this->get_recurring_profile();
