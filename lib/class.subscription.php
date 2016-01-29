@@ -476,62 +476,14 @@ class IT_Exchange_Subscription {
 	 * Cancel this subscription.
 	 *
 	 * @since 1.8
-	 *
-	 * @param bool $at_period_end Cancel this subscription at the end of the current period, or immediately.
 	 */
-	public function cancel( $at_period_end = false ) {
+	public function cancel() {
 
 		$method = $this->get_transaction()->transaction_method;
 
 		do_action( "it_exchange_cancel_{$method}_subscription", array(
 			'old_subscriber_id' => $this->get_subscriber_id()
 		) );
-	}
-
-	/**
-	 * Transfer ownership of this subscription to someone.
-	 *
-	 * @since 1.8
-	 *
-	 * @param IT_Exchange_Customer $customer
-	 */
-	public function transfer( IT_Exchange_Customer $customer ) {
-	}
-
-	/**
-	 * Is this subscription an installment.
-	 *
-	 * An installment means this subscription is limited to a set number of payments.
-	 *
-	 * @since 1.8
-	 *
-	 * @return bool
-	 */
-	public function has_installment_plan() {
-	}
-
-	/**
-	 * Get the total number of installments allocated for this subscription.
-	 *
-	 * @since 1.8
-	 *
-	 * @return int
-	 *
-	 * @throws UnexpectedValueException If this subscription does not have an installment plan.
-	 */
-	public function get_number_installments() {
-	}
-
-	/**
-	 * Get the total number of installments remaining.
-	 *
-	 * @since 1.8
-	 *
-	 * @return int
-	 *
-	 * @throws UnexpectedValueException If this subscription does not have an installment plan.
-	 */
-	public function get_number_installments_remaining() {
 	}
 
 	/**
