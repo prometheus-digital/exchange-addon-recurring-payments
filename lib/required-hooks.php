@@ -235,7 +235,7 @@ add_action( 'it_exchange_add_child_transaction_success', 'it_exchange_recurring_
  */
 function it_exchange_recurring_payments_update_status( $transaction, $sub_id, $subscriber_status ) {
 
-	$subscription = it_exchange_get_subscription( it_exchange_get_transaction( $transaction ) );
+	$subscription = it_exchange_get_subscription_by_transaction( it_exchange_get_transaction( $transaction ) );
 	$subscription->set_status( $subscriber_status );
 }
 
@@ -331,7 +331,7 @@ function it_exchange_recurring_payments_handle_expired() {
 			$transaction->update_transaction_meta( 'subscription_expired_' . $product_id, $result->meta_value );
 			$transaction->delete_transaction_meta( 'subscription_expires_' . $product_id );
 
-			$subscription = it_exchange_get_subscription( $transaction, it_exchange_get_product( $product_id ) );
+			$subscription = it_exchange_get_subscription_by_transaction( $transaction, it_exchange_get_product( $product_id ) );
 
 			if ( $subscription->get_status() === IT_Exchange_Subscription::STATUS_ACTIVE ) {
 				$subscription->set_status( IT_Exchange_Subscription::STATUS_DEACTIVATED );
@@ -357,7 +357,7 @@ function it_exchange_recurring_payments_transaction_print_metabox_after_product_
 	$transaction = it_exchange_get_transaction( $post->ID );
 
 	try {
-		$subscription = it_exchange_get_subscription( $transaction, it_exchange_get_product( $product['product_id'] ) );
+		$subscription = it_exchange_get_subscription_by_transaction( $transaction, it_exchange_get_product( $product['product_id'] ) );
 	} catch ( Exception $e ) {
 
 		$time = __( 'forever', 'LION' );

@@ -48,7 +48,7 @@ function it_exchange_recurring_payments_addon_update_transaction_subscription_st
 		return false;
 	}
 
-	$subscription = it_exchange_get_subscription( $transaction );
+	$subscription = it_exchange_get_subscription_by_transaction( $transaction );
 
 	if ( $subscription->get_status() === $subscriber_status ) {
 		return false;

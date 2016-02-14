@@ -19,7 +19,7 @@
  *
  * @throws InvalidArgumentException If which subscription to return is ambiguous.
  */
-function it_exchange_get_subscription( IT_Exchange_Transaction $transaction, IT_Exchange_Product $product = null ) {
+function it_exchange_get_subscription_by_transaction( IT_Exchange_Transaction $transaction, IT_Exchange_Product $product = null ) {
 
 	if ( $product ) {
 		foreach ( $transaction->get_products() as $cart_product ) {
@@ -68,7 +68,7 @@ function it_exchange_get_transaction_subscriptions( IT_Exchange_Transaction $tra
 	foreach ( $transaction->get_products() as $product ) {
 
 		try {
-			$subs[] = it_exchange_get_subscription( $transaction, it_exchange_get_product( $product['product_id'] ) );
+			$subs[] = it_exchange_get_subscription_by_transaction( $transaction, it_exchange_get_product( $product['product_id'] ) );
 		}
 		catch ( Exception $e ) {
 
