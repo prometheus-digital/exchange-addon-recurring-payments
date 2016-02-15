@@ -48,8 +48,10 @@ function it_exchange_get_subscription_by_transaction( IT_Exchange_Transaction $t
 	 * @since 1.8
 	 *
 	 * @param IT_Exchange_Subscription|null $subscription
+	 * @param IT_Exchange_Transaction       $transaction
+	 * @param IT_Exchange_Product|null      $product
 	 */
-	return apply_filters( 'it_exchange_get_subscription', $subscription );
+	return apply_filters( 'it_exchange_get_subscription_by_transaction', $subscription, $transaction, $product );
 }
 
 /**
