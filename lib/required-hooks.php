@@ -42,11 +42,11 @@ add_action( 'admin_notices', 'it_exchange_recurring_payments_addon_show_membersh
 */
 function it_exchange_recurring_payments_addon_admin_wp_enqueue_styles( $hook_suffix, $post_type ) {
 	global $wp_version;
-	
+
 	if ( isset( $post_type ) && 'it_exchange_prod' === $post_type ) {
 		// no longer needed as of 1.6.1
 		//wp_enqueue_style( 'it-exchange-recurring-payments-addon-add-edit-product', ITUtility::get_url_from_file( dirname( __FILE__ ) ) . '/styles/add-edit-product.css' );
-		
+
 		if ( $wp_version <= 3.7 ) {
 			wp_enqueue_style( 'it-exchange-recurring-payments-addon-add-edit-product-pre-3-8', ITUtility::get_url_from_file( dirname( __FILE__ ) ) . '/styles/add-edit-product-pre-3-8.css' );
 		}
@@ -84,7 +84,7 @@ function it_exchange_recurring_payments_addon_content_purchases_fields_elements(
 	$elements[] = 'payments';
 	$elements[] = 'unsubscribe';
 	$elements[] = 'expiration';
-	return $elements;	
+	return $elements;
 }
 add_filter( 'it_exchange_get_content_purchases_fields_elements', 'it_exchange_recurring_payments_addon_content_purchases_fields_elements' );
 
@@ -114,12 +114,12 @@ add_filter( 'it_exchange_possible_template_paths', 'it_exchange_recurring_paymen
 function it_exchange_recurring_payments_multi_item_cart_allowed( $allowed ) {
 	if ( !$allowed )
 		return $allowed;
-		
+
 	global $post;
-					
+
 	if ( it_exchange_is_product( $post ) ) {
 		$product = it_exchange_get_product( $post );
-		
+
 		if ( it_exchange_product_supports_feature( $product->ID, 'recurring-payments', array( 'setting' => 'recurring-enabled' ) ) ) {
 			if ( it_exchange_product_has_feature( $product->ID, 'recurring-payments', array( 'setting' => 'recurring-enabled' ) ) ) {
 				if ( it_exchange_product_supports_feature( $product->ID, 'recurring-payments', array( 'setting' => 'auto-renew' ) ) ) {
@@ -130,9 +130,9 @@ function it_exchange_recurring_payments_multi_item_cart_allowed( $allowed ) {
 			}
 		}
 	}
-	
+
 	$cart = it_exchange_get_cart_products();
-	
+
 	if ( !empty( $cart ) ) {
 		foreach( $cart as $product ) {
 			if ( !empty( $product['product_id'] ) ) {
@@ -148,7 +148,7 @@ function it_exchange_recurring_payments_multi_item_cart_allowed( $allowed ) {
 			}
 		}
 	}
-		
+
 	return $allowed;
 }
 add_filter( 'it_exchange_multi_item_cart_allowed', 'it_exchange_recurring_payments_multi_item_cart_allowed' );
@@ -166,8 +166,8 @@ add_filter( 'it_exchange_multi_item_cart_allowed', 'it_exchange_recurring_paymen
 function it_exchange_recurring_payments_multi_item_product_allowed( $allowed, $product_id ) {
 	if ( !$allowed )
 		return $allowed;
-	
-	if ( 'membership-product-type' === it_exchange_get_product_type( $product_id ) ) {		
+
+	if ( 'membership-product-type' === it_exchange_get_product_type( $product_id ) ) {
 		if ( it_exchange_product_supports_feature( $product_id, 'recurring-payments', array( 'setting' => 'recurring-enabled' ) ) ) {
 			if ( it_exchange_product_has_feature( $product_id, 'recurring-payments', array( 'setting' => 'recurring-enabled' ) ) ) {
 				if ( it_exchange_product_supports_feature( $product_id, 'recurring-payments', array( 'setting' => 'auto-renew' ) ) ) {
@@ -178,7 +178,7 @@ function it_exchange_recurring_payments_multi_item_product_allowed( $allowed, $p
 			}
 		}
 	}
-		
+
 	return $allowed;
 }
 add_filter( 'it_exchange_multi_item_product_allowed', 'it_exchange_recurring_payments_multi_item_product_allowed', 10, 2 );
@@ -187,70 +187,88 @@ add_filter( 'it_exchange_multi_item_product_allowed', 'it_exchange_recurring_pay
  * Adds necessary details to Exchange upon successfully completed transaction
  *
  * @since 1.0.0
- * @param int $transaction_id iThemes Exchange Transaction ID 
+ * @param int $transaction_id iThemes Exchange Transaction ID
  * @return void
 */
 function it_exchange_recurring_payments_addon_add_transaction( $transaction_id ) {
     $transaction = it_exchange_get_transaction( $transaction_id );
+
+	foreach ( $transaction->get_products() as $product ) {
+
+		$product = it_exchange_get_product( $product['product_id'] );
+
+		if ( $product->get_feature( 'recurring-payments', array( 'setting' =>'recurring-enabled' ) ) ) {
+			IT_Exchange_Subscription::create( $transaction, $product );
+		}
+	}
+
 	it_exchange_recurring_payments_addon_update_expirations( $transaction );
 }
-add_action( 'it_exchange_add_transaction_success', 'it_exchange_recurring_payments_addon_add_transaction' );
+add_action( 'it_exchange_add_transaction_success', 'it_exchange_recurring_payments_addon_add_transaction', 0 );
 
 /**
- * Updates Expirations dates upon successful payments of recurring products
+ * Bump expirations when a child transaction occurs.
  *
- * @since 1.0.0
- * @param int $transaction iThemes Exchange Transaction Object 
- * @return void
-*/
-function it_exchange_recurring_payments_addon_update_expirations( $transaction ) {
-	$transaction_method = it_exchange_get_transaction_method( $transaction->ID );
-	$ancestors = get_post_ancestors( $transaction->ID );
-	if ( !empty( $ancestors ) ) {
-		foreach( $ancestors as $ancestor_id ) { //should only be one
-			$cart_object = get_post_meta( $ancestor_id, '_it_exchange_cart_object', true );
-			$transaction = it_exchange_get_transaction( $ancestor_id );
+ * @since 1.8
+ *
+ * @param int $transaction_id
+ */
+function it_exchange_recurring_payments_bump_expiration_on_child_transaction( $transaction_id ) {
+
+	$parent = wp_get_post_parent_id( $transaction_id );
+
+	it_exchange_recurring_payments_addon_update_expirations( it_exchange_get_transaction( $parent ) );
+}
+
+add_action( 'it_exchange_add_child_transaction_success', 'it_exchange_recurring_payments_bump_expiration_on_child_transaction' );
+
+/**
+ * Update the status when the status hook is fired.
+ *
+ * This really is for BC as IT_Exchange_Subscription::set_status() should always be used.
+ *
+ * @since 1.8
+ *
+ * @param IT_Exchange_Transaction $transaction
+ * @param string $sub_id
+ * @param string $subscriber_status
+ */
+function it_exchange_recurring_payments_update_status( $transaction, $sub_id, $subscriber_status ) {
+
+	$subscription = it_exchange_get_subscription_by_transaction( it_exchange_get_transaction( $transaction ) );
+	$subscription->set_status( $subscriber_status );
+}
+
+add_action( 'it_exchange_update_transaction_subscription_status', 'it_exchange_recurring_payments_update_status', 10, 3 );
+
+/**
+ * Send status notifications whenever a subscription status changes.
+ *
+ * @since 1.8
+ *
+ * @param string                   $new_status
+ * @param string                   $old_status
+ * @param IT_Exchange_Subscription $subscription
+ */
+function it_exchange_recurring_payments_send_status_notifications( $new_status, $old_status, IT_Exchange_Subscription $subscription ) {
+
+	$transaction = $subscription->get_transaction();
+	$customer = $subscription->get_customer();
+
+	switch ( $new_status ) {
+
+		case 'deactivated' : //expired
+			it_exchange_recurring_payments_customer_notification( $customer, 'deactivate', $transaction );
 			break;
-		}
-	} else {
-		$cart_object = get_post_meta( $transaction->ID, '_it_exchange_cart_object', true );
-	}
-	
-	foreach ( $cart_object->products as $product ) {
-		if ( it_exchange_product_supports_feature( $product['product_id'], 'recurring-payments' ) ) {			
-			if ( it_exchange_get_product_feature( $product['product_id'], 'recurring-payments', array( 'setting' => 'recurring-enabled' ) ) ) {
-				$trial_enabled = it_exchange_get_product_feature( $product['product_id'], 'recurring-payments', array( 'setting' => 'trial-enabled' ) );
-				$auto_renew = it_exchange_get_product_feature( $product['product_id'], 'recurring-payments', array( 'setting' => 'auto-renew' ) );
-				$interval = it_exchange_get_product_feature( $product['product_id'], 'recurring-payments', array( 'setting' => 'interval' ) );
-				$interval_count = it_exchange_get_product_feature( $product['product_id'], 'recurring-payments', array( 'setting' => 'interval-count' ) );
-			
-				if ( $trial_enabled && empty( $GLOBALS['it_exchange']['child_transaction'] ) ) {
-					$trial_interval_count = it_exchange_get_product_feature( $product['product_id'], 'recurring-payments', array( 'setting' => 'trial-interval-count' ) );
-					if ( 0 < $trial_interval_count ) { //This product has a trial period associated with it
-						$trial_interval = it_exchange_get_product_feature( $product['product_id'], 'recurring-payments', array( 'setting' => 'trial-interval' ) );
-						if ( empty( $ancestors ) ) { //This is the first and it's a trial period
-							$interval = $trial_interval;
-							$interval_count = $trial_interval_count;
-						}
-					}
-				}
-				$expires = strtotime( sprintf( '+%d %s', $interval_count, $interval ) ) + ( 60 * 60 * 24 ); //plus 1 day
 
-				//The extra day is added just to be safe
-				$expires = apply_filters( 'it_exchange_recurring_payments_addon_expires_time', $expires, $interval, $interval_count, $auto_renew );
-				$expires = apply_filters( 'it_exchange_recurring_payments_addon_expires_time_' . $transaction_method, $expires, $interval, $interval_count, $auto_renew );
-				if ( $expires ) {
-					$autorenews = ( 'on' === $auto_renew ) ? true : false;
-					$transaction->update_transaction_meta( 'subscription_expires_' . $product['product_id'], $expires );
-					$transaction->update_transaction_meta( 'subscription_autorenew_' . $product['product_id'], $autorenews );
-					$transaction->delete_transaction_meta( 'subscription_expired_' . $product['product_id'] );
-				}
-			}
+		case 'cancelled' :
+			it_exchange_recurring_payments_customer_notification( $customer, 'cancel', $transaction );
+			break;
 
-		}
-		
 	}
 }
+
+add_action( 'it_exchange_transition_subscription_status', 'it_exchange_recurring_payments_send_status_notifications', 10, 3 );
 
 /**
  * Special hook that adds a filter to another hook at the right place in the theme API
@@ -273,7 +291,7 @@ add_action( 'it_exchange_content_purchases_before_wrap', 'it_exchange_recurring_
 */
 function it_exchange_recurring_payments_addon_get_transactions_get_posts_args( $args ) {
 	$args['post_parent'] = 0;
-	return $args;	
+	return $args;
 }
 
 /**
@@ -295,29 +313,33 @@ add_action( 'it_exchange_recurring_payments_daily_schedule', 'it_exchange_recurr
 */
 function it_exchange_recurring_payments_handle_expired() {
 	global $wpdb;
-	
-	$results = $wpdb->get_results( 
-		$wpdb->prepare( '
+
+	$results = $wpdb->get_results(
+		$wpdb->prepare( "
 			SELECT post_id, meta_key, meta_value
-			FROM ' . $wpdb->postmeta . ' 
-			WHERE meta_key LIKE %s 
-			  AND meta_value < %d',
+			FROM $wpdb->postmeta
+			WHERE meta_key LIKE %s
+			  AND meta_value < %d",
 			'_it_exchange_transaction_subscription_expires_%', time() )
 	);
-	
+
 	foreach ( $results as $result ) {
-		
+
 		$product_id = str_replace( '_it_exchange_transaction_subscription_expires_', '', $result->meta_key );
 		$transaction = it_exchange_get_transaction( $result->post_id );
 		if ( $expired = apply_filters( 'it_exchange_recurring_payments_handle_expired', true, $product_id, $transaction ) ) {
 			$transaction->update_transaction_meta( 'subscription_expired_' . $product_id, $result->meta_value );
 			$transaction->delete_transaction_meta( 'subscription_expires_' . $product_id );
-			$customer = it_exchange_get_transaction_customer( $transaction->ID );
-			it_exchange_recurring_payments_addon_update_transaction_subscription_status( $transaction, $customer->id, 'deactivated' );
+
+			$subscription = it_exchange_get_subscription_by_transaction( $transaction, it_exchange_get_product( $product_id ) );
+
+			if ( $subscription->get_status() === IT_Exchange_Subscription::STATUS_ACTIVE ) {
+				$subscription->set_status( IT_Exchange_Subscription::STATUS_DEACTIVATED );
+			} else {
+				$subscription->mark_expired();
+			}
 		}
-		
 	}
-	
 }
 
 /**
@@ -326,16 +348,25 @@ function it_exchange_recurring_payments_handle_expired() {
  *
  * @since 1.0.1
  * @param object $post Post Object
- * @param object $transaction_product iThemes Exchange Transaction Object
+ * @param array $product Cart Product
+ *
  * @return void
 */
 function it_exchange_recurring_payments_transaction_print_metabox_after_product_feature_title( $post, $product ) {
+
 	$transaction = it_exchange_get_transaction( $post->ID );
-	$enabled = it_exchange_get_product_feature( $product['product_id'], 'recurring-payments', array( 'setting' => 'recurring-enabled' ) );	
-	if ( empty( $enabled ) ) {
+
+	try {
+		$subscription = it_exchange_get_subscription_by_transaction( $transaction, it_exchange_get_product( $product['product_id'] ) );
+	} catch ( Exception $e ) {
+
 		$time = __( 'forever', 'LION' );
 		echo '<span class="recurring-product-type">' . $time . '</span>';
-	} else if ( $transaction->get_transaction_meta( 'subscription_autorenew_' . $product['product_id'], true ) ) {
+
+		return;
+	}
+
+	if ( $subscription->is_auto_renewing() ) {
 		echo '<span class="recurring-product-autorenew"></span>';
 	}
 }
@@ -352,7 +383,7 @@ function it_exchange_recurring_payments_addon_after_payment_details() {
 	global $post;
 	$transaction = it_exchange_get_transaction( $post->ID );
 	$transaction_method = it_exchange_get_transaction_method( $transaction->ID );
-	do_action( 'it_exchange_after_payment_details_cancel_url_for_' . $transaction_method, $transaction );	
+	do_action( 'it_exchange_after_payment_details_cancel_url_for_' . $transaction_method, $transaction );
 }
 add_action( 'it_exchange_after_payment_details', 'it_exchange_recurring_payments_addon_after_payment_details' );
 
@@ -380,118 +411,151 @@ add_filter( 'it_exchange_admin_product_list_price_column', 'it_exchange_recurrin
  * @return string
 */
 function it_exchange_recurring_payments_after_payment_details_recurring_payments_autorenewal_details( $transaction ) {
-	$cart_object = get_post_meta( $transaction->ID, '_it_exchange_cart_object', true );
+
 	$transaction = it_exchange_get_transaction( $transaction->ID );
-	if ( !empty( $cart_object->products ) ) {
-		foreach ( $cart_object->products as $product ) {
-			if ( it_exchange_get_product_feature( $product['product_id'], 'recurring-payments', array( 'setting' => 'recurring-enabled' ) ) ) {
-				//This is a recurring product...
-				$dateformat = get_option( 'date_format' );
-				$jquery_date_format = it_exchange_php_date_format_to_jquery_datepicker_format( $dateformat );
-				$subscriber_status = $transaction->get_transaction_meta( 'subscriber_status', true );
-				$expires = $transaction->get_transaction_meta( 'subscription_expires_' . $product['product_id'], true );
-				$expired = $transaction->get_transaction_meta( 'subscription_expired_' . $product['product_id'], true );
-				if ( empty( $expires ) ) {
-					if ( !empty( $expired ) ) {
-						$expires = date_i18n( $dateformat, $expired );
-					} else {
-						$expires = '';
-					}
-				} else {
-					$expires = date_i18n( $dateformat, $expires );
-				}
-				?>
-				<div class="transaction-recurring-options clearfix spacing-wrapper">
-					<div class="recurring-options">
-						<h3><?php _e( 'Subscription Settings', 'LION' ); ?></h3>
-						<form action="" method="POST">
-							<?php
-							$autorenews = $transaction->get_transaction_meta( 'subscription_autorenew_' . $product['product_id'] );
-							if ( $autorenews ) {
-							$subscriber_id = $transaction->get_transaction_meta( 'subscriber_id', true );
-							?>
-							<p>
-							<label for="recurring-payment-subscriber-id"><?php _e( 'Subscription ID', 'LION' ); ?> <span class="tip" title="<?php _e( 'This is the Subscription ID from the Payment Processor.', 'LION' ); ?>">i</span></label>
-							<input type="text" id="recurring-payment-subscriber-id" name="recurring-payment-subscriber-id" value="<?php echo $subscriber_id; ?>" />
-							</p>
-							<?php
-							}
-							?>
-							
-							<p>
-							<label for="recurring-payment-subscriber-status"><?php _e( 'Subscription Status', 'LION' ); ?> <span class="tip" title="<?php _e( 'This is the status of the subscription in Exchange, not the transaction. It will not change the status in the Payment gateway.', 'LION' ); ?>">i</span></label>
-							<select id="recurring-payment-subscriber-status" name="recurring-payment-subscriber-status">
-								<option value="active" <?php selected( 'active', $subscriber_status, true ); ?>><?php _e( 'Active', 'LION' ); ?></option>
-								<option value="suspended" <?php selected( 'suspended', $subscriber_status, true ); ?>><?php _e( 'Suspended', 'LION' ); ?></option>
-								<option value="cancelled" <?php selected( 'cancelled', $subscriber_status, true ); ?>><?php _e( 'Cancelled', 'LION' ); ?></option>
-								<option value="deactivated" <?php selected( 'deactivated', $subscriber_status, true ); ?>><?php _e( 'Deactivated', 'LION' ); ?></option>
-							</select>
-							</p>
-							
-							<p>
-							<label for="recurring-payment-subscriber-expires"><?php _e( 'Subscription Expiration', 'LION' ); ?> <span class="tip" title="<?php _e( 'Set this to change what Exchange sees as the customer expiration date, the Payment processor will still send webhooks if the payment expires or if new payments come through.', 'LION' ); ?>">i</span></label>
-							<input type="text" id="recurring-payment-subscriber-expires" class="datepicker" name="recurring-payment-subscriber-expires" value="<?php esc_attr_e( $expires ); ?>" />
-							<input type="hidden" name="it_exchange_recurring-payment_date_picker_format" value="<?php echo $jquery_date_format; ?>" />
-							</p>
-							<p class="description">
-							<?php _e( "Warning:  Changes to these settings can potentially remove this customer's access to their products.", 'LION' ); ?>
-							</p>
-							<?php submit_button( 'Save Subscription Settings', 'secondary-button', 'recurring-payments-save' ); ?>
-							<?php wp_nonce_field( 'transaction-recurring-options', 'transaction-recurring-options-nonce', true ) ?>
-						</form>
-					</div>
-				</div>
-				<?php
-			}
-		}
+
+	$subs = it_exchange_get_transaction_subscriptions( $transaction );
+
+	if ( ! $subs ) {
+		return;
 	}
+
+	$df        = get_option( 'date_format' );
+	$jquery_df = it_exchange_php_date_format_to_jquery_datepicker_format( $df );
+	?>
+
+	<div class="transaction-recurring-options clearfix spacing-wrapper">
+
+		<h3><?php _e( 'Subscription Settings', 'LION' ); ?></h3>
+
+		<?php foreach ( $subs as $subscription ) :
+
+			$pid = $subscription->get_product()->ID;
+
+			$status = $subscription->get_status();
+
+			$expires = $subscription->get_expiry_date();
+			$expires = $expires ? date_i18n( $df, $expires->format( 'U' ), true ) : '';
+			?>
+
+			<div class="recurring-options">
+
+				<?php if ( count( $subs ) > 1 ): ?>
+					<h4><?php echo $subscription->get_product()->post_title; ?></h4>
+				<?php endif; ?>
+
+				<?php if ( $sub_id = $subscription->get_subscriber_id() ) : ?>
+					<p>
+						<label for="rp-sub-id-<?php echo $pid; ?>">
+							<?php _e( 'Subscription ID', 'LION' ); ?>
+							<span class="tip" title="<?php _e( 'This is the Subscription ID from the Payment Processor.', 'LION' ); ?>">i</span>
+						</label>
+
+						<input type="text" id="rp-sub-id-<?php echo $pid; ?>" name="rp-sub-id[<?php echo $pid; ?>]" value="<?php echo $sub_id; ?>" />
+					</p>
+				<?php endif; ?>
+
+				<p>
+					<label for="rp-status-<?php echo $pid; ?>">
+						<?php _e( 'Subscription Status', 'LION' ); ?>
+						<span class="tip" title="<?php _e( 'This is the status of the subscription in Exchange, not the transaction. It will not change the status in the Payment gateway.', 'LION' ); ?>">i</span>
+					</label>
+
+					<select id="rp-status-<?php echo $pid; ?>" name="rp-status[<?php echo $pid; ?>]">
+						<?php foreach ( IT_Exchange_Subscription::get_statuses() as $slug => $label ): ?>
+							<option value="<?php echo $slug; ?>" <?php selected( $slug, $status ); ?>>
+								<?php echo $label; ?>
+							</option>
+						<?php endforeach; ?>
+					</select>
+				</p>
+
+				<p>
+					<label for="rp-expires-<?php echo $pid; ?>">
+						<?php _e( 'Subscription Expiration', 'LION' ); ?>
+						<span class="tip" title="<?php _e( 'Set this to change what Exchange sees as the customer expiration date, the Payment processor will still send webhooks if the payment expires or if new payments come through.', 'LION' ); ?>">i</span>
+					</label>
+
+					<input type="text" id="rp-expires-<?php echo $pid; ?>" class="datepicker rp-expires" name="rp-expires[<?php echo $pid; ?>]" value="<?php echo $expires; ?>" />
+				</p>
+			</div>
+		<?php endforeach; ?>
+
+		<?php submit_button( 'Save Subscription Settings', 'secondary-button', 'recurring-payments-save', false ); ?>
+		<?php wp_nonce_field( 'transaction-recurring-options', 'transaction-recurring-options-nonce', true ) ?>
+
+		<p class="description">
+			<?php _e( "Warning:  Changes to these settings can potentially remove this customer's access to their products.", 'LION' ); ?>
+		</p>
+
+		<input type="hidden" name="it_exchange_recurring-payment_date_picker_format" value="<?php echo $jquery_df; ?>">
+	</div>
+	<?php
 }
 add_action( 'it_exchange_after_payment_details', 'it_exchange_recurring_payments_after_payment_details_recurring_payments_autorenewal_details' );
 
-function it_exchange_recurring_payments_save_transaction_post( $post_id, $post, $update ) {
-	if ( !empty( $_POST['transaction-recurring-options-nonce'] ) ) {
-		
-		if ( wp_verify_nonce( $_POST['transaction-recurring-options-nonce'], 'transaction-recurring-options' ) ) {
-			
-			$cart_object = get_post_meta( $post_id, '_it_exchange_cart_object', true );
-			$transaction = it_exchange_get_transaction( $post_id );
-			if ( !empty( $cart_object->products ) ) {
-				foreach ( $cart_object->products as $product ) {
-					if ( it_exchange_get_product_feature( $product['product_id'], 'recurring-payments', array( 'setting' => 'recurring-enabled' ) ) ) {
-						$autorenews = $transaction->get_transaction_meta( 'subscription_autorenew_' . $product['product_id'] );
-						if ( $autorenews ) {
-							if ( !empty( $_POST['recurring-payment-subscriber-id'] ) ) {
-								$transaction->update_transaction_meta( 'subscriber_id', $_POST['recurring-payment-subscriber-id'] );
-							}
-						}
-						
-						if ( !empty( $_POST['recurring-payment-subscriber-status'] ) ) {
-							$transaction->update_transaction_meta( 'subscriber_status', $_POST['recurring-payment-subscriber-status'] );
-						}
-						
-						if ( !empty( $_POST['recurring-payment-subscriber-expires'] ) ) {
-							$expires = strtotime( $_POST['recurring-payment-subscriber-expires'] );
-							if ( time() < $expires ) {
-								$transaction->update_transaction_meta( 'subscription_expires_' . $product['product_id'], $expires );
-								$transaction->delete_transaction_meta( 'subscription_expired_' . $product['product_id'] );
-							} else {
-								$transaction->delete_transaction_meta( 'subscription_expires_' . $product['product_id'] );
-								$transaction->update_transaction_meta( 'subscription_expired_' . $product['product_id'], $expires );
-							}
-						}
-					}
-				}
-			}
-			
-		} else {
-			
-            if ( $wp_error ) {
-                return new WP_Error( 'invalid_nonce', __( 'Unable to verify security none.', 'LION' ) );
-            }
-            return 0;
-			
+/**
+ * Save the subscription details.
+ *
+ * @param int $post_id
+ */
+function it_exchange_recurring_payments_save_transaction_post( $post_id ) {
+
+	if ( empty( $_POST['transaction-recurring-options-nonce'] ) || empty( $_POST['recurring-payments-save'] ) ) {
+		return;
+	}
+
+	if ( ! wp_verify_nonce( $_POST['transaction-recurring-options-nonce'], 'transaction-recurring-options' ) ) {
+		return;
+	}
+
+	$txn = it_exchange_get_transaction( $post_id );
+
+	foreach ( it_exchange_get_transaction_subscriptions( $txn ) as $sub ) {
+
+		$new_expires = new DateTime( $_POST['rp-expires'][ $sub->get_product()->ID ] );
+
+		if ( ! $sub->get_expiry_date() || $new_expires->format( 'U' ) != $sub->get_expiry_date()->format( 'U' ) ) {
+			$sub->set_expiry_date( $new_expires );
 		}
-		
+
+		$new_status = $_POST['rp-status'][ $sub->get_product()->ID ];
+
+		if ( $new_status !== $sub->get_status() ) {
+			$sub->set_status( $new_status );
+		}
+
+		$new_id = isset( $_POST['rp-sub-id'][ $sub->get_product()->ID ] ) ? $_POST['rp-sub-id'][ $sub->get_product()->ID ] : '';
+
+		if ( $new_id && $new_id !== $sub->get_subscriber_id() ) {
+			$sub->set_subscriber_id( $new_id );
+		}
 	}
 }
-add_action( 'save_post_it_exchange_tran', 'it_exchange_recurring_payments_save_transaction_post', 10, 3 );
+
+add_action( 'save_post_it_exchange_tran', 'it_exchange_recurring_payments_save_transaction_post', 10 );
+
+/**
+ * Shows the nag when needed.
+ *
+ * @since 1.0.0
+ *
+ * @return void
+ */
+function it_exchange_addon_recurring_payments_show_version_nag() {
+	if ( version_compare( $GLOBALS['it_exchange']['version'], '1.3.0', '<' ) ) {
+		?>
+		<div id="it-exchange-add-on-min-version-nag" class="it-exchange-nag">
+			<?php printf( __( 'The Recurring Payments add-on requires iThemes Exchange version 1.3.0 or greater. %sPlease upgrade Exchange%s.', 'LION' ), '<a href="' . admin_url( 'update-core.php' ) . '">', '</a>' ); ?>
+		</div>
+		<script type="text/javascript">
+			jQuery( document ).ready( function() {
+				if ( jQuery( '.wrap > h2' ).length == '1' ) {
+					jQuery("#it-exchange-add-on-min-version-nag").insertAfter('.wrap > h2').addClass( 'after-h2' );
+				}
+			});
+		</script>
+		<?php
+	}
+}
+add_action( 'admin_notices', 'it_exchange_addon_recurring_payments_show_version_nag' );
