@@ -42,7 +42,7 @@ class IT_Exchange_Subscription {
 	 * @param IT_Exchange_Transaction $transaction
 	 * @param IT_Exchange_Product     $product
 	 */
-	public function __construct( IT_Exchange_Transaction $transaction, IT_Exchange_Product $product ) {
+	private function __construct( IT_Exchange_Transaction $transaction, IT_Exchange_Product $product ) {
 		$this->transaction = $transaction;
 		$this->product     = $product;
 
@@ -90,6 +90,20 @@ class IT_Exchange_Subscription {
 				$this->trial_profile = new IT_Exchange_Recurring_Profile( $type, $count );
 			}
 		}
+	}
+
+	/**
+	 * Construct a subscription from a transaction.
+	 *
+	 * @since 1.8
+	 *
+	 * @param IT_Exchange_Transaction $transaction
+	 * @param IT_Exchange_Product     $product
+	 *
+	 * @return IT_Exchange_Subscription
+	 */
+	public static function from_transaction( IT_Exchange_Transaction $transaction, IT_Exchange_Product $product ) {
+		return new self( $transaction, $product );
 	}
 
 	/**

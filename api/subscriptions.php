@@ -25,7 +25,7 @@ function it_exchange_get_subscription_by_transaction( IT_Exchange_Transaction $t
 		foreach ( $transaction->get_products() as $cart_product ) {
 
 			if ( $cart_product['product_id'] == $product->ID ) {
-				$subscription = new IT_Exchange_Subscription( $transaction, $product );
+				$subscription = IT_Exchange_Subscription::from_transaction( $transaction, $product );
 
 				break;
 			}
@@ -35,7 +35,7 @@ function it_exchange_get_subscription_by_transaction( IT_Exchange_Transaction $t
 		$cart_products = $transaction->get_products();
 		$cart_product  = reset( $cart_products );
 
-		$subscription = new IT_Exchange_Subscription( $transaction, it_exchange_get_product( $cart_product['product_id'] ) );
+		$subscription = IT_Exchange_Subscription::from_transaction( $transaction, it_exchange_get_product( $cart_product['product_id'] ) );
 	} else {
 		throw new InvalidArgumentException( 'Ambiguous subscription requested.' );
 	}
