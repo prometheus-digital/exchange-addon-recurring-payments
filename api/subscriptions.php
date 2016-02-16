@@ -70,7 +70,11 @@ function it_exchange_get_transaction_subscriptions( IT_Exchange_Transaction $tra
 	foreach ( $transaction->get_products() as $product ) {
 
 		try {
-			$subs[] = it_exchange_get_subscription_by_transaction( $transaction, it_exchange_get_product( $product['product_id'] ) );
+			$sub = it_exchange_get_subscription_by_transaction( $transaction, it_exchange_get_product( $product['product_id'] ) );
+
+			if ( $sub ) {
+				$subs[] = $sub;
+			}
 		}
 		catch ( Exception $e ) {
 
