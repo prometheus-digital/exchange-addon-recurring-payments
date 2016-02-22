@@ -3,8 +3,8 @@
  * Loads APIs for iThemes Exchange - Recurring Payments Add-on
  *
  * @package exchange-addon-recurring-payments
- * @since 1.0.0
-*/
+ * @since   1.0.0
+ */
 
 if ( is_admin() ) {
 	// Admin only
@@ -15,3 +15,4 @@ if ( is_admin() ) {
 
 // Transaction Add-ons
 include( 'transactions.php' );
+require_once( dirname( __FILE__ ) . '/subscriptions.php' );
