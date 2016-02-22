@@ -92,3 +92,12 @@
 1.7.2 - 2016-01-12 - Timothy Jacobs
 	Tweak: Display reccurring price label in products table
 	Tweak: Add old status to update subscription status hook
+1.8 - 2016-02-22 - Timothy Jacobs
+	Add: IT_Exchange_Subscription class for managing subscriptions
+	Add: Alter subscription status whenever a transaction status changes.
+	Fix: Subscription settings when multiple subscriptions per-transaction
+	Deprecate:
+		it_exchange_recurring_payments_addon_update_transaction_subscription_status()
+		it_exchange_recurring_payments_addon_interval_string()
+		it_exchange_recurring_payments_addon_expires_time
+		it_exchange_recurring_payments_addon_expires_time_{$method}
