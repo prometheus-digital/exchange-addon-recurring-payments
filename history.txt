@@ -101,3 +101,5 @@
 		it_exchange_recurring_payments_addon_interval_string()
 		it_exchange_recurring_payments_addon_expires_time
 		it_exchange_recurring_payments_addon_expires_time_{$method}
+1.8.1 - 2016-02-23 - Timothy Jacobs
+	Fix: Fatal error on child transaction screens
