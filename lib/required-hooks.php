@@ -443,7 +443,7 @@ function it_exchange_recurring_payments_transaction_print_metabox_after_product_
 		return;
 	}
 
-	if ( $subscription->is_auto_renewing() ) {
+	if ( $subscription && $subscription->is_auto_renewing() ) {
 		echo '<span class="recurring-product-autorenew"></span>';
 	}
 }
