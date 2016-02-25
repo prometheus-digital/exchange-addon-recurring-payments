@@ -103,3 +103,5 @@
 		it_exchange_recurring_payments_addon_expires_time_{$method}
 1.8.1 - 2016-02-23 - Timothy Jacobs
 	Fix: Fatal error on child transaction screens
+1.8.2 - 2016-02-25 - Timothy Jacobs
+	Fix: Fatal error with invalid products
