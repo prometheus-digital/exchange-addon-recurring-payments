@@ -514,6 +514,7 @@ function it_exchange_recurring_payments_after_payment_details_recurring_payments
 
 			$pid     = $subscription->get_product()->ID;
 
+			$sub_id = $subscription->get_subscriber_id();
 			$status = $subscription->get_status();
 
 			$expires = $subscription->get_expiry_date();
@@ -526,16 +527,14 @@ function it_exchange_recurring_payments_after_payment_details_recurring_payments
 					<h4><?php echo $subscription->get_product()->post_title; ?></h4>
 				<?php endif; ?>
 
-				<?php if ( $sub_id = $subscription->get_subscriber_id() ) : ?>
-					<p>
-						<label for="rp-sub-id-<?php echo $pid; ?>">
-							<?php _e( 'Subscription ID', 'LION' ); ?>
-							<span class="tip" title="<?php _e( 'This is the Subscription ID from the Payment Processor.', 'LION' ); ?>">i</span>
-						</label>
+				<p>
+					<label for="rp-sub-id-<?php echo $pid; ?>">
+						<?php _e( 'Subscription ID', 'LION' ); ?>
+						<span class="tip" title="<?php _e( 'This is the Subscription ID from the Payment Processor.', 'LION' ); ?>">i</span>
+					</label>
 
-						<input type="text" id="rp-sub-id-<?php echo $pid; ?>" name="rp-sub-id[<?php echo $pid; ?>]" value="<?php echo $sub_id; ?>" />
-					</p>
-				<?php endif; ?>
+					<input type="text" id="rp-sub-id-<?php echo $pid; ?>" name="rp-sub-id[<?php echo $pid; ?>]" value="<?php echo $sub_id; ?>" />
+				</p>
 
 				<p>
 					<label for="rp-status-<?php echo $pid; ?>">
@@ -544,6 +543,9 @@ function it_exchange_recurring_payments_after_payment_details_recurring_payments
 					</label>
 
 					<select id="rp-status-<?php echo $pid; ?>" name="rp-status[<?php echo $pid; ?>]">
+
+						<option value=""><?php _e( 'None', 'LION' ); ?></option>
+
 						<?php foreach ( IT_Exchange_Subscription::get_statuses() as $slug => $label ): ?>
 							<option value="<?php echo $slug; ?>" <?php selected( $slug, $status ); ?>>
 								<?php echo $label; ?>
