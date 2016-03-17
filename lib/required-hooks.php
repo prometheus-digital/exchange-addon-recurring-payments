@@ -272,7 +272,13 @@ add_action( 'it_exchange_add_child_transaction_success', 'it_exchange_recurring_
 function it_exchange_recurring_payments_update_status( $transaction, $sub_id, $subscriber_status ) {
 
 	$subscription = it_exchange_get_subscription_by_transaction( it_exchange_get_transaction( $transaction ) );
-	$subscription->set_status( $subscriber_status );
+
+	try {
+		$subscription->set_status( $subscriber_status );
+	}
+	catch ( InvalidArgumentException $e ) {
+
+	}
 }
 
 add_action( 'it_exchange_update_transaction_subscription_status', 'it_exchange_recurring_payments_update_status', 10, 3 );
