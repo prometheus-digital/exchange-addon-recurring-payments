@@ -651,3 +651,36 @@ function it_exchange_addon_recurring_payments_show_version_nag() {
 }
 
 add_action( 'admin_notices', 'it_exchange_addon_recurring_payments_show_version_nag' );
+
+/**
+ * Register email notifications with Exchange core.
+ *
+ * @since 1.8.1
+ *
+ * @param IT_Exchange_Email_Notifications $notifications
+ */
+function it_exchange_recurring_payments_register_email_notifications( IT_Exchange_Email_Notifications $notifications ) {
+	$notifications
+		->register_notification( new IT_Exchange_Customer_Email_Notification(
+			__( 'Recurring Payment Cancelled', 'it-l10n-ithemes-exchange' ), 'recurring-payment-cancelled', null, array(
+				'defaults' => array(
+					'subject' => __( 'Cancellation Notification', 'LION' ),
+					'body'    => sprintf( __( "Hello %s, \r\n\r\n Your recurring payment has been cancelled.\r\n\r\nThank you.\r\n\r\n%s", 'LION' ),
+						'[it_exchange_email show=name]', '[it_exchange_email show=sitename]')
+				),
+				'group'    => __( 'Recurring', 'it-l10n-ithemes-exchange' )
+			)
+		) )
+		->register_notification( new IT_Exchange_Customer_Email_Notification(
+			__( 'Recurring Payment Expired', 'it-l10n-ithemes-exchange' ), 'recurring-payment-deactivated', null, array(
+				'defaults' => array(
+					'subject' => __( 'Expiration Notification', 'LION' ),
+					'body'    => sprintf( __( "Hello %s, \r\n\r\n Your recurring payment has expired.\r\n\r\nThank you.\r\n\r\n%s", 'LION' ),
+						'[it_exchange_email show=name]', '[it_exchange_email show=sitename]')
+				),
+				'group'    => __( 'Recurring', 'it-l10n-ithemes-exchange' )
+			)
+		) );
+}
+
+add_action( 'it_exchange_register_email_notifications', 'it_exchange_recurring_payments_register_email_notifications' );

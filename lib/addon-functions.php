@@ -11,33 +11,41 @@
  *
  * @since 1.0.0
  *
- * @param object $customer    iThemes Exchange Customer Object
- * @param string $status      Subscription Status
- * @param object $transaction Transaction
+ * @param IT_Exchange_Customer|int      $customer    iThemes Exchange Customer Object
+ * @param string                        $status      Subscription Status
+ * @param IT_Exchange_Transaction|bool  $transaction Transaction
  */
 function it_exchange_recurring_payments_customer_notification( $customer, $status, $transaction = false ) {
 
-	$settings = it_exchange_get_option( 'addon_recurring_payments', true );
+	$customer = it_exchange_get_customer( $customer );
 
-	$subject = '';
-	$content = '';
+	if ( ! $customer instanceof IT_Exchange_Customer ) {
+		return;
+	}
 
 	switch ( $status ) {
 
 		case 'deactivate':
-			$subject = $settings['recurring-payments-deactivate-subject'];
-			$content = $settings['recurring-payments-deactivate-body'];
+
+			$notification = it_exchange_email_notifications()->get_notification( 'recurring-payment-deactivated' );
+
+			it_exchange_send_email( new IT_Exchange_Email( new IT_Exchange_Email_Recipient_Customer( $customer ), $notification, array(
+				'customer' => $customer
+			) )	);
 			break;
 
 		case 'cancel':
-			$subject = $settings['recurring-payments-cancel-subject'];
-			$content = $settings['recurring-payments-cancel-body'];
+
+			$notification = it_exchange_email_notifications()->get_notification( 'recurring-payment-cancelled' );
+
+			it_exchange_send_email( new IT_Exchange_Email( new IT_Exchange_Email_Recipient_Customer( $customer ), $notification, array(
+				'customer' => $customer
+			) )	);
 			break;
 
 	}
 
 	do_action( 'it_exchange_recurring_payments_customer_notification', $customer, $status, $transaction );
-	do_action( 'it_exchange_send_email_notification', $customer->id, $subject, $content );
 
 }
 

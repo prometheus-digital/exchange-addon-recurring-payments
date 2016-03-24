@@ -34,7 +34,6 @@ function it_exchange_register_recurring_payments_addon() {
 		'icon'              => ITUtility::get_url_from_file( dirname( __FILE__ ) . '/lib/images/recurring50px.png' ),
 		'file'              => dirname( __FILE__ ) . '/init.php',
 		'category'          => 'other',
-		'settings-callback' => 'it_exchange_recurring_payments_addon_settings_callback',	
 	);
 	it_exchange_register_addon( 'recurring-payments', $options );
 }
