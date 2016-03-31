@@ -41,3 +41,5 @@ include( 'lib/addon-settings.php' );
  * need to do similar things.
  */
 include( 'lib/addon-functions.php' );
+
+require_once( dirname( __FILE__ ) . '/lib/class.email.php' );

@@ -118,3 +118,16 @@ function it_exchange_recurring_payments_addon_interval_string( $interval, $count
 	}
 
 }
+
+/**
+ * Send status notifications whenever a subscription status changes.
+ *
+ * @since 1.8
+ *
+ * @param string                   $new_status
+ * @param string                   $old_status
+ * @param IT_Exchange_Subscription $subscription
+ */
+function it_exchange_recurring_payments_send_status_notifications( $new_status, $old_status, IT_Exchange_Subscription $subscription ) {
+	_deprecated_function( __FUNCTION__, '1.8.3' );
+}

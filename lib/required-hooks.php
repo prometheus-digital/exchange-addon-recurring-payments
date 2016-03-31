@@ -284,36 +284,6 @@ function it_exchange_recurring_payments_update_status( $transaction, $sub_id, $s
 add_action( 'it_exchange_update_transaction_subscription_status', 'it_exchange_recurring_payments_update_status', 10, 3 );
 
 /**
- * Send status notifications whenever a subscription status changes.
- *
- * @since 1.8
- *
- * @param string                   $new_status
- * @param string                   $old_status
- * @param IT_Exchange_Subscription $subscription
- */
-function it_exchange_recurring_payments_send_status_notifications( $new_status, $old_status, IT_Exchange_Subscription $subscription ) {
-
-	$transaction = $subscription->get_transaction();
-	$customer    = $subscription->get_customer();
-
-	switch ( $new_status ) {
-
-		case 'deactivated' : //expired
-			it_exchange_recurring_payments_customer_notification( $customer, 'deactivate', $transaction );
-			break;
-
-		case 'cancelled' :
-			it_exchange_recurring_payments_customer_notification( $customer, 'cancel', $transaction );
-			break;
-
-	}
-}
-
-add_action( 'it_exchange_transition_subscription_status', 'it_exchange_recurring_payments_send_status_notifications', 10, 3 );
-
-
-/**
  * Update all subscription's associated with a transaction when the status changes.
  *
  * @since 1.8
@@ -403,6 +373,8 @@ function it_exchange_recurring_payments_handle_expired() {
 			  AND meta_value < %d",
 			'_it_exchange_transaction_subscription_expires_%', time() )
 	);
+	
+	IT_Exchange_Recurring_Payments_Email::batch();
 
 	foreach ( $results as $result ) {
 
@@ -421,6 +393,8 @@ function it_exchange_recurring_payments_handle_expired() {
 			}
 		}
 	}
+
+	IT_Exchange_Recurring_Payments_Email::batch( false );
 }
 
 /**
@@ -651,36 +625,3 @@ function it_exchange_addon_recurring_payments_show_version_nag() {
 }
 
 add_action( 'admin_notices', 'it_exchange_addon_recurring_payments_show_version_nag' );
-
-/**
- * Register email notifications with Exchange core.
- *
- * @since 1.8.1
- *
- * @param IT_Exchange_Email_Notifications $notifications
- */
-function it_exchange_recurring_payments_register_email_notifications( IT_Exchange_Email_Notifications $notifications ) {
-	$notifications
-		->register_notification( new IT_Exchange_Customer_Email_Notification(
-			__( 'Recurring Payment Cancelled', 'it-l10n-ithemes-exchange' ), 'recurring-payment-cancelled', null, array(
-				'defaults' => array(
-					'subject' => __( 'Cancellation Notification', 'LION' ),
-					'body'    => sprintf( __( "Hello %s, \r\n\r\n Your recurring payment has been cancelled.\r\n\r\nThank you.\r\n\r\n%s", 'LION' ),
-						'[it_exchange_email show=first_name]', '[it_exchange_email show=company_name]')
-				),
-				'group'    => __( 'Recurring', 'it-l10n-ithemes-exchange' )
-			)
-		) )
-		->register_notification( new IT_Exchange_Customer_Email_Notification(
-			__( 'Recurring Payment Expired', 'it-l10n-ithemes-exchange' ), 'recurring-payment-deactivated', null, array(
-				'defaults' => array(
-					'subject' => __( 'Expiration Notification', 'LION' ),
-					'body'    => sprintf( __( "Hello %s, \r\n\r\n Your recurring payment has expired.\r\n\r\nThank you.\r\n\r\n%s", 'LION' ),
-						'[it_exchange_email show=first_name]', '[it_exchange_email show=company_name]')
-				),
-				'group'    => __( 'Recurring', 'it-l10n-ithemes-exchange' )
-			)
-		) );
-}
-
-add_action( 'it_exchange_register_email_notifications', 'it_exchange_recurring_payments_register_email_notifications' );
