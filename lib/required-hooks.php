@@ -666,7 +666,7 @@ function it_exchange_recurring_payments_register_email_notifications( IT_Exchang
 				'defaults' => array(
 					'subject' => __( 'Cancellation Notification', 'LION' ),
 					'body'    => sprintf( __( "Hello %s, \r\n\r\n Your recurring payment has been cancelled.\r\n\r\nThank you.\r\n\r\n%s", 'LION' ),
-						'[it_exchange_email show=first_name]', '[it_exchange_email show=sitename]')
+						'[it_exchange_email show=first_name]', '[it_exchange_email show=company_name]')
 				),
 				'group'    => __( 'Recurring', 'it-l10n-ithemes-exchange' )
 			)
@@ -676,7 +676,7 @@ function it_exchange_recurring_payments_register_email_notifications( IT_Exchang
 				'defaults' => array(
 					'subject' => __( 'Expiration Notification', 'LION' ),
 					'body'    => sprintf( __( "Hello %s, \r\n\r\n Your recurring payment has expired.\r\n\r\nThank you.\r\n\r\n%s", 'LION' ),
-						'[it_exchange_email show=first_name]', '[it_exchange_email show=sitename]')
+						'[it_exchange_email show=first_name]', '[it_exchange_email show=company_name]')
 				),
 				'group'    => __( 'Recurring', 'it-l10n-ithemes-exchange' )
 			)
