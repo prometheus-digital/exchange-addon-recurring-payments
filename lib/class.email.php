@@ -73,6 +73,10 @@ class IT_Exchange_Recurring_Payments_Email {
 				return;
 		}
 
+		if ( ! $notification->is_active() ) {
+			return;
+		}
+
 		$customer = $subscription->get_customer();
 
 		$email = new IT_Exchange_Email( new IT_Exchange_Email_Recipient_Customer( $customer ), $notification, array(
