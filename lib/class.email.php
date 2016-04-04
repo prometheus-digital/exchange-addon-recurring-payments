@@ -99,25 +99,28 @@ class IT_Exchange_Recurring_Payments_Email {
 	 * @param IT_Exchange_Email_Notifications $notifications
 	 */
 	public function register_notifications( IT_Exchange_Email_Notifications $notifications ) {
+
+		$r = $notifications->get_replacer();
+
 		$notifications
 			->register_notification( new IT_Exchange_Customer_Email_Notification(
-				__( 'Recurring Payment Cancelled', 'it-l10n-ithemes-exchange' ), 'recurring-payment-cancelled', null, array(
+				__( 'Recurring Payment Cancelled', 'LION' ), 'recurring-payment-cancelled', null, array(
 					'defaults' => array(
 						'subject' => __( 'Cancellation Notification', 'LION' ),
 						'body'    => sprintf( __( "Hello %s, \r\n\r\n Your recurring payment for %s has been cancelled.\r\n\r\nThank you.\r\n\r\n%s", 'LION' ),
-							'[it_exchange_email show=first_name]', '[it_exchange_email show=subscription_product]', '[it_exchange_email show=company_name]' )
+							$r->format_tag( 'first_name' ), $r->format_tag( 'subscription_product' ), $r->format_tag( 'company_name' ) )
 					),
-					'group'    => __( 'Recurring Payments', 'it-l10n-ithemes-exchange' )
+					'group'    => __( 'Recurring Payments', 'LION' )
 				)
 			) )
 			->register_notification( new IT_Exchange_Customer_Email_Notification(
-				__( 'Recurring Payment Expired', 'it-l10n-ithemes-exchange' ), 'recurring-payment-deactivated', null, array(
+				__( 'Recurring Payment Expired', 'LION' ), 'recurring-payment-deactivated', null, array(
 					'defaults' => array(
 						'subject' => __( 'Expiration Notification', 'LION' ),
 						'body'    => sprintf( __( "Hello %s, \r\n\r\n Your recurring payment for %s has expired.\r\n\r\n You can renew your subscription here: %s \r\n\r\nThank you.\r\n\r\n%s", 'LION' ),
-							'[it_exchange_email show=first_name]', '[it_exchange_email show=subscription_product]', '[it_exchange_email show=subscription_product_link]', '[it_exchange_email show=company_name]' )
+							$r->format_tag( 'first_name' ), $r->format_tag( 'subscription_product' ), $r->format_tag( 'subscription_product_link' ), $r->format_tag( 'company_name' ) )
 					),
-					'group'    => __( 'Recurring Payments', 'it-l10n-ithemes-exchange' )
+					'group'    => __( 'Recurring Payments', 'LION' )
 				)
 			) );
 	}
@@ -133,13 +136,13 @@ class IT_Exchange_Recurring_Payments_Email {
 
 		$tags = array(
 			'subscription_product'      => array(
-				'name'    => __( 'Subscription Product', 'it-l10n-ithemes-exchange' ),
-				'desc'    => __( 'The name of the product subscribed to.', 'it-l10n-ithemes-exchange' ),
+				'name'    => __( 'Subscription Product', 'LION' ),
+				'desc'    => __( 'The name of the product subscribed to.', 'LION' ),
 				'context' => array( 'subscription' )
 			),
 			'subscription_product_link' => array(
-				'name'    => __( 'Subscription Product Link', 'it-l10n-ithemes-exchange' ),
-				'desc'    => __( 'A link to the subscription product page.', 'it-l10n-ithemes-exchange' ),
+				'name'    => __( 'Subscription Product Link', 'LION' ),
+				'desc'    => __( 'A link to the subscription product page.', 'LION' ),
 				'context' => array( 'subscription' )
 			),
 		);
