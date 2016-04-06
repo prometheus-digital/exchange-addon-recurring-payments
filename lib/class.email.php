@@ -27,7 +27,7 @@ class IT_Exchange_Recurring_Payments_Email {
 	public function __construct() {
 		add_action( 'it_exchange_transition_subscription_status', array( $this, 'send_status_notifications' ), 10, 3 );
 		add_action( 'it_exchange_register_email_notifications', array( $this, 'register_notifications' ) );
-		add_action( 'it_exchange_email_notifications_register_tags', array( $this, 'register_tags' ) );
+		add_action( 'it_exchange_email_notifications_register_tags', array( $this, 'register_tags' ), 20 );
 	}
 
 	/**
@@ -79,7 +79,7 @@ class IT_Exchange_Recurring_Payments_Email {
 
 		$customer = $subscription->get_customer();
 
-		$email = new IT_Exchange_Email( new IT_Exchange_Email_Recipient_Customer( $customer ), $notification, array(
+		$email = new IT_Exchange_Email( new IT_Exchange_Email_Recipient_Customer( $subscription->get_beneficiary() ), $notification, array(
 			'customer'     => $customer,
 			'subscription' => $subscription
 		) );
@@ -160,6 +160,22 @@ class IT_Exchange_Recurring_Payments_Email {
 			}
 
 			$replacer->add_tag( $obj );
+		}
+
+		$tags = array(
+			'customer_first_name',
+			'customer_last_name',
+			'customer_fullname',
+			'customer_username',
+			'customer_email'
+		);
+
+		foreach ( $tags as $tag ) {
+			$tag = $replacer->get_tag( $tag );
+
+			if ( $tag ) {
+				$tag->add_available_for( 'recurring-payment-cancelled' )->add_available_for( 'recurring-payment-deactivated' );
+			}
 		}
 	}
 
