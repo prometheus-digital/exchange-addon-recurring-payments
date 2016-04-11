@@ -599,29 +599,3 @@ function it_exchange_recurring_payments_save_transaction_post( $post_id ) {
 }
 
 add_action( 'save_post_it_exchange_tran', 'it_exchange_recurring_payments_save_transaction_post', 10 );
-
-/**
- * Shows the nag when needed.
- *
- * @since 1.0.0
- *
- * @return void
- */
-function it_exchange_addon_recurring_payments_show_version_nag() {
-	if ( version_compare( $GLOBALS['it_exchange']['version'], '1.3.0', '<' ) ) {
-		?>
-		<div id="it-exchange-add-on-min-version-nag" class="it-exchange-nag">
-			<?php printf( __( 'The Recurring Payments add-on requires iThemes Exchange version 1.3.0 or greater. %sPlease upgrade Exchange%s.', 'LION' ), '<a href="' . admin_url( 'update-core.php' ) . '">', '</a>' ); ?>
-		</div>
-		<script type="text/javascript">
-			jQuery( document ).ready( function () {
-				if ( jQuery( '.wrap > h2' ).length == '1' ) {
-					jQuery( "#it-exchange-add-on-min-version-nag" ).insertAfter( '.wrap > h2' ).addClass( 'after-h2' );
-				}
-			} );
-		</script>
-		<?php
-	}
-}
-
-add_action( 'admin_notices', 'it_exchange_addon_recurring_payments_show_version_nag' );
