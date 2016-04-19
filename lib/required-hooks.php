@@ -273,6 +273,13 @@ function it_exchange_recurring_payments_update_status( $transaction, $sub_id, $s
 
 	$subscription = it_exchange_get_subscription_by_transaction( it_exchange_get_transaction( $transaction ) );
 
+	// this hook is used by payment processors, we don't want them to alter the status for complimentary subscriptions
+	if ( $subscription->get_status() === IT_Exchange_Subscription::STATUS_COMPLIMENTARY && $wh = it_exchange_doing_webhook() && $subscriber_status == IT_Exchange_Subscription::STATUS_CANCELLED ) {
+		$subscription->record_gateway_cancellation_while_complimentary( $wh );
+		
+		return;
+	}
+
 	try {
 		$subscription->set_status( $subscriber_status );
 	}

@@ -15,6 +15,7 @@ class IT_Exchange_Subscription {
 	const STATUS_SUSPENDED = 'suspended';
 	const STATUS_CANCELLED = 'cancelled';
 	const STATUS_DEACTIVATED = 'deactivated';
+	const STATUS_COMPLIMENTARY = 'complimentary';
 
 	/**
 	 * @var IT_Exchange_Transaction
@@ -423,6 +424,10 @@ class IT_Exchange_Subscription {
 		 */
 		do_action( 'it_exchange_transition_subscription_status', $new_status, $old_status, $this );
 
+		if ( $old_status === self::STATUS_ACTIVE && $this->is_auto_renewing() ) {
+			$this->cancel();
+		}
+
 		return $old_status;
 	}
 
@@ -439,7 +444,11 @@ class IT_Exchange_Subscription {
 			$profile = $this->get_recurring_profile();
 		}
 
-		$time = strtotime( $profile->get_interval() ) + DAY_IN_SECONDS;
+		$time = strtotime( $profile->get_interval() );
+
+		if ( $this->is_auto_renewing() ) {
+			$time += DAY_IN_SECONDS;
+		}
 
 		/**
 		 * Filter the new expiration date.
@@ -496,8 +505,24 @@ class IT_Exchange_Subscription {
 		$method = $this->get_transaction()->transaction_method;
 
 		do_action( "it_exchange_cancel_{$method}_subscription", array(
-			'old_subscriber_id' => $this->get_subscriber_id()
+			'old_subscriber_id' => $this->get_subscriber_id(),
+			'customer'          => $this->get_customer()
 		) );
+	}
+
+	/**
+	 * Record a gateway cancellation while the subscription is complimentary.
+	 *
+	 * @since 1.9
+	 *
+	 * @param string $gateway
+	 */
+	public function record_gateway_cancellation_while_complimentary( $gateway ) {
+
+		$builder = new IT_Exchange_Txn_Activity_Builder( $this->get_transaction(), 'status' );
+		$builder->set_description( "Original recurring payment has been cancelled." );
+		$builder->set_actor( new IT_Exchange_Txn_Activity_Gateway_Actor( it_exchange_get_addon( $gateway ) ) );
+		$builder->build( it_exchange_get_txn_activity_factory() );
 	}
 
 	/**
@@ -509,10 +534,11 @@ class IT_Exchange_Subscription {
 	 */
 	public static function get_statuses() {
 		return array(
-			self::STATUS_ACTIVE      => __( 'Active', 'LION' ),
-			self::STATUS_SUSPENDED   => __( 'Suspended', 'LION' ),
-			self::STATUS_DEACTIVATED => __( 'Deactivated', 'LION' ),
-			self::STATUS_CANCELLED   => __( 'Cancelled', 'LION' )
+			self::STATUS_ACTIVE        => __( 'Active', 'LION' ),
+			self::STATUS_COMPLIMENTARY => __( 'Complimentary', 'LION' ),
+			self::STATUS_SUSPENDED     => __( 'Suspended', 'LION' ),
+			self::STATUS_DEACTIVATED   => __( 'Deactivated', 'LION' ),
+			self::STATUS_CANCELLED     => __( 'Cancelled', 'LION' )
 		);
 	}
 }
