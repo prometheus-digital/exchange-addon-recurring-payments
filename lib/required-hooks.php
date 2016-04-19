@@ -433,6 +433,56 @@ function it_exchange_recurring_payments_handle_expired() {
 }
 
 /**
+ * Add an activity item when the subscriber status changes.
+ *
+ * @since 1.34
+ *
+ * @param string                   $status
+ * @param string                   $old_status
+ * @param IT_Exchange_Subscription $subscription
+ */
+function it_exchange_recurring_payments_add_activity_on_subscriber_status( $status, $old_status, IT_Exchange_Subscription $subscription ) {
+
+	if ( $status === $old_status ) {
+		return;
+	}
+
+	$labels = IT_Exchange_Subscription::get_statuses();
+
+	$status_label     = isset( $labels[ $status ] ) ? $labels[ $status ] : __( 'Unknown', 'it-l10n-ithemes-exchange' );
+	$old_status_label = isset( $labels[ $old_status ] ) ? $labels[ $old_status ] : __( 'Unknown', 'it-l10n-ithemes-exchange' );
+
+	if ( $old_status ) {
+		$message = sprintf( __( 'Subscriber status changed from %s to %s.', 'it-l10n-ithemes-exchange' ),
+			$old_status_label, $status_label
+		);
+	} else {
+		$message = sprintf( __( 'Subscriber status changed to %s.', 'it-l10n-ithemes-exchange' ), $status_label );
+	}
+
+	$builder = new IT_Exchange_Txn_Activity_Builder( $subscription->get_transaction(), 'status' );
+	$builder->set_description( $message );
+
+	if ( is_user_logged_in() ) {
+		$actor = new IT_Exchange_Txn_Activity_User_Actor( wp_get_current_user() );
+	} elseif ( ( $wh = it_exchange_doing_webhook() ) && ( $addon = it_exchange_get_addon( $wh ) ) ) {
+		$actor = new IT_Exchange_Txn_Activity_Gateway_Actor( $addon );
+	} else {
+		$actor = new IT_Exchange_Txn_Activity_Site_Actor();
+	}
+
+	$builder->set_actor( $actor );
+	$builder->build( it_exchange_get_txn_activity_factory() );
+}
+
+add_action( 'it_exchange_transition_subscription_status', 'it_exchange_recurring_payments_add_activity_on_subscriber_status', 10, 3 );
+
+if ( has_action( 'it_exchange_recurring_payments_addon_update_transaction_subscriber_status', 'it_exchange_add_activity_on_subscriber_status' ) ) {
+	remove_action( 'it_exchange_recurring_payments_addon_update_transaction_subscriber_status',
+		'it_exchange_add_activity_on_subscriber_status', 10 );
+}
+
+/**
  * Modifies the Transaction Payments screen for recurring payments
  * Adds recurring type to product title
  *
