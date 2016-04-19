@@ -567,7 +567,7 @@ function it_exchange_recurring_payments_after_payment_details_recurring_payments
 		return;
 	}
 
-	$df        = get_option( 'date_format' );
+	$df        = 'Y-m-d';
 	$jquery_df = it_exchange_php_date_format_to_jquery_datepicker_format( $df );
 	?>
 
@@ -583,7 +583,7 @@ function it_exchange_recurring_payments_after_payment_details_recurring_payments
 			$status = $subscription->get_status();
 
 			$expires = $subscription->get_expiry_date();
-			$expires = $expires ? date_i18n( $df, $expires->format( 'U' ), true ) : '';
+			$expires = $expires ? $expires->format( $df ) : '';
 			?>
 
 			<div class="recurring-options">
