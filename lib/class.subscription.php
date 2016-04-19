@@ -439,7 +439,11 @@ class IT_Exchange_Subscription {
 			$profile = $this->get_recurring_profile();
 		}
 
-		$time = strtotime( $profile->get_interval() ) + DAY_IN_SECONDS;
+		$time = strtotime( $profile->get_interval() );
+		
+		if ( $this->is_auto_renewing() ) {
+			$time += DAY_IN_SECONDS;
+		}
 
 		/**
 		 * Filter the new expiration date.
