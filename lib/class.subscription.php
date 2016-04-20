@@ -506,7 +506,8 @@ class IT_Exchange_Subscription {
 
 		do_action( "it_exchange_cancel_{$method}_subscription", array(
 			'old_subscriber_id' => $this->get_subscriber_id(),
-			'customer'          => $this->get_customer()
+			'customer'          => $this->get_customer(),
+			'subscription'      => $this
 		) );
 	}
 
