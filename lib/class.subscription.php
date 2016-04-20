@@ -445,7 +445,7 @@ class IT_Exchange_Subscription {
 		 */
 		do_action( 'it_exchange_transition_subscription_status', $new_status, $old_status, $this );
 
-		if ( $old_status === self::STATUS_ACTIVE && $this->is_auto_renewing() ) {
+		if ( $new_status === self::STATUS_COMPLIMENTARY && $old_status === self::STATUS_ACTIVE && $this->is_auto_renewing() & ) {
 			$this->cancel();
 		}
 
