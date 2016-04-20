@@ -99,7 +99,7 @@ add_filter( 'it_exchange_bump_subscription_new_expiration_date', 'it_exchange_re
 /**
  * Fire deprecated hooks when the subscriber ID is updated.
  *
- * @since 1.8.3
+ * @since 1.8.4
  *
  * @param IT_Exchange_Subscription $subscription
  */

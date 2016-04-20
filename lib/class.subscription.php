@@ -370,7 +370,7 @@ class IT_Exchange_Subscription {
 		/**
 		 * Fires when a subscription's subscriber ID has been updated.
 		 *
-		 * @since 1.8.3
+		 * @since 1.8.4
 		 *
 		 * @param IT_Exchange_Subscription $this
 		 * @param string                   $old_id
@@ -535,7 +535,7 @@ class IT_Exchange_Subscription {
 	/**
 	 * Record a gateway cancellation while the subscription is complimentary.
 	 *
-	 * @since 1.9
+	 * @since 1.8.4
 	 *
 	 * @param string $gateway
 	 */
