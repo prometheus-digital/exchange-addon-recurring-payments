@@ -17,8 +17,7 @@
 */
 function it_exchange_recurring_payments_addon_update_transaction_subscription_id( $transaction, $subscriber_id ) {
 
-	if ( 'IT_Exchange_Transaction' != get_class( $transaction ) )
-		$transaction = it_exchange_get_transaction( $transaction );
+	$transaction = it_exchange_get_transaction( $transaction );
 
 	if ( ! $transaction->ID )
 		return false;
