@@ -40,7 +40,7 @@ add_action( 'it_exchange_transition_subscription_status', 'it_exchange_recurring
  */
 function it_exchange_recurring_payments_addon_update_transaction_subscription_status( $transaction, $subscriber_id, $subscriber_status ) {
 
-	_deprecated_function( __FUNCTION__,	'1.8', 'IT_Exchange_Subscription::set_status' );
+	_deprecated_function( __FUNCTION__, '1.8', 'IT_Exchange_Subscription::set_status' );
 
 	$transaction = it_exchange_get_transaction( $transaction );
 
@@ -96,6 +96,23 @@ function it_exchange_recurring_payments_deprecated_expirations_filters( $time, I
 
 add_filter( 'it_exchange_bump_subscription_new_expiration_date', 'it_exchange_recurring_payments_deprecated_expirations_filters', 10, 2 );
 
+/**
+ * Fire deprecated hooks when the subscriber ID is updated.
+ *
+ * @since 1.8.3
+ *
+ * @param IT_Exchange_Subscription $subscription
+ */
+function it_exchange_recurring_payments_deprecated_subscriber_id_actions( IT_Exchange_Subscription $subscription ) {
+
+	$txn_id = $subscription->get_transaction();
+	$sub_id = $subscription->get_subscriber_id();
+
+	do_action( 'it_exchange_recurring_payments_addon_update_transaction_subscriber_id', $txn_id, $sub_id );
+	do_action( 'it_exchange_recurring_payments_addon_update_transaction_subscriber_id_' . $txn_id->transaction_method, $txn_id, $sub_id );
+}
+
+add_action( 'it_exchange_subscription_set_subscriber_id', 'it_exchange_recurring_payments_deprecated_subscriber_id_actions' );
 
 /**
  * Build the interval string.

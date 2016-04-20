@@ -354,7 +354,28 @@ class IT_Exchange_Subscription {
 	 * @param string $new_id
 	 */
 	public function set_subscriber_id( $new_id ) {
+
+		$old_id = $this->get_subscriber_id();
 		$this->get_transaction()->update_meta( 'subscriber_id', $new_id );
+
+		$customer_subscription_ids = $this->get_customer()->get_customer_meta( 'subscription_ids' );
+
+		if ( ! empty( $old_id ) ) {
+			unset( $customer_subscription_ids[ $old_id ] );
+		}
+
+		$customer_subscription_ids[ $new_id ]['txn_id'] = $this->get_transaction()->ID;
+		$this->get_customer()->update_customer_meta( 'subscription_ids', $customer_subscription_ids );
+
+		/**
+		 * Fires when a subscription's subscriber ID has been updated.
+		 *
+		 * @since 1.8.3
+		 *
+		 * @param IT_Exchange_Subscription $this
+		 * @param string                   $old_id
+		 */
+		do_action( 'it_exchange_subscription_set_subscriber_id', $this, $old_id );
 	}
 
 	/**
