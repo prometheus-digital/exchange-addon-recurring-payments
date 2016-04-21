@@ -7,6 +7,7 @@
 
 require_once( dirname( __FILE__ ) . '/lib/class.recurring-profile.php' );
 require_once( dirname( __FILE__ ) . '/lib/class.subscription.php' );
+require_once( dirname( __FILE__ ) . '/lib/class.expiry-date-activity.php' );
 
 require_once ( dirname( __FILE__ ) ) . '/lib/deprecated.php';
 

@@ -570,9 +570,83 @@ function it_exchange_recurring_payments_add_activity_on_subscriber_status( $stat
 add_action( 'it_exchange_transition_subscription_status', 'it_exchange_recurring_payments_add_activity_on_subscriber_status', 10, 3 );
 
 if ( has_action( 'it_exchange_recurring_payments_addon_update_transaction_subscriber_status', 'it_exchange_add_activity_on_subscriber_status' ) ) {
-	remove_action( 'it_exchange_recurring_payments_addon_update_transaction_subscriber_status',
-		'it_exchange_add_activity_on_subscriber_status', 10 );
+	remove_action(
+		'it_exchange_recurring_payments_addon_update_transaction_subscriber_status',
+		'it_exchange_add_activity_on_subscriber_status', 10
+	);
 }
+
+/**
+ * Add an activity item when the subscription
+ * 
+ * @since 1.8.4
+ *
+ * @param IT_Exchange_Subscription $subscription
+ * @param DateTime                 $previous
+ */
+function it_exchange_recurring_payments_add_activity_on_expiration_date( IT_Exchange_Subscription $subscription, DateTime $previous = null ) {
+
+	$format = get_option( 'date_format' );
+
+	if ( $previous ) {
+		$message = sprintf(
+			__( 'Subscription expiration date updated to %s from %s.', 'LION' ),
+			date_i18n( $format, $subscription->get_expiry_date()->format( 'U' ) ),
+			date_i18n( $format, $previous->format( 'U' ) )
+		);
+	} else {
+		$message = sprintf(
+			__( 'Subscription expiration date updated to %s.', 'LION' ),
+			date_i18n( $format, $subscription->get_expiry_date()->format( 'U' ) )
+		);
+	}
+
+	$builder = new IT_Exchange_Txn_Activity_Builder( $subscription->get_transaction(), 'subscription-expiry' );
+	$builder->set_description( $message );
+
+	/**
+	 * Filter whether to force using a gateway actor.
+	 *
+	 * @since 1.8.4
+	 *
+	 * @param bool                     $use_gateway
+	 * @param IT_Exchange_Subscription $subscription
+	 * @param DateTime|null            $previous
+	 */
+	$use_gateway = apply_filters( 'it_exchange_subscriber_expiration_date_activity_use_gateway_actor', false, $subscription, $previous );
+
+	if ( $use_gateway ) {
+		$actor = new IT_Exchange_Txn_Activity_Gateway_Actor( it_exchange_get_addon( $subscription->get_transaction()->transaction_method ) );
+	} elseif ( is_user_logged_in() ) {
+		$actor = new IT_Exchange_Txn_Activity_User_Actor( wp_get_current_user() );
+	} elseif ( ( $wh = it_exchange_doing_webhook() ) && ( $addon = it_exchange_get_addon( $wh ) ) ) {
+		$actor = new IT_Exchange_Txn_Activity_Gateway_Actor( $addon );
+	} else {
+		$actor = new IT_Exchange_Txn_Activity_Site_Actor();
+	}
+
+	$builder->set_actor( $actor );
+	$builder->build( it_exchange_get_txn_activity_factory() );
+}
+
+add_action( 'it_exchange_subscription_set_expiry_date', 'it_exchange_recurring_payments_add_activity_on_expiration_date', 10, 2 );
+
+/**
+ * Register custom activity types.
+ *
+ * @since 1.8.4
+ *
+ * @param IT_Exchange_Txn_Activity_Factory $factory
+ */
+function it_exchange_recurring_payments_register_activity_types( IT_Exchange_Txn_Activity_Factory $factory ) {
+
+	$factory->register( 'subscription-expiry', __( 'Subscription Expiry', 'LION' ), array(
+		'IT_Exchange_Txn_Subscription_Expiry_Activity',
+		'make'
+	) );
+}
+
+add_action( 'it_exchange_get_txn_activity_factory', 'it_exchange_recurring_payments_register_activity_types' );
 
 /**
  * Modifies the Transaction Payments screen for recurring payments
