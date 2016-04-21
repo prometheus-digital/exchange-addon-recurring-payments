@@ -365,6 +365,7 @@ class IT_Exchange_Subscription {
 		}
 
 		$customer_subscription_ids[ $new_id ]['txn_id'] = $this->get_transaction()->ID;
+		$customer_subscription_ids[ $new_id ]['status'] = $this->get_status();
 		$this->get_customer()->update_customer_meta( 'subscription_ids', $customer_subscription_ids );
 
 		/**
@@ -419,18 +420,16 @@ class IT_Exchange_Subscription {
 	 */
 	public function set_status( $new_status ) {
 
-		if ( $new_status === $this->get_status() ) {
+		$old_status = $this->get_status();
+		
+		if ( $new_status === $old_status ) {
 			throw new InvalidArgumentException( '$new_status === $old_status' );
 		}
 
-		$subscriber_id = $this->get_subscriber_id();
-
 		$this->get_transaction()->update_meta( 'subscriber_status_' . $this->get_product()->ID, $new_status );
 		$this->get_transaction()->update_meta( 'subscriber_status', $new_status ); // back-compat
+
 		$subscriptions = $this->get_customer()->get_customer_meta( 'subscription_ids' );
-
-		$old_status = isset( $subscriptions[ $subscriber_id ]['status'] ) ? $subscriptions[ $subscriber_id ]['status'] : '';
-
 		$subscriptions[ $this->get_subscriber_id() ]['status'] = $new_status;
 		$this->get_customer()->update_customer_meta( 'subscription_ids', $subscriptions );
 

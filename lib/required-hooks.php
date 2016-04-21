@@ -310,10 +310,6 @@ add_action( 'it_exchange_subscription_created', 'it_exchange_recurring_payments_
  */
 function it_exchange_recurring_payments_set_non_auto_renewing_subscriptions_as_active_on_clear( $transaction, $old_status, $old_cleared ) {
 
-	if ( ! function_exists( 'it_exchange_get_transaction_subscriptions' ) ) {
-		return;
-	}
-
 	$new_cleared = it_exchange_transaction_is_cleared_for_delivery( $transaction );
 	$method      = it_exchange_get_transaction_method( $transaction );
 
