@@ -233,7 +233,16 @@ function it_exchange_recurring_payments_addon_add_transaction( $transaction_id )
 		$product = it_exchange_get_product( $product['product_id'] );
 
 		if ( $product->get_feature( 'recurring-payments', array( 'setting' => 'recurring-enabled' ) ) ) {
-			IT_Exchange_Subscription::create( $transaction, $product );
+			$subscription = IT_Exchange_Subscription::create( $transaction, $product );
+
+			/**
+			 * Fires when a subscription is created.
+			 * 
+			 * @since 1.8.4
+			 *        
+			 * @param IT_Exchange_Subscription $subscription
+			 */
+			do_action( 'it_exchange_subscription_created', $subscription );
 		}
 	}
 
@@ -257,6 +266,79 @@ function it_exchange_recurring_payments_bump_expiration_on_child_transaction( $t
 }
 
 add_action( 'it_exchange_add_child_transaction_success', 'it_exchange_recurring_payments_bump_expiration_on_child_transaction' );
+
+/**
+ * Set non-auto-renewing subscriptions to active when they are created.
+ * 
+ * @since 1.8.4
+ * 
+ * @param IT_Exchange_Subscription $subscription
+ */
+function it_exchange_recurring_payments_set_non_auto_renewing_subscriptions_to_active( IT_Exchange_Subscription $subscription ) {
+	
+	if ( it_exchange_transaction_is_cleared_for_delivery( $subscription->get_transaction() ) && ! $subscription->is_auto_renewing() ) {
+		
+		$method = $subscription->get_transaction()->transaction_method;
+
+		/**
+		 * Filter whether to auto-activate non auto-renewing subscriptions.
+		 *
+		 * The dynamic portion of this hook, `$method`, refers to the transaction method slug.
+		 * For example, offline-payments.
+		 * 
+		 * @param bool                     $activate
+		 * @param IT_Exchange_Subscription $subscription 
+		 */
+		if ( apply_filters( "it_exchange_auto_activate_non_renewing_{$method}_subscriptions", true, $subscription ) ) {
+			add_filter( 'it_exchange_subscriber_status_activity_use_gateway_actor', '__return_true' );
+			$subscription->set_status( $subscription::STATUS_ACTIVE );
+			remove_filter( 'it_exchange_subscriber_status_activity_use_gateway_actor', '__return_true' );
+		}
+	}
+}
+
+add_action( 'it_exchange_subscription_created', 'it_exchange_recurring_payments_set_non_auto_renewing_subscriptions_to_active' );
+
+/**
+ * Mark subscriptions as active when the transaction is marked as cleared for delivery.
+ *
+ * @since 1.35.4
+ *
+ * @param IT_Exchange_Transaction $transaction
+ * @param string                  $old_status
+ * @param bool                    $old_cleared
+ */
+function it_exchange_recurring_payments_set_non_auto_renewing_subscriptions_as_active_on_clear( $transaction, $old_status, $old_cleared ) {
+
+	if ( ! function_exists( 'it_exchange_get_transaction_subscriptions' ) ) {
+		return;
+	}
+
+	$new_cleared = it_exchange_transaction_is_cleared_for_delivery( $transaction );
+	$method      = it_exchange_get_transaction_method( $transaction );
+
+	if ( $new_cleared && ! $old_cleared ) {
+
+		$subs = it_exchange_get_transaction_subscriptions( $transaction );
+
+		foreach ( $subs as $subscription ) {
+			$sub_status = $subscription->get_status();
+
+			if ( empty( $sub_status ) ) {
+
+				// This filter is documented in lib/required-hooks.php
+				if ( apply_filters( "it_exchange_auto_activate_non_renewing_{$method}_subscriptions", true, $subscription ) ) {
+					add_filter( 'it_exchange_subscriber_status_activity_use_gateway_actor', '__return_true' );
+					$subscription->set_status( $subscription::STATUS_ACTIVE );
+					remove_filter( 'it_exchange_subscriber_status_activity_use_gateway_actor', '__return_true' );
+				}
+			}
+		}
+	}
+
+}
+
+add_action( 'it_exchange_update_transaction_status', 'it_exchange_zero_sum_mark_subscriptions_as_active_on_clear', 10, 3 );
 
 /**
  * Update the status when the status hook is fired.
@@ -463,7 +545,21 @@ function it_exchange_recurring_payments_add_activity_on_subscriber_status( $stat
 	$builder = new IT_Exchange_Txn_Activity_Builder( $subscription->get_transaction(), 'status' );
 	$builder->set_description( $message );
 
-	if ( is_user_logged_in() ) {
+	/**
+	 * Filter whether to force using a gateway actor.
+	 *
+	 * @since 1.8.4
+	 *
+	 * @param bool                     $use_gateway
+	 * @param IT_Exchange_Subscription $subscription
+	 * @param string                   $status
+	 * @param string                   $old_status
+	 */
+	$use_gateway = apply_filters( 'it_exchange_subscriber_status_activity_use_gateway_actor', false, $subscription, $status, $old_status );
+
+	if ( $use_gateway ) {
+		$actor = new IT_Exchange_Txn_Activity_Gateway_Actor( it_exchange_get_addon( $subscription->get_transaction()->transaction_method ) );
+	} elseif ( is_user_logged_in() ) {
 		$actor = new IT_Exchange_Txn_Activity_User_Actor( wp_get_current_user() );
 	} elseif ( ( $wh = it_exchange_doing_webhook() ) && ( $addon = it_exchange_get_addon( $wh ) ) ) {
 		$actor = new IT_Exchange_Txn_Activity_Gateway_Actor( $addon );
