@@ -505,7 +505,7 @@ function it_exchange_recurring_payments_handle_expired() {
 
 			if ( $subscription->get_status() === IT_Exchange_Subscription::STATUS_ACTIVE ) {
 				$subscription->set_status( IT_Exchange_Subscription::STATUS_DEACTIVATED );
-			} elseif ( $subscription->get_status() === IT_Exchange_Subscription::STATUS_COMPLIMENTARY ) {
+			} elseif ( $subscription->get_status() === $subscription::STATUS_COMPLIMENTARY && $subscription->is_auto_renewing() ) {
 				$subscription->bump_expiration_date();
 			} else {
 				$subscription->mark_expired();
