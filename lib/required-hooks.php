@@ -684,14 +684,16 @@ function it_exchange_recurring_payments_after_payment_details_recurring_payments
 					<h4><?php echo $subscription->get_product()->post_title; ?></h4>
 				<?php endif; ?>
 
-				<p>
-					<label for="rp-sub-id-<?php echo $pid; ?>">
-						<?php _e( 'Subscription ID', 'LION' ); ?>
-						<span class="tip" title="<?php _e( 'This is the Subscription ID from the Payment Processor.', 'LION' ); ?>">i</span>
-					</label>
+				<?php if ( $subscription->is_auto_renewing() ): ?>
+					<p>
+						<label for="rp-sub-id-<?php echo $pid; ?>">
+							<?php _e( 'Subscription ID', 'LION' ); ?>
+							<span class="tip" title="<?php _e( 'This is the Subscription ID from the Payment Processor.', 'LION' ); ?>">i</span>
+						</label>
 
-					<input type="text" id="rp-sub-id-<?php echo $pid; ?>" name="rp-sub-id[<?php echo $pid; ?>]" value="<?php echo $sub_id; ?>" />
-				</p>
+						<input type="text" id="rp-sub-id-<?php echo $pid; ?>" name="rp-sub-id[<?php echo $pid; ?>]" value="<?php echo $sub_id; ?>" />
+					</p>
+				<?php endif; ?>
 
 				<p>
 					<label for="rp-status-<?php echo $pid; ?>">
