@@ -477,7 +477,7 @@ class IT_Exchange_Subscription {
 
 		$time = strtotime( $profile->get_interval() );
 
-		if ( $this->is_auto_renewing() ) {
+		if ( $this->is_auto_renewing() && $this->get_status() !== self::STATUS_COMPLIMENTARY ) {
 			$time += DAY_IN_SECONDS;
 		}
 
