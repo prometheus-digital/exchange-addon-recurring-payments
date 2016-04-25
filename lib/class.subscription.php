@@ -334,14 +334,14 @@ class IT_Exchange_Subscription {
 			$this->get_transaction()->delete_meta( 'subscription_expires_' . $this->get_product()->ID );
 			$this->get_transaction()->update_meta( 'subscription_expired_' . $this->get_product()->ID, $date->format( 'U' ) );
 		}
-		
+
 		/**
 		 * Fires when a subscription's expiry date has been updated.
 		 *
 		 * @since 1.8.4
 		 *
 		 * @param IT_Exchange_Subscription $this
-		 * @param DateTime|null             $previous
+		 * @param DateTime|null            $previous
 		 */
 		do_action( 'it_exchange_subscription_set_expiry_date', $this, $previous );
 	}
@@ -414,7 +414,7 @@ class IT_Exchange_Subscription {
 		if ( $label ) {
 			$labels = self::get_statuses();
 
-			return $labels[ $status ];
+			return isset( $labels[ $status ] ) ? $labels[ $status ] : ucfirst( $status );
 		}
 
 		return $status;
@@ -440,7 +440,8 @@ class IT_Exchange_Subscription {
 		$this->get_transaction()->update_meta( 'subscriber_status_' . $this->get_product()->ID, $new_status );
 		$this->get_transaction()->update_meta( 'subscriber_status', $new_status ); // back-compat
 
-		$subscriptions                                         = $this->get_customer()->get_customer_meta( 'subscription_ids' );
+		$subscriptions = $this->get_customer()->get_customer_meta( 'subscription_ids' );
+
 		$subscriptions[ $this->get_subscriber_id() ]['status'] = $new_status;
 		$this->get_customer()->update_customer_meta( 'subscription_ids', $subscriptions );
 
