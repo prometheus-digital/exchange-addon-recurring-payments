@@ -7,9 +7,9 @@
  */
 
 /**
- * Class IT_Exchange_Recurring_Payments_Zero_Sum_Checkout_Upgrade
+ * Class IT_Exchange_Recurring_Payments_Non_Auto_Renewing
  */
-class IT_Exchange_Recurring_Payments_Zero_Sum_Checkout_Upgrade implements IT_Exchange_UpgradeInterface {
+class IT_Exchange_Recurring_Payments_Non_Auto_Renewing implements IT_Exchange_UpgradeInterface {
 
 	/**
 	 * @inheritDoc
@@ -22,21 +22,21 @@ class IT_Exchange_Recurring_Payments_Zero_Sum_Checkout_Upgrade implements IT_Exc
 	 * @inheritDoc
 	 */
 	public function get_name() {
-		return 'Zero Sum Checkout Complimentary';
+		return 'Non-Auto-Renewing Subscriptions';
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public function get_slug() {
-		return 'zero-sum-checkout-complimentary';
+		return 'non-auto-renewing-subscriptions';
 	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public function get_description() {
-		return __( 'Convert active Zero Sum Checkout subscriptions to complimentary status.', 'LION' );
+		return __( "Repair non-auto-renewing subscriptions that don't have a status.", 'LION' );
 	}
 
 	/**
@@ -66,18 +66,37 @@ class IT_Exchange_Recurring_Payments_Zero_Sum_Checkout_Upgrade implements IT_Exc
 	 */
 	protected function get_transactions( $number = - 1, $page = 1, $ids = false ) {
 
-		$args = array(
-			'posts_per_page'     => $number,
-			'paged'              => $page,
-			'post_parent'        => 0,
-			'transaction_method' => 'zero-sum-checkout'
-		);
+		/** @var \wpdb $wpdb */
+		global $wpdb;
 
-		if ( $ids ) {
-			$args['fields'] = 'ids';
+		$sql = "SELECT {$wpdb->posts}.ID FROM {$wpdb->posts} 
+	LEFT JOIN {$wpdb->postmeta} ON ( {$wpdb->posts}.ID = {$wpdb->postmeta}.post_id ) 
+	LEFT JOIN {$wpdb->postmeta} AS mt1 ON ({$wpdb->posts}.ID = mt1.post_id AND mt1.meta_key = '_it_exchange_transaction_subscriber_status' ) 
+WHERE 1=1  AND ( 
+  {$wpdb->postmeta}.meta_key LIKE '_it_exchange_transaction_subscription_expires%' AND 
+  mt1.post_id IS NULL
+) ";
+
+		if ( $number != - 1 ) {
+
+			$offset = $number * ( $page - 1 );
+
+			$sql .= "LIMIT {$offset}, {$number}";
 		}
 
-		return it_exchange_get_transactions( $args );
+		$results = $wpdb->get_results( $sql );
+
+		if ( $ids ) {
+			return $results;
+		}
+
+		$transactions = array();
+
+		foreach ( $results as $result ) {
+			$transactions[] = it_exchange_get_transaction( $result->ID );
+		}
+
+		return $transactions;
 	}
 
 	/**
@@ -102,6 +121,16 @@ class IT_Exchange_Recurring_Payments_Zero_Sum_Checkout_Upgrade implements IT_Exc
 			$skin->debug( 'Upgrading Txn: ' . $transaction->ID );
 		}
 
+		if ( it_exchange_get_transaction_method( $transaction ) === 'zero-sum-checkout' ) {
+
+			if ( $verbose ) {
+				$skin->debug( 'Skipped Txn: ' . $transaction->ID . '. Zero Sum Transaction.' );
+				$skin->debug( '' );
+			}
+
+			return;
+		}
+
 		$subs = it_exchange_get_transaction_subscriptions( $transaction );
 
 		if ( ! $subs ) {
@@ -117,17 +146,17 @@ class IT_Exchange_Recurring_Payments_Zero_Sum_Checkout_Upgrade implements IT_Exc
 		foreach ( $subs as $sub ) {
 			$status = $sub->get_status();
 
-			if ( empty( $status ) || $status === $sub::STATUS_ACTIVE ) {
+			if ( empty( $status ) && ! $sub->is_auto_renewing() ) {
 
 				try {
-					$sub->set_status( $sub::STATUS_COMPLIMENTARY );
+					$sub->set_status( $sub::STATUS_ACTIVE );
 				}
 				catch ( Exception $e ) {
 					$skin->warn( "Exception while setting subscription ({$sub->get_product()->ID}) status: {$e->getMessage()} for txn {$transaction->ID}." );
 				}
 
 				if ( $verbose ) {
-					$skin->debug( "Updated subscription ({$sub->get_product()->ID}) status from '$status' to complimentary." );
+					$skin->debug( "Updated subscription ({$sub->get_product()->ID}) status to active." );
 				}
 			}
 		}

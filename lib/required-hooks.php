@@ -862,6 +862,7 @@ add_action( 'save_post_it_exchange_tran', 'it_exchange_recurring_payments_save_t
  */
 function it_exchange_recurring_payments_register_upgrades( IT_Exchange_Upgrader $upgrader ) {
 	$upgrader->add_upgrade( new IT_Exchange_Recurring_Payments_Zero_Sum_Checkout_Upgrade() );
+	$upgrader->add_upgrade( new IT_Exchange_Recurring_Payments_Non_Auto_Renewing() );
 }
 
 add_action( 'it_exchange_register_upgrades', 'it_exchange_recurring_payments_register_upgrades' );
