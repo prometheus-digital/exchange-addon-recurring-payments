@@ -854,6 +854,19 @@ function it_exchange_recurring_payments_save_transaction_post( $post_id ) {
 add_action( 'save_post_it_exchange_tran', 'it_exchange_recurring_payments_save_transaction_post', 10 );
 
 /**
+ * Register upgrade routines.
+ * 
+ * @since 1.8.4
+ * 
+ * @param IT_Exchange_Upgrader $upgrader
+ */
+function it_exchange_recurring_payments_register_upgrades( IT_Exchange_Upgrader $upgrader ) {
+	$upgrader->add_upgrade( new IT_Exchange_Recurring_Payments_Zero_Sum_Checkout_Upgrade() );
+}
+
+add_action( 'it_exchange_register_upgrades', 'it_exchange_recurring_payments_register_upgrades' );
+
+/**
  * Shows the nag when needed.
  *
  * @since 1.0.0
