@@ -233,16 +233,7 @@ function it_exchange_recurring_payments_addon_add_transaction( $transaction_id )
 		$product = it_exchange_get_product( $product['product_id'] );
 
 		if ( $product->get_feature( 'recurring-payments', array( 'setting' => 'recurring-enabled' ) ) ) {
-			$subscription = IT_Exchange_Subscription::create( $transaction, $product );
-
-			/**
-			 * Fires when a subscription is created.
-			 * 
-			 * @since 1.8.4
-			 *        
-			 * @param IT_Exchange_Subscription $subscription
-			 */
-			do_action( 'it_exchange_subscription_created', $subscription );
+			IT_Exchange_Subscription::create( $transaction, $product );
 		}
 	}
 

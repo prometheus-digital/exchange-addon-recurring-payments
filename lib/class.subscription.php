@@ -180,7 +180,18 @@ class IT_Exchange_Subscription {
 			}
 		}
 
-		return new self( $transaction, $product );
+		$subscription = new self( $transaction, $product );
+		
+		/**
+		 * Fires when a subscription is created.
+		 *
+		 * @since 1.8.4
+		 *
+		 * @param IT_Exchange_Subscription $subscription
+		 */
+		do_action( 'it_exchange_subscription_created', $subscription );
+
+		return $subscription;
 	}
 
 	/**
