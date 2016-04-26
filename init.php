@@ -16,18 +16,18 @@ require_once ( dirname( __FILE__ ) ) . '/lib/deprecated.php';
 /**
  * New API functions.
  */
-include( 'api/load.php' );
+require_once( dirname( __FILE__ ) . '/api/load.php' );
 
 /**
  * New Product Features.
  */
-require( 'lib/product-features/load.php' );
+require_once( dirname( __FILE__ ) . '/lib/product-features/load.php' );
 
 /**
  * Exchange Add-ons require several hooks in order to work properly.
  * We've placed them all in one file to help add-on devs identify them more easily
  */
-include( 'lib/required-hooks.php' );
+require_once( dirname( __FILE__ ) . '/lib/required-hooks.php' );
 
 /**
  * Exchange will build your add-on's settings page for you and link to it from our add-on
@@ -36,11 +36,11 @@ include( 'lib/required-hooks.php' );
  * the options. This includes the wizard settings. Additionally, we use the Exchange storage API to
  * save / retreive options. Add-ons are not required to do this.
  */
-include( 'lib/addon-settings.php' );
+require_once( dirname( __FILE__ ) . '/lib/addon-settings.php' );
 
 /**
  * The following file contains utility functions specific to our recurring payments add-on
  * If you're building your own addon, it's likely that you will
  * need to do similar things.
  */
-include( 'lib/addon-functions.php' );
+require_once( dirname( __FILE__ ) . '/lib/addon-functions.php' );
