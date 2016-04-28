@@ -282,7 +282,7 @@ function it_exchange_recurring_payments_set_non_auto_renewing_subscriptions_to_a
 		 */
 		if ( apply_filters( "it_exchange_auto_activate_non_renewing_{$method}_subscriptions", true, $subscription ) ) {
 			add_filter( 'it_exchange_subscriber_status_activity_use_gateway_actor', '__return_true' );
-			$subscription->set_status( $subscription::STATUS_ACTIVE );
+			$subscription->set_status( IT_Exchange_Subscription::STATUS_ACTIVE );
 			remove_filter( 'it_exchange_subscriber_status_activity_use_gateway_actor', '__return_true' );
 		}
 	}
@@ -316,7 +316,7 @@ function it_exchange_recurring_payments_set_non_auto_renewing_subscriptions_as_a
 				// This filter is documented in lib/required-hooks.php
 				if ( apply_filters( "it_exchange_auto_activate_non_renewing_{$method}_subscriptions", true, $subscription ) ) {
 					add_filter( 'it_exchange_subscriber_status_activity_use_gateway_actor', '__return_true' );
-					$subscription->set_status( $subscription::STATUS_ACTIVE );
+					$subscription->set_status( IT_Exchange_Subscription::STATUS_ACTIVE );
 					remove_filter( 'it_exchange_subscriber_status_activity_use_gateway_actor', '__return_true' );
 				}
 			}
@@ -489,10 +489,10 @@ function it_exchange_recurring_payments_handle_expired() {
 			
 			$subscription = it_exchange_get_subscription_by_transaction( $transaction, it_exchange_get_product( $product_id ) );
 
-			if ( $subscription->get_status() === $subscription::STATUS_ACTIVE ) {
-				$subscription->set_status( $subscription::STATUS_DEACTIVATED );
+			if ( $subscription->get_status() === IT_Exchange_Subscription::STATUS_ACTIVE ) {
+				$subscription->set_status( IT_Exchange_Subscription::STATUS_DEACTIVATED );
 				$subscription->mark_expired();
-			} elseif ( $subscription->get_status() === $subscription::STATUS_COMPLIMENTARY && $subscription->is_auto_renewing() ) {
+			} elseif ( $subscription->get_status() === IT_Exchange_Subscription::STATUS_COMPLIMENTARY && $subscription->is_auto_renewing() ) {
 				$subscription->bump_expiration_date();
 			} else {
 				$subscription->mark_expired();

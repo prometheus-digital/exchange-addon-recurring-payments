@@ -117,10 +117,10 @@ class IT_Exchange_Recurring_Payments_Zero_Sum_Checkout_Upgrade implements IT_Exc
 		foreach ( $subs as $sub ) {
 			$status = $sub->get_status();
 
-			if ( empty( $status ) || $status === $sub::STATUS_ACTIVE ) {
+			if ( empty( $status ) || $status === IT_Exchange_Subscription::STATUS_ACTIVE ) {
 
 				try {
-					$sub->set_status( $sub::STATUS_COMPLIMENTARY );
+					$sub->set_status( IT_Exchange_Subscription::STATUS_COMPLIMENTARY );
 				}
 				catch ( Exception $e ) {
 					$skin->warn( "Exception while setting subscription ({$sub->get_product()->ID}) status: {$e->getMessage()} for txn {$transaction->ID}." );

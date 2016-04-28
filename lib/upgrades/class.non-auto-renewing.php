@@ -149,7 +149,7 @@ WHERE 1=1  AND (
 			if ( empty( $status ) && ! $sub->is_auto_renewing() ) {
 
 				try {
-					$sub->set_status( $sub::STATUS_ACTIVE );
+					$sub->set_status( IT_Exchange_Subscription::STATUS_ACTIVE );
 				}
 				catch ( Exception $e ) {
 					$skin->warn( "Exception while setting subscription ({$sub->get_product()->ID}) status: {$e->getMessage()} for txn {$transaction->ID}." );
