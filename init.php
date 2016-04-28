@@ -44,3 +44,24 @@ require_once( dirname( __FILE__ ) . '/lib/addon-settings.php' );
  * need to do similar things.
  */
 require_once( dirname( __FILE__ ) . '/lib/addon-functions.php' );
+
+$current_version = get_option( 'exchange_recurring_payments_version', '1.8.3' );
+
+if ( $current_version != ITE_RECURRING_PAYMENTS_VERSION ) {
+
+	/**
+	 * Runs when the version upgrades.
+	 *
+	 * @since 1.8.4
+	 *
+	 * @param string $current_version
+	 * @param string $new_version
+	 */
+	do_action( 'it_exchange_addon_recurring_payments_upgrade', $current_version, ITE_RECURRING_PAYMENTS_VERSION );
+
+	update_option( 'exchange_recurring_payments_version', ITE_RECURRING_PAYMENTS_VERSION );
+
+	if ( it_exchange_make_upgrader()->get_available_upgrades() ) {
+		update_option( 'it_exchange_show_upgrades_nag', true );
+	}
+}
