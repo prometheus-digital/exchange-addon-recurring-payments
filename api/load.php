@@ -10,9 +10,9 @@ if ( is_admin() ) {
 	// Admin only
 } else {
 	// Frontend only
-	include( 'theme.php' );
+	require_once( dirname( __FILE__ ) . '/theme.php' );
 }
 
 // Transaction Add-ons
-include( 'transactions.php' );
+require_once( dirname( __FILE__ ) . '/transactions.php' );
 require_once( dirname( __FILE__ ) . '/subscriptions.php' );

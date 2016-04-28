@@ -259,6 +259,75 @@ function it_exchange_recurring_payments_bump_expiration_on_child_transaction( $t
 add_action( 'it_exchange_add_child_transaction_success', 'it_exchange_recurring_payments_bump_expiration_on_child_transaction' );
 
 /**
+ * Set non-auto-renewing subscriptions to active when they are created.
+ * 
+ * @since 1.8.4
+ * 
+ * @param IT_Exchange_Subscription $subscription
+ */
+function it_exchange_recurring_payments_set_non_auto_renewing_subscriptions_to_active( IT_Exchange_Subscription $subscription ) {
+	
+	if ( it_exchange_transaction_is_cleared_for_delivery( $subscription->get_transaction() ) && ! $subscription->is_auto_renewing() ) {
+		
+		$method = $subscription->get_transaction()->transaction_method;
+
+		/**
+		 * Filter whether to auto-activate non auto-renewing subscriptions.
+		 *
+		 * The dynamic portion of this hook, `$method`, refers to the transaction method slug.
+		 * For example, offline-payments.
+		 * 
+		 * @param bool                     $activate
+		 * @param IT_Exchange_Subscription $subscription 
+		 */
+		if ( apply_filters( "it_exchange_auto_activate_non_renewing_{$method}_subscriptions", true, $subscription ) ) {
+			add_filter( 'it_exchange_subscriber_status_activity_use_gateway_actor', '__return_true' );
+			$subscription->set_status( $subscription::STATUS_ACTIVE );
+			remove_filter( 'it_exchange_subscriber_status_activity_use_gateway_actor', '__return_true' );
+		}
+	}
+}
+
+add_action( 'it_exchange_subscription_created', 'it_exchange_recurring_payments_set_non_auto_renewing_subscriptions_to_active' );
+
+/**
+ * Mark subscriptions as active when the transaction is marked as cleared for delivery.
+ *
+ * @since 1.35.4
+ *
+ * @param IT_Exchange_Transaction $transaction
+ * @param string                  $old_status
+ * @param bool                    $old_cleared
+ */
+function it_exchange_recurring_payments_set_non_auto_renewing_subscriptions_as_active_on_clear( $transaction, $old_status, $old_cleared ) {
+
+	$new_cleared = it_exchange_transaction_is_cleared_for_delivery( $transaction );
+	$method      = it_exchange_get_transaction_method( $transaction );
+
+	if ( $new_cleared && ! $old_cleared ) {
+
+		$subs = it_exchange_get_transaction_subscriptions( $transaction );
+
+		foreach ( $subs as $subscription ) {
+			$sub_status = $subscription->get_status();
+
+			if ( empty( $sub_status ) ) {
+
+				// This filter is documented in lib/required-hooks.php
+				if ( apply_filters( "it_exchange_auto_activate_non_renewing_{$method}_subscriptions", true, $subscription ) ) {
+					add_filter( 'it_exchange_subscriber_status_activity_use_gateway_actor', '__return_true' );
+					$subscription->set_status( $subscription::STATUS_ACTIVE );
+					remove_filter( 'it_exchange_subscriber_status_activity_use_gateway_actor', '__return_true' );
+				}
+			}
+		}
+	}
+
+}
+
+add_action( 'it_exchange_update_transaction_status', 'it_exchange_zero_sum_mark_subscriptions_as_active_on_clear', 10, 3 );
+
+/**
  * Update the status when the status hook is fired.
  *
  * This really is for BC as IT_Exchange_Subscription::set_status() should always be used.
@@ -272,6 +341,13 @@ add_action( 'it_exchange_add_child_transaction_success', 'it_exchange_recurring_
 function it_exchange_recurring_payments_update_status( $transaction, $sub_id, $subscriber_status ) {
 
 	$subscription = it_exchange_get_subscription_by_transaction( it_exchange_get_transaction( $transaction ) );
+
+	// this hook is used by payment processors, we don't want them to alter the status for complimentary subscriptions
+	if ( $subscription->get_status() === IT_Exchange_Subscription::STATUS_COMPLIMENTARY && $wh = it_exchange_doing_webhook() && $subscriber_status == IT_Exchange_Subscription::STATUS_CANCELLED ) {
+		$subscription->record_gateway_cancellation_while_complimentary( $wh );
+		
+		return;
+	}
 
 	try {
 		$subscription->set_status( $subscriber_status );
@@ -408,20 +484,160 @@ function it_exchange_recurring_payments_handle_expired() {
 
 		$product_id  = str_replace( '_it_exchange_transaction_subscription_expires_', '', $result->meta_key );
 		$transaction = it_exchange_get_transaction( $result->post_id );
+		
 		if ( $expired = apply_filters( 'it_exchange_recurring_payments_handle_expired', true, $product_id, $transaction ) ) {
-			$transaction->update_transaction_meta( 'subscription_expired_' . $product_id, $result->meta_value );
-			$transaction->delete_transaction_meta( 'subscription_expires_' . $product_id );
-
+			
 			$subscription = it_exchange_get_subscription_by_transaction( $transaction, it_exchange_get_product( $product_id ) );
 
-			if ( $subscription->get_status() === IT_Exchange_Subscription::STATUS_ACTIVE ) {
-				$subscription->set_status( IT_Exchange_Subscription::STATUS_DEACTIVATED );
+			if ( $subscription->get_status() === $subscription::STATUS_ACTIVE ) {
+				$subscription->set_status( $subscription::STATUS_DEACTIVATED );
+				$subscription->mark_expired();
+			} elseif ( $subscription->get_status() === $subscription::STATUS_COMPLIMENTARY && $subscription->is_auto_renewing() ) {
+				$subscription->bump_expiration_date();
 			} else {
 				$subscription->mark_expired();
 			}
 		}
 	}
 }
+
+/**
+ * Add an activity item when the subscriber status changes.
+ *
+ * @since 1.34
+ *
+ * @param string                   $status
+ * @param string                   $old_status
+ * @param IT_Exchange_Subscription $subscription
+ */
+function it_exchange_recurring_payments_add_activity_on_subscriber_status( $status, $old_status, IT_Exchange_Subscription $subscription ) {
+
+	if ( $status === $old_status ) {
+		return;
+	}
+
+	$labels = IT_Exchange_Subscription::get_statuses();
+
+	$status_label     = isset( $labels[ $status ] ) ? $labels[ $status ] : __( 'Unknown', 'it-l10n-ithemes-exchange' );
+	$old_status_label = isset( $labels[ $old_status ] ) ? $labels[ $old_status ] : __( 'Unknown', 'it-l10n-ithemes-exchange' );
+
+	if ( $old_status ) {
+		$message = sprintf( __( 'Subscriber status changed from %s to %s.', 'it-l10n-ithemes-exchange' ),
+			$old_status_label, $status_label
+		);
+	} else {
+		$message = sprintf( __( 'Subscriber status changed to %s.', 'it-l10n-ithemes-exchange' ), $status_label );
+	}
+
+	$builder = new IT_Exchange_Txn_Activity_Builder( $subscription->get_transaction(), 'status' );
+	$builder->set_description( $message );
+
+	/**
+	 * Filter whether to force using a gateway actor.
+	 *
+	 * @since 1.8.4
+	 *
+	 * @param bool                     $use_gateway
+	 * @param IT_Exchange_Subscription $subscription
+	 * @param string                   $status
+	 * @param string                   $old_status
+	 */
+	$use_gateway = apply_filters( 'it_exchange_subscriber_status_activity_use_gateway_actor', false, $subscription, $status, $old_status );
+
+	if ( $use_gateway ) {
+		$actor = new IT_Exchange_Txn_Activity_Gateway_Actor( it_exchange_get_addon( $subscription->get_transaction()->transaction_method ) );
+	} elseif ( is_user_logged_in() ) {
+		$actor = new IT_Exchange_Txn_Activity_User_Actor( wp_get_current_user() );
+	} elseif ( ( $wh = it_exchange_doing_webhook() ) && ( $addon = it_exchange_get_addon( $wh ) ) ) {
+		$actor = new IT_Exchange_Txn_Activity_Gateway_Actor( $addon );
+	} else {
+		$actor = new IT_Exchange_Txn_Activity_Site_Actor();
+	}
+
+	$builder->set_actor( $actor );
+	$builder->build( it_exchange_get_txn_activity_factory() );
+}
+
+add_action( 'it_exchange_transition_subscription_status', 'it_exchange_recurring_payments_add_activity_on_subscriber_status', 10, 3 );
+
+if ( has_action( 'it_exchange_recurring_payments_addon_update_transaction_subscriber_status', 'it_exchange_add_activity_on_subscriber_status' ) ) {
+	remove_action(
+		'it_exchange_recurring_payments_addon_update_transaction_subscriber_status',
+		'it_exchange_add_activity_on_subscriber_status', 10
+	);
+}
+
+/**
+ * Add an activity item when the subscription
+ * 
+ * @since 1.8.4
+ *
+ * @param IT_Exchange_Subscription $subscription
+ * @param DateTime                 $previous
+ */
+function it_exchange_recurring_payments_add_activity_on_expiration_date( IT_Exchange_Subscription $subscription, DateTime $previous = null ) {
+
+	$format = get_option( 'date_format' );
+
+	if ( $previous ) {
+		$message = sprintf(
+			__( 'Subscription expiration date updated to %s from %s.', 'LION' ),
+			date_i18n( $format, $subscription->get_expiry_date()->format( 'U' ) ),
+			date_i18n( $format, $previous->format( 'U' ) )
+		);
+	} else {
+		$message = sprintf(
+			__( 'Subscription expiration date updated to %s.', 'LION' ),
+			date_i18n( $format, $subscription->get_expiry_date()->format( 'U' ) )
+		);
+	}
+
+	$builder = new IT_Exchange_Txn_Activity_Builder( $subscription->get_transaction(), 'subscription-expiry' );
+	$builder->set_description( $message );
+
+	/**
+	 * Filter whether to force using a gateway actor.
+	 *
+	 * @since 1.8.4
+	 *
+	 * @param bool                     $use_gateway
+	 * @param IT_Exchange_Subscription $subscription
+	 * @param DateTime|null            $previous
+	 */
+	$use_gateway = apply_filters( 'it_exchange_subscriber_expiration_date_activity_use_gateway_actor', false, $subscription, $previous );
+
+	if ( $use_gateway ) {
+		$actor = new IT_Exchange_Txn_Activity_Gateway_Actor( it_exchange_get_addon( $subscription->get_transaction()->transaction_method ) );
+	} elseif ( is_user_logged_in() ) {
+		$actor = new IT_Exchange_Txn_Activity_User_Actor( wp_get_current_user() );
+	} elseif ( ( $wh = it_exchange_doing_webhook() ) && ( $addon = it_exchange_get_addon( $wh ) ) ) {
+		$actor = new IT_Exchange_Txn_Activity_Gateway_Actor( $addon );
+	} else {
+		$actor = new IT_Exchange_Txn_Activity_Site_Actor();
+	}
+
+	$builder->set_actor( $actor );
+	$builder->build( it_exchange_get_txn_activity_factory() );
+}
+
+add_action( 'it_exchange_subscription_set_expiry_date', 'it_exchange_recurring_payments_add_activity_on_expiration_date', 10, 2 );
+
+/**
+ * Register custom activity types.
+ *
+ * @since 1.8.4
+ *
+ * @param IT_Exchange_Txn_Activity_Factory $factory
+ */
+function it_exchange_recurring_payments_register_activity_types( IT_Exchange_Txn_Activity_Factory $factory ) {
+
+	$factory->register( 'subscription-expiry', __( 'Subscription Expiry', 'LION' ), array(
+		'IT_Exchange_Txn_Subscription_Expiry_Activity',
+		'make'
+	) );
+}
+
+add_action( 'it_exchange_get_txn_activity_factory', 'it_exchange_recurring_payments_register_activity_types' );
 
 /**
  * Modifies the Transaction Payments screen for recurring payments
@@ -508,7 +724,7 @@ function it_exchange_recurring_payments_after_payment_details_recurring_payments
 		return;
 	}
 
-	$df        = get_option( 'date_format' );
+	$df        = 'Y-m-d';
 	$jquery_df = it_exchange_php_date_format_to_jquery_datepicker_format( $df );
 	?>
 
@@ -524,7 +740,7 @@ function it_exchange_recurring_payments_after_payment_details_recurring_payments
 			$status = $subscription->get_status();
 
 			$expires = $subscription->get_expiry_date();
-			$expires = $expires ? date_i18n( $df, $expires->format( 'U' ), true ) : '';
+			$expires = $expires ? $expires->format( $df ) : '';
 			?>
 
 			<div class="recurring-options">
@@ -533,14 +749,16 @@ function it_exchange_recurring_payments_after_payment_details_recurring_payments
 					<h4><?php echo $subscription->get_product()->post_title; ?></h4>
 				<?php endif; ?>
 
-				<p>
-					<label for="rp-sub-id-<?php echo $pid; ?>">
-						<?php _e( 'Subscription ID', 'LION' ); ?>
-						<span class="tip" title="<?php _e( 'This is the Subscription ID from the Payment Processor.', 'LION' ); ?>">i</span>
-					</label>
+				<?php if ( $subscription->is_auto_renewing() ): ?>
+					<p>
+						<label for="rp-sub-id-<?php echo $pid; ?>">
+							<?php _e( 'Subscription ID', 'LION' ); ?>
+							<span class="tip" title="<?php _e( 'This is the Subscription ID from the Payment Processor.', 'LION' ); ?>">i</span>
+						</label>
 
-					<input type="text" id="rp-sub-id-<?php echo $pid; ?>" name="rp-sub-id[<?php echo $pid; ?>]" value="<?php echo $sub_id; ?>" />
-				</p>
+						<input type="text" id="rp-sub-id-<?php echo $pid; ?>" name="rp-sub-id[<?php echo $pid; ?>]" value="<?php echo $sub_id; ?>" />
+					</p>
+				<?php endif; ?>
 
 				<p>
 					<label for="rp-status-<?php echo $pid; ?>">
@@ -627,6 +845,20 @@ function it_exchange_recurring_payments_save_transaction_post( $post_id ) {
 add_action( 'save_post_it_exchange_tran', 'it_exchange_recurring_payments_save_transaction_post', 10 );
 
 /**
+ * Register upgrade routines.
+ * 
+ * @since 1.8.4
+ * 
+ * @param IT_Exchange_Upgrader $upgrader
+ */
+function it_exchange_recurring_payments_register_upgrades( IT_Exchange_Upgrader $upgrader ) {
+	$upgrader->add_upgrade( new IT_Exchange_Recurring_Payments_Zero_Sum_Checkout_Upgrade() );
+	$upgrader->add_upgrade( new IT_Exchange_Recurring_Payments_Non_Auto_Renewing() );
+}
+
+add_action( 'it_exchange_register_upgrades', 'it_exchange_recurring_payments_register_upgrades' );
+
+/**
  * Shows the nag when needed.
  *
  * @since 1.0.0
@@ -634,10 +866,10 @@ add_action( 'save_post_it_exchange_tran', 'it_exchange_recurring_payments_save_t
  * @return void
  */
 function it_exchange_addon_recurring_payments_show_version_nag() {
-	if ( version_compare( $GLOBALS['it_exchange']['version'], '1.3.0', '<' ) ) {
+	if ( version_compare( $GLOBALS['it_exchange']['version'], '1.35.5', '<' ) ) {
 		?>
 		<div id="it-exchange-add-on-min-version-nag" class="it-exchange-nag">
-			<?php printf( __( 'The Recurring Payments add-on requires iThemes Exchange version 1.3.0 or greater. %sPlease upgrade Exchange%s.', 'LION' ), '<a href="' . admin_url( 'update-core.php' ) . '">', '</a>' ); ?>
+			<?php printf( __( 'The Recurring Payments add-on requires iThemes Exchange version 1.35.3 or greater. %sPlease upgrade Exchange%s.', 'LION' ), '<a href="' . admin_url( 'update-core.php' ) . '">', '</a>' ); ?>
 		</div>
 		<script type="text/javascript">
 			jQuery( document ).ready( function () {

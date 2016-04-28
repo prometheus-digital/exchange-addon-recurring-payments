@@ -15,6 +15,7 @@ class IT_Exchange_Subscription {
 	const STATUS_SUSPENDED = 'suspended';
 	const STATUS_CANCELLED = 'cancelled';
 	const STATUS_DEACTIVATED = 'deactivated';
+	const STATUS_COMPLIMENTARY = 'complimentary';
 
 	/**
 	 * @var IT_Exchange_Transaction
@@ -179,7 +180,18 @@ class IT_Exchange_Subscription {
 			}
 		}
 
-		return new self( $transaction, $product );
+		$subscription = new self( $transaction, $product );
+		
+		/**
+		 * Fires when a subscription is created.
+		 *
+		 * @since 1.8.4
+		 *
+		 * @param IT_Exchange_Subscription $subscription
+		 */
+		do_action( 'it_exchange_subscription_created', $subscription );
+
+		return $subscription;
 	}
 
 	/**
@@ -323,7 +335,8 @@ class IT_Exchange_Subscription {
 	 */
 	public function set_expiry_date( DateTime $date ) {
 
-		$now = new DateTime( 'now', new DateTimeZone( 'UTC' ) );
+		$previous = $this->get_expiry_date();
+		$now      = new DateTime( 'now', new DateTimeZone( 'UTC' ) );
 
 		if ( $now < $date ) {
 			$this->get_transaction()->update_meta( 'subscription_expires_' . $this->get_product()->ID, $date->format( 'U' ) );
@@ -332,6 +345,16 @@ class IT_Exchange_Subscription {
 			$this->get_transaction()->delete_meta( 'subscription_expires_' . $this->get_product()->ID );
 			$this->get_transaction()->update_meta( 'subscription_expired_' . $this->get_product()->ID, $date->format( 'U' ) );
 		}
+
+		/**
+		 * Fires when a subscription's expiry date has been updated.
+		 *
+		 * @since 1.8.4
+		 *
+		 * @param IT_Exchange_Subscription $this
+		 * @param DateTime|null            $previous
+		 */
+		do_action( 'it_exchange_subscription_set_expiry_date', $this, $previous );
 	}
 
 	/**
@@ -353,7 +376,29 @@ class IT_Exchange_Subscription {
 	 * @param string $new_id
 	 */
 	public function set_subscriber_id( $new_id ) {
+
+		$old_id = $this->get_subscriber_id();
 		$this->get_transaction()->update_meta( 'subscriber_id', $new_id );
+
+		$customer_subscription_ids = $this->get_customer()->get_customer_meta( 'subscription_ids' );
+
+		if ( ! empty( $old_id ) ) {
+			unset( $customer_subscription_ids[ $old_id ] );
+		}
+
+		$customer_subscription_ids[ $new_id ]['txn_id'] = $this->get_transaction()->ID;
+		$customer_subscription_ids[ $new_id ]['status'] = $this->get_status();
+		$this->get_customer()->update_customer_meta( 'subscription_ids', $customer_subscription_ids );
+
+		/**
+		 * Fires when a subscription's subscriber ID has been updated.
+		 *
+		 * @since 1.8.4
+		 *
+		 * @param IT_Exchange_Subscription $this
+		 * @param string                   $old_id
+		 */
+		do_action( 'it_exchange_subscription_set_subscriber_id', $this, $old_id );
 	}
 
 	/**
@@ -380,7 +425,7 @@ class IT_Exchange_Subscription {
 		if ( $label ) {
 			$labels = self::get_statuses();
 
-			return $labels[ $status ];
+			return isset( $labels[ $status ] ) ? $labels[ $status ] : ucfirst( $status );
 		}
 
 		return $status;
@@ -397,17 +442,16 @@ class IT_Exchange_Subscription {
 	 */
 	public function set_status( $new_status ) {
 
-		if ( $new_status === $this->get_status() ) {
+		$old_status = $this->get_status();
+
+		if ( $new_status === $old_status ) {
 			throw new InvalidArgumentException( '$new_status === $old_status' );
 		}
 
-		$subscriber_id = $this->get_subscriber_id();
-
 		$this->get_transaction()->update_meta( 'subscriber_status_' . $this->get_product()->ID, $new_status );
 		$this->get_transaction()->update_meta( 'subscriber_status', $new_status ); // back-compat
-		$subscriptions = $this->get_customer()->get_customer_meta( 'subscription_ids' );
 
-		$old_status = isset( $subscriptions[ $subscriber_id ]['status'] ) ? $subscriptions[ $subscriber_id ]['status'] : '';
+		$subscriptions = $this->get_customer()->get_customer_meta( 'subscription_ids' );
 
 		$subscriptions[ $this->get_subscriber_id() ]['status'] = $new_status;
 		$this->get_customer()->update_customer_meta( 'subscription_ids', $subscriptions );
@@ -422,6 +466,10 @@ class IT_Exchange_Subscription {
 		 * @param IT_Exchange_Subscription $this
 		 */
 		do_action( 'it_exchange_transition_subscription_status', $new_status, $old_status, $this );
+
+		if ( $new_status === self::STATUS_COMPLIMENTARY && $old_status === self::STATUS_ACTIVE && $this->is_auto_renewing() ) {
+			$this->cancel();
+		}
 
 		return $old_status;
 	}
@@ -439,7 +487,11 @@ class IT_Exchange_Subscription {
 			$profile = $this->get_recurring_profile();
 		}
 
-		$time = strtotime( $profile->get_interval() ) + DAY_IN_SECONDS;
+		$time = strtotime( $profile->get_interval() );
+
+		if ( $this->is_auto_renewing() && $this->get_status() !== self::STATUS_COMPLIMENTARY ) {
+			$time += DAY_IN_SECONDS;
+		}
 
 		/**
 		 * Filter the new expiration date.
@@ -455,8 +507,7 @@ class IT_Exchange_Subscription {
 			return;
 		}
 
-		$this->transaction->update_meta( 'subscription_expires_' . $this->get_product()->ID, $time );
-		$this->transaction->delete_meta( 'subscription_expired_' . $this->get_product()->ID );
+		$this->set_expiry_date( new DateTime( "@$time", new DateTimeZone( 'UTC' ) ) );
 
 		/**
 		 * Fires when a subscription's expiration date is bumped.
@@ -496,8 +547,25 @@ class IT_Exchange_Subscription {
 		$method = $this->get_transaction()->transaction_method;
 
 		do_action( "it_exchange_cancel_{$method}_subscription", array(
-			'old_subscriber_id' => $this->get_subscriber_id()
+			'old_subscriber_id' => $this->get_subscriber_id(),
+			'customer'          => $this->get_customer(),
+			'subscription'      => $this
 		) );
+	}
+
+	/**
+	 * Record a gateway cancellation while the subscription is complimentary.
+	 *
+	 * @since 1.8.4
+	 *
+	 * @param string $gateway
+	 */
+	public function record_gateway_cancellation_while_complimentary( $gateway ) {
+
+		$builder = new IT_Exchange_Txn_Activity_Builder( $this->get_transaction(), 'status' );
+		$builder->set_description( "Original recurring payment has been cancelled." );
+		$builder->set_actor( new IT_Exchange_Txn_Activity_Gateway_Actor( it_exchange_get_addon( $gateway ) ) );
+		$builder->build( it_exchange_get_txn_activity_factory() );
 	}
 
 	/**
@@ -509,10 +577,11 @@ class IT_Exchange_Subscription {
 	 */
 	public static function get_statuses() {
 		return array(
-			self::STATUS_ACTIVE      => __( 'Active', 'LION' ),
-			self::STATUS_SUSPENDED   => __( 'Suspended', 'LION' ),
-			self::STATUS_DEACTIVATED => __( 'Deactivated', 'LION' ),
-			self::STATUS_CANCELLED   => __( 'Cancelled', 'LION' )
+			self::STATUS_ACTIVE        => __( 'Active', 'LION' ),
+			self::STATUS_COMPLIMENTARY => __( 'Complimentary', 'LION' ),
+			self::STATUS_SUSPENDED     => __( 'Suspended', 'LION' ),
+			self::STATUS_DEACTIVATED   => __( 'Deactivated', 'LION' ),
+			self::STATUS_CANCELLED     => __( 'Cancelled', 'LION' )
 		);
 	}
 }
