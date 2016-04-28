@@ -869,7 +869,7 @@ function it_exchange_addon_recurring_payments_show_version_nag() {
 	if ( version_compare( $GLOBALS['it_exchange']['version'], '1.35.5', '<' ) ) {
 		?>
 		<div id="it-exchange-add-on-min-version-nag" class="it-exchange-nag">
-			<?php printf( __( 'The Recurring Payments add-on requires iThemes Exchange version 1.35.3 or greater. %sPlease upgrade Exchange%s.', 'LION' ), '<a href="' . admin_url( 'update-core.php' ) . '">', '</a>' ); ?>
+			<?php printf( __( 'The Recurring Payments add-on requires iThemes Exchange version 1.35.5 or greater. %sPlease upgrade Exchange%s.', 'LION' ), '<a href="' . admin_url( 'update-core.php' ) . '">', '</a>' ); ?>
 		</div>
 		<script type="text/javascript">
 			jQuery( document ).ready( function () {

@@ -118,4 +118,5 @@
 	Fix: Non-auto-renewing subscriptions not always granting access
 	Fix: Traverse parent transaction chain when setting subscriber ID.
 	Fix: Don't include extra day buffer for non-auto-renewing subscriptions.
-
+1.8.4.1 - 2016-04-28 - Timothy Jacobs
+	Fix: iThemes Exchange version nag
