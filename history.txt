@@ -120,3 +120,5 @@
 	Fix: Don't include extra day buffer for non-auto-renewing subscriptions.
 1.8.4.1 - 2016-04-28 - Timothy Jacobs
 	Fix: iThemes Exchange version nag
+1.8.4.2 - 2016-04-28 - Timothy Jacobs
+	Fix: t_paamayim_nekudotayim error on PHP 5.2
