@@ -181,7 +181,7 @@ class IT_Exchange_Subscription {
 		}
 
 		$subscription = new self( $transaction, $product );
-		
+
 		/**
 		 * Fires when a subscription is created.
 		 *
@@ -535,6 +535,85 @@ class IT_Exchange_Subscription {
 		if ( $expires ) {
 			$this->transaction->update_meta( 'subscription_expired_' . $this->get_product()->ID, $expires->format( 'U' ) );
 		}
+	}
+
+	/**
+	 * The total number of days left in this subscription period.
+	 *
+	 * @since 1.9
+	 *
+	 * @return int
+	 */
+	public function get_days_left_in_period() {
+
+		$now     = new DateTime();
+		$expires = $this->get_expiry_date();
+
+		if ( $expires < $now ) {
+			return 0;
+		}
+
+		if ( method_exists( $now, 'diff' ) ) {
+			$diff = $now->diff( $expires );
+
+			return $diff->days;
+		} else {
+
+			// this is inaccurate, DateTime::diff handles daylight saving, etc...
+
+			$diff = (int) $expires->format( 'U' ) - (int) $expires->format( 'U' );
+
+			return floor( $diff / DAY_IN_SECONDS );
+		}
+	}
+
+	/**
+	 * Calculate the prorate credit for this subscription.
+	 *
+	 * @since 1.9
+	 *
+	 * @return float
+	 */
+	public function calculate_prorate_credit() {
+
+		$daily_price = $this->calculate_daily_price();
+
+		$days_left = $this->get_days_left_in_period();
+
+		return $daily_price * $days_left;
+	}
+
+	/**
+	 * Calculate the daily price for this subscription.
+	 *
+	 * @since 1.9
+	 *
+	 * @return float
+	 */
+	protected function calculate_daily_price() {
+
+		// auto-renewing subscriptions only can be purchased individually
+		if ( $this->is_auto_renewing() ) {
+			$amount_paid = $this->get_transaction()->get_total( false );
+		} else {
+			foreach ( $this->get_transaction()->get_products() as $product ) {
+				if ( $product['product_id'] == $this->get_product()->ID ) {
+					$amount_paid = $product['product_subtotal'];
+				}
+			}
+
+			if ( ! isset( $amount_paid ) ) {
+				throw new UnexpectedValueException( 'Could not determine the amount paid for the subscription.' );
+			}
+
+			if ( $this->get_transaction()->get_total( false ) < $amount_paid ) {
+				$amount_paid = $this->get_transaction()->get_total( false );
+			}
+		}
+
+		$days_this_year = date_i18n( 'z', mktime( 0, 0, 0, 12, 31, date_i18n( 'Y' ) ) );
+
+		return $amount_paid / $days_this_year;
 	}
 
 	/**
