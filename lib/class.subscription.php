@@ -611,6 +611,22 @@ class IT_Exchange_Subscription {
 			}
 		}
 
+		$profile = $this->get_recurring_profile();
+
+		switch ( $profile->get_interval_type() ) {
+			case IT_Exchange_Recurring_Profile::TYPE_WEEK:
+				$amount_paid /= 7;
+				break;
+			case IT_Exchange_Recurring_Profile::TYPE_MONTH:
+				$amount_paid /= 30;
+				break;
+			case IT_Exchange_Recurring_Profile::TYPE_YEAR:
+				$amount_paid /= (int) date_i18n( 'z', mktime( 0, 0, 0, 12, 31, date_i18n( 'Y' ) ) );
+				break;
+		}
+
+		$amount_paid /= $profile->get_interval_count();
+
 		$days_this_year = date_i18n( 'z', mktime( 0, 0, 0, 12, 31, date_i18n( 'Y' ) ) );
 
 		return $amount_paid / $days_this_year;
