@@ -9,7 +9,7 @@
 /**
  * Class IT_Exchange_Subscription
  */
-class IT_Exchange_Subscription {
+class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 
 	const STATUS_ACTIVE = 'active';
 	const STATUS_SUSPENDED = 'suspended';
@@ -568,19 +568,21 @@ class IT_Exchange_Subscription {
 	}
 
 	/**
-	 * Calculate the prorate credit for this subscription.
-	 *
-	 * @since 1.9
-	 *
-	 * @return float
+	 * @inheritDoc
 	 */
-	public function calculate_prorate_credit() {
+	public function get_available_prorate_credit( IT_Exchange_Product $for, IT_Exchange_Product $to = null ) {
+
+		if ( $for->ID != $this->get_product()->ID ) {
+			throw new InvalidArgumentException(
+				"Given product with ID '$for->ID' does not match subscription product '{$this->get_product()->ID}'."
+			);
+		}
 
 		$daily_price = $this->calculate_daily_price();
 
 		$days_left = $this->get_days_left_in_period();
 
-		return $daily_price * $days_left;
+		return it_exchange_convert_to_database_number( $daily_price * $days_left );
 	}
 
 	/**
