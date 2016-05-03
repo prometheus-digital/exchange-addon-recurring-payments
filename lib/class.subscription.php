@@ -570,19 +570,34 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	/**
 	 * @inheritDoc
 	 */
-	public function get_available_prorate_credit( IT_Exchange_Product $for, IT_Exchange_Product $to = null ) {
+	public static function handle_prorate_credit_request( ITE_Prorate_Credit_Request $request, ITE_Daily_Price_Calculator $calculator ) {
 
-		if ( $for->ID != $this->get_product()->ID ) {
+		if ( ! self::accepts_prorate_credit_request( $request ) ) {
+			throw new DomainException( "This credit request can't be handled by this provider." );
+		}
+
+		/** @var IT_Exchange_Subscription $sub */
+		$sub = $request->get_subscription();
+
+		$for = $request->get_product_providing_credit();
+
+		if ( $for->ID != $sub->get_product()->ID ) {
 			throw new InvalidArgumentException(
-				"Given product with ID '$for->ID' does not match subscription product '{$this->get_product()->ID}'."
+				"Given product with ID '$for->ID' does not match subscription product '{$sub->get_product()->ID}'."
 			);
 		}
 
-		$daily_price = $this->calculate_daily_price();
+		$daily_price = $calculator->calculate( $sub->get_recurring_profile(), $sub->calculate_amount_paid() );
+		$days_left   = $sub->get_days_left_in_period();
 
-		$days_left = $this->get_days_left_in_period();
+		$request->set_credit( $daily_price * $days_left );
+	}
 
-		return it_exchange_convert_to_database_number( $daily_price * $days_left );
+	/**
+	 * @inheritDoc
+	 */
+	public static function accepts_prorate_credit_request( ITE_Prorate_Credit_Request $request ) {
+		return $request instanceof ITE_Prorate_Subscription_Credit_Request;
 	}
 
 	/**
@@ -592,7 +607,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	 *
 	 * @return float
 	 */
-	protected function calculate_daily_price() {
+	protected function calculate_amount_paid() {
 
 		// auto-renewing subscriptions only can be purchased individually
 		if ( $this->is_auto_renewing() ) {
@@ -613,25 +628,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 			}
 		}
 
-		$profile = $this->get_recurring_profile();
-
-		switch ( $profile->get_interval_type() ) {
-			case IT_Exchange_Recurring_Profile::TYPE_WEEK:
-				$amount_paid /= 7;
-				break;
-			case IT_Exchange_Recurring_Profile::TYPE_MONTH:
-				$amount_paid /= 30;
-				break;
-			case IT_Exchange_Recurring_Profile::TYPE_YEAR:
-				$amount_paid /= (int) date_i18n( 'z', mktime( 0, 0, 0, 12, 31, date_i18n( 'Y' ) ) );
-				break;
-		}
-
-		$amount_paid /= $profile->get_interval_count();
-
-		$days_this_year = date_i18n( 'z', mktime( 0, 0, 0, 12, 31, date_i18n( 'Y' ) ) );
-
-		return $amount_paid / $days_this_year;
+		return $amount_paid;
 	}
 
 	/**
