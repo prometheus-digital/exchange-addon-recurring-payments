@@ -47,17 +47,18 @@ function it_exchange_recurring_payments_customer_notification( $customer, $statu
  * @since 1.0.0
  *
  * @param IT_Exchange_Transaction $transaction iThemes Exchange Transaction Object
+ * @param DateTime                $from From date to base the new expiration date off of.
  *
  * @return void
  */
-function it_exchange_recurring_payments_addon_update_expirations( $transaction ) {
+function it_exchange_recurring_payments_addon_update_expirations( $transaction, DateTime $from = null ) {
 
 	if ( ! empty( $transaction->post_parent ) ) {
 		$transaction = it_exchange_get_transaction( $transaction->post_parent );
 	}
 
 	foreach ( it_exchange_get_transaction_subscriptions( $transaction ) as $subscription ) {
-		$subscription->bump_expiration_date();
+		$subscription->bump_expiration_date( $from );
 	}
 }
 
@@ -90,7 +91,7 @@ function it_exchange_recurring_payments_addon_recurring_label( $product_id ) {
 		return '';
 	}
 
-	$rp    = new IT_Exchange_Recurring_Profile( $interval, $interval_count );
+	$rp = new IT_Exchange_Recurring_Profile( $interval, $interval_count );
 
 	$label = ' ' . (string) $rp;
 

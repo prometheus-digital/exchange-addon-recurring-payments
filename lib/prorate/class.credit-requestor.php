@@ -39,6 +39,8 @@ class ITE_Prorate_Credit_Requestor {
 	 *
 	 * @param ITE_Prorate_Credit_Request $request
 	 *
+	 * @return array
+	 *
 	 * @throws RuntimeException If no prorate credit provider is found.
 	 */
 	public function request_upgrade( ITE_Prorate_Credit_Request $request ) {
@@ -46,9 +48,9 @@ class ITE_Prorate_Credit_Requestor {
 		$provider = $request->get_product_providing_credit();
 		$receiver = $request->get_product_receiving_credit();
 
-		// Recurring to life is not allowed
-		if ( $request->is_provider_recurring() && ! $receiver->get_feature( 'recurring-payments' ) ) {
-			return;
+		// Life to recurring is not allowed
+		if ( ! $request->is_provider_recurring() && $receiver->get_feature( 'recurring-payments' ) ) {
+			return array();
 		}
 
 		$this->handle_request( $request, 'upgrade' );
@@ -72,7 +74,7 @@ class ITE_Prorate_Credit_Requestor {
 
 		// If we don't have any credit, or free days, we can just stop here
 		if ( empty( $credit ) && empty( $free_days ) ) {
-			return;
+			return array();
 		}
 
 		// Life to Life memberships apply credit directly
@@ -80,7 +82,7 @@ class ITE_Prorate_Credit_Requestor {
 			return $this->update_sesion( $request, array(
 				'credit'       => round( $credit, 2 ),
 				'free_days'    => 0,
-				'upgrade_type' => 'crediit'
+				'upgrade_type' => 'credit'
 			) );
 		}
 
@@ -179,14 +181,20 @@ class ITE_Prorate_Credit_Requestor {
 	 *
 	 * @param ITE_Prorate_Credit_Request $request
 	 * @param array                      $details
+	 * 
+	 * @return array
 	 */
 	protected function update_sesion( ITE_Prorate_Credit_Request $request, array $details ) {
 
+		$details = array_merge( $details, $request->get_session_details() );
+
 		$data = it_exchange_get_session_data( 'updowngrade_details' );
 
-		$data[ $request->get_product_receiving_credit()->ID ] = array_merge( $details, $request->get_session_details() );
+		$data[ $request->get_product_receiving_credit()->ID ] = $details;
 
 		it_exchange_update_session_data( 'updowngrade_details', $data );
+		
+		return $details;
 	}
 
 	/**

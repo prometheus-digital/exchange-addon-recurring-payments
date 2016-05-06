@@ -237,7 +237,8 @@ function it_exchange_recurring_payments_addon_add_transaction( $transaction_id )
 		}
 	}
 
-	it_exchange_recurring_payments_addon_update_expirations( $transaction );
+	$from = new DateTime( $transaction->post_date_gmt, new DateTimeZone( 'UTC' ) );
+	it_exchange_recurring_payments_addon_update_expirations( $transaction, $from );
 }
 
 add_action( 'it_exchange_add_transaction_success', 'it_exchange_recurring_payments_addon_add_transaction', 0 );

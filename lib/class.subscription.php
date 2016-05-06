@@ -478,8 +478,10 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	 * Bump the expiration date.
 	 *
 	 * @since 1.8
+	 *
+	 * @param DateTime $from
 	 */
-	public function bump_expiration_date() {
+	public function bump_expiration_date( DateTime $from = null ) {
 
 		if ( $this->get_trial_profile() && ! $this->get_transaction()->has_children() ) {
 			$profile = $this->get_trial_profile();
@@ -487,7 +489,13 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 			$profile = $this->get_recurring_profile();
 		}
 
-		$time = strtotime( $profile->get_interval() );
+		if ( $from ) {
+			$now = (int) $from->format( 'U' );
+		} else {
+			$now = time();
+		}
+
+		$time = strtotime( $profile->get_interval(), $now );
 
 		if ( $this->is_auto_renewing() && $this->get_status() !== self::STATUS_COMPLIMENTARY ) {
 			$time += DAY_IN_SECONDS;
@@ -546,23 +554,19 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	 */
 	public function get_days_left_in_period() {
 
-		$now     = new DateTime();
+		$now     = new DateTime( date( 'Y-m-d' ) . ' 00:00:00' );
 		$expires = $this->get_expiry_date();
 
-		if ( $expires < $now ) {
+		if ( $expires <= $now ) {
 			return 0;
 		}
 
 		if ( method_exists( $now, 'diff' ) ) {
 			$diff = $now->diff( $expires );
-
 			$days = $diff->days;
 		} else {
-
 			// this is inaccurate, DateTime::diff handles daylight saving, etc...
-
 			$diff = (int) $expires->format( 'U' ) - (int) $expires->format( 'U' );
-
 			$days = floor( $diff / DAY_IN_SECONDS );
 		}
 
@@ -570,7 +574,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 			$days -= 1;
 		}
 
-		return $days;
+		return max( $days, 0 );
 	}
 
 	/**
@@ -628,11 +632,21 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	 */
 	protected function calculate_amount_paid() {
 
+		$children = $this->get_transaction()->get_children( array(
+			'numberposts' => 1
+		) );
+
+		if ( $children ) {
+			$transaction = $children[0];
+		} else {
+			$transaction = $this->get_transaction();
+		}
+
 		// auto-renewing subscriptions only can be purchased individually
 		if ( $this->is_auto_renewing() ) {
-			$amount_paid = $this->get_transaction()->get_total( false );
+			$amount_paid = $transaction->get_total( false );
 		} else {
-			foreach ( $this->get_transaction()->get_products() as $product ) {
+			foreach ( $transaction->get_products() as $product ) {
 				if ( $product['product_id'] == $this->get_product()->ID ) {
 					$amount_paid = $product['product_subtotal'];
 				}
@@ -642,8 +656,8 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 				throw new UnexpectedValueException( 'Could not determine the amount paid for the subscription.' );
 			}
 
-			if ( $this->get_transaction()->get_total( false ) < $amount_paid ) {
-				$amount_paid = $this->get_transaction()->get_total( false );
+			if ( $transaction->get_total( false ) < $amount_paid ) {
+				$amount_paid = $transaction->get_total( false );
 			}
 		}
 
