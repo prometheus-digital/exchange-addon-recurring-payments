@@ -7,9 +7,15 @@
 
 require_once( dirname( __FILE__ ) . '/lib/class.recurring-profile.php' );
 require_once( dirname( __FILE__ ) . '/lib/class.subscription.php' );
+require_once( dirname( __FILE__ ) . '/lib/class.daily-price-calculator.php' );
 require_once( dirname( __FILE__ ) . '/lib/class.expiry-date-activity.php' );
+
 require_once( dirname( __FILE__ ) . '/lib/prorate/class.credit-request.php' );
+require_once( dirname( __FILE__ ) . '/lib/prorate/class.forever-credit-request.php' );
+require_once( dirname( __FILE__ ) . '/lib/prorate/class.subscription-credit-request.php' );
+
 require_once( dirname( __FILE__ ) . '/lib/prorate/class.credit-requestor.php' );
+
 require_once( dirname( __FILE__ ) . '/lib/upgrades/class.zero-sum-checkout.php' );
 require_once( dirname( __FILE__ ) . '/lib/upgrades/class.non-auto-renewing.php' );
 

@@ -556,15 +556,21 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 		if ( method_exists( $now, 'diff' ) ) {
 			$diff = $now->diff( $expires );
 
-			return $diff->days;
+			$days = $diff->days;
 		} else {
 
 			// this is inaccurate, DateTime::diff handles daylight saving, etc...
 
 			$diff = (int) $expires->format( 'U' ) - (int) $expires->format( 'U' );
 
-			return floor( $diff / DAY_IN_SECONDS );
+			$days = floor( $diff / DAY_IN_SECONDS );
 		}
+
+		if ( $this->is_auto_renewing() && $this->get_status() !== self::STATUS_COMPLIMENTARY ) {
+			$days -= 1;
+		}
+
+		return $days;
 	}
 
 	/**
@@ -578,7 +584,6 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 
 		/** @var IT_Exchange_Subscription $sub */
 		$sub = $request->get_subscription();
-
 		$for = $request->get_product_providing_credit();
 
 		if ( $for->ID != $sub->get_product()->ID ) {
@@ -587,10 +592,24 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 			);
 		}
 
-		$daily_price = $calculator->calculate( $sub->get_recurring_profile(), $sub->calculate_amount_paid() );
+		$amount_paid = $sub->calculate_amount_paid();
+		$daily_price = $calculator->calculate( $sub->get_recurring_profile(), $amount_paid );
 		$days_left   = $sub->get_days_left_in_period();
 
-		$request->set_credit( $daily_price * $days_left );
+		$credit = min( $daily_price * $days_left, $amount_paid );
+
+		$request->set_credit( $credit );
+
+		$request->update_session_details( array(
+			'old_transaction_id'     => $sub->get_transaction()->ID,
+			'old_transaction_method' => $sub->get_transaction()->transaction_method,
+		) );
+
+		if ( $sub->get_subscriber_id() && $sub->is_auto_renewing() ) {
+			$request->update_session_details( array(
+				'old_subscriber_id' => $sub->get_subscriber_id()
+			) );
+		}
 	}
 
 	/**
@@ -628,7 +647,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 			}
 		}
 
-		return $amount_paid;
+		return (float) $amount_paid;
 	}
 
 	/**

@@ -9,7 +9,7 @@
 /**
  * Class ITE_Prorate_Credit_Request
  */
-class ITE_Prorate_Credit_Request {
+abstract class ITE_Prorate_Credit_Request {
 
 	/**
 	 * @var IT_Exchange_Product
@@ -27,9 +27,19 @@ class ITE_Prorate_Credit_Request {
 	protected $customer;
 
 	/**
+	 * @var array
+	 */
+	protected $session_details = array();
+
+	/**
 	 * @var float
 	 */
 	protected $credit = null;
+
+	/**
+	 * @var int
+	 */
+	protected $free_days = null;
 
 	/**
 	 * ITE_Prorate_Credit_Request constructor.
@@ -78,6 +88,28 @@ class ITE_Prorate_Credit_Request {
 	}
 
 	/**
+	 * Is the credit provider auto-renewing.
+	 *
+	 * @since 1.9
+	 *
+	 * @return bool
+	 */
+	public abstract function is_provider_auto_renewing();
+
+	/**
+	 * Is the credit provider a recurring product.
+	 *
+	 * By default, this is true.
+	 *
+	 * @since 1.9
+	 *
+	 * @return bool
+	 */
+	public function is_provider_recurring() {
+		return true;
+	}
+
+	/**
 	 * Set the credit the customer is eligible for.
 	 *
 	 * @since 1.9
@@ -97,5 +129,60 @@ class ITE_Prorate_Credit_Request {
 	 */
 	public function get_credit() {
 		return $this->credit;
+	}
+
+	/**
+	 * Get the total amount of free days available from this credit.
+	 *
+	 * @since 1.9
+	 *
+	 * @return int|null Null if the free days has not been set yet.
+	 */
+	public function get_free_days() {
+		return $this->free_days;
+	}
+
+	/**
+	 * Set the amount of free days available from this credit.
+	 *
+	 * @since 1.9
+	 *
+	 * @param int $free_days
+	 */
+	public function set_free_days( $free_days ) {
+		$this->free_days = $free_days;
+	}
+
+	/**
+	 * Get the details to be added to the `updowngrade` session data.
+	 *
+	 * @since 1.9
+	 *
+	 * @return array
+	 */
+	public function get_session_details() {
+		return $this->session_details;
+	}
+
+	/**
+	 * Set the details that are added to the `updowngrade` session data.
+	 *
+	 * @since 1.9
+	 *
+	 * @param array $session_details
+	 */
+	public function set_session_details( array $session_details ) {
+		$this->session_details = $session_details;
+	}
+
+	/**
+	 * Update the details that are added to the `updowngrade` session data.
+	 * 
+	 * @since 1.9
+	 * 
+	 * @param array $session_details
+	 */
+	public function update_session_details( array $session_details ) {
+		$this->session_details = wp_parse_args( $session_details, $this->get_session_details() );
 	}
 }

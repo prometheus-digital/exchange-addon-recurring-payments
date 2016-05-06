@@ -28,6 +28,7 @@ class ITE_Daily_Price_Calculator {
 				$cost /= 7;
 				break;
 			case IT_Exchange_Recurring_Profile::TYPE_MONTH:
+				//$cost /= (int) date( 't' );
 				$cost /= 30;
 				break;
 			case IT_Exchange_Recurring_Profile::TYPE_YEAR:
@@ -37,9 +38,7 @@ class ITE_Daily_Price_Calculator {
 
 		$cost /= $profile->get_interval_count();
 
-		$days_this_year = date_i18n( 'z', mktime( 0, 0, 0, 12, 31, date_i18n( 'Y' ) ) );
-
-		return $cost / $days_this_year;
+		return $cost;
 	}
 
 }

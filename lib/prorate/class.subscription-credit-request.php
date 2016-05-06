@@ -29,6 +29,13 @@ class ITE_Prorate_Subscription_Credit_Request extends ITE_Prorate_Credit_Request
 	}
 
 	/**
+	 * @inheritDoc
+	 */
+	public function is_provider_auto_renewing() {
+		return $this->get_subscription()->is_auto_renewing();
+	}
+
+	/**
 	 * Get the subscription.
 	 *
 	 * @since 1.9

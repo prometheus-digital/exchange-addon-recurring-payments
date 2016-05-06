@@ -30,6 +30,20 @@ class ITE_Prorate_Forever_Credit_Request extends ITE_Prorate_Credit_Request {
 	}
 
 	/**
+	 * @inheritDoc
+	 */
+	public function is_provider_auto_renewing() {
+		return false;
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public function is_provider_recurring() {
+		return false;
+	}
+
+	/**
 	 * Get the transaction that purchased the forever membership.
 	 *
 	 * @since 1.9
