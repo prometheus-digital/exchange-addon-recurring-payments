@@ -42,6 +42,11 @@ abstract class ITE_Prorate_Credit_Request {
 	protected $free_days = null;
 
 	/**
+	 * @var string
+	 */
+	protected $upgrade_type = null;
+
+	/**
 	 * ITE_Prorate_Credit_Request constructor.
 	 *
 	 * @param IT_Exchange_Product  $providing
@@ -151,6 +156,28 @@ abstract class ITE_Prorate_Credit_Request {
 	 */
 	public function set_free_days( $free_days ) {
 		$this->free_days = $free_days;
+	}
+
+	/**
+	 * Get the upgrade type used to fufill the credit request.
+	 * 
+	 * @since 1.9
+	 * 
+	 * @return string|null Null if the upgrade type has not been set yet.
+	 */
+	public function get_upgrade_type() {
+		return $this->upgrade_type;
+	}
+
+	/**
+	 * Set the upgrade type used to fufill the credit request.
+	 * 
+	 * @since 1.9
+	 * 
+	 * @param string $upgrade_type Accepts 'days' or 'credit'.
+	 */
+	public function set_upgrade_type( $upgrade_type ) {
+		$this->upgrade_type = $upgrade_type;
 	}
 
 	/**

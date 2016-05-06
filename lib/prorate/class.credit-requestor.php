@@ -79,7 +79,7 @@ class ITE_Prorate_Credit_Requestor {
 
 		// Life to Life memberships apply credit directly
 		if ( ! $request->is_provider_recurring() && ! $receiver->get_feature( 'recurring-payments' ) ) {
-			return $this->update_sesion( $request, array(
+			return $this->update_session( $request, array(
 				'credit'       => round( $credit, 2 ),
 				'free_days'    => 0,
 				'upgrade_type' => 'credit'
@@ -93,7 +93,9 @@ class ITE_Prorate_Credit_Requestor {
 			$upgrade_type = 'credit';
 		}
 
-		return $this->update_sesion( $request, array(
+		$request->set_upgrade_type( $upgrade_type );
+
+		return $this->update_session( $request, array(
 			'credit'       => round( $credit, 2 ),
 			'free_days'    => $free_days,
 			'upgrade_type' => $upgrade_type
@@ -181,10 +183,10 @@ class ITE_Prorate_Credit_Requestor {
 	 *
 	 * @param ITE_Prorate_Credit_Request $request
 	 * @param array                      $details
-	 * 
+	 *
 	 * @return array
 	 */
-	protected function update_sesion( ITE_Prorate_Credit_Request $request, array $details ) {
+	protected function update_session( ITE_Prorate_Credit_Request $request, array $details ) {
 
 		$details = array_merge( $details, $request->get_session_details() );
 
@@ -193,7 +195,7 @@ class ITE_Prorate_Credit_Requestor {
 		$data[ $request->get_product_receiving_credit()->ID ] = $details;
 
 		it_exchange_update_session_data( 'updowngrade_details', $data );
-		
+
 		return $details;
 	}
 
