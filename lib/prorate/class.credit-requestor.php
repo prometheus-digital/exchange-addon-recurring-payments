@@ -47,9 +47,9 @@ class ITE_Prorate_Credit_Requestor {
 
 		// Life to recurring is not allowed
 		if ( ! $request->is_provider_recurring() && $receiver->get_feature( 'recurring-payments' ) ) {
-			
+
 			$request->fail();
-			
+
 			return;
 		}
 
@@ -86,8 +86,7 @@ class ITE_Prorate_Credit_Requestor {
 
 			return;
 		}
-
-
+		
 		if ( $this->product_auto_renews( $receiver ) ) {
 			$upgrade_type = 'days';
 		} else {
@@ -111,7 +110,59 @@ class ITE_Prorate_Credit_Requestor {
 	 * @throws RuntimeException If no prorate credit provider is found.
 	 */
 	public function request_downgrade( ITE_Prorate_Credit_Request $request ) {
+
+		$receiver = $request->get_product_receiving_credit();
+
+		if ( ! $request->is_provider_recurring() && $receiver->get_feature( 'recurring-payments' ) ) {
+
+			$request->fail();
+
+			return;
+		}
+
 		$this->handle_request( $request, 'downgrade' );
+
+		$credit    = $request->get_credit();
+		$free_days = $request->get_free_days();
+
+		if ( empty( $free_days ) && $receiver->get_feature( 'recurring-payments' ) ) {
+			$daily_cost_of_upgrade = $this->get_daily_cost_for_product( $receiver );
+
+			if ( empty( $daily_cost_of_upgrade ) ) {
+				$free_days = 0;
+			} else {
+				$free_days = max( round( $credit / $daily_cost_of_upgrade ), 0 );
+			}
+
+			if ( $free_days ) {
+				$request->set_free_days( $free_days );
+			}
+		}
+
+		// If we don't have any credit, or free days, we can just stop here
+		if ( empty( $credit ) && empty( $free_days ) ) {
+
+			$request->fail();
+
+			return;
+		}
+
+		// Life to Life memberships apply credit directly
+		if ( ! $request->is_provider_recurring() && ! $receiver->get_feature( 'recurring-payments' ) ) {
+			$request->persist();
+
+			return;
+		}
+		
+		if ( $this->product_auto_renews( $receiver ) ) {
+			$upgrade_type = 'days';
+		} else {
+			$upgrade_type = 'credit';
+		}
+
+		$request->set_upgrade_type( $upgrade_type );
+
+		$request->persist();
 	}
 
 	/**
@@ -172,7 +223,7 @@ class ITE_Prorate_Credit_Requestor {
 			array( 'on', 'yes' )
 		);
 	}
-	
+
 	/**
 	 * Register a credit provider.
 	 *
