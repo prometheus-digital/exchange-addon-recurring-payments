@@ -27,6 +27,34 @@ class ITE_Prorate_Forever_Credit_Request extends ITE_Prorate_Credit_Request {
 		parent::__construct( $providing, $receiving, it_exchange_get_transaction_customer( $transaction ) );
 
 		$this->transaction = $transaction;
+
+		$this->update_additional_session_details( array(
+			'_txn'   => $transaction->ID,
+			'_class' => get_class()
+		) );
+	}
+
+	/**
+	 * Helper method for reconstructing the credit request from the session.
+	 *
+	 * @since 2.0
+	 *
+	 * @param IT_Exchange_Product $receiving_product
+	 * @param array               $session
+	 *
+	 * @return ITE_Prorate_Forever_Credit_Request|null
+	 */
+	protected static function _get( IT_Exchange_Product $receiving_product, $session ) {
+
+		if ( ! isset( $session['_txn'], $session['_prod'] ) ) {
+			return null;
+		}
+
+		return new self(
+			it_exchange_get_product( $session['_prod'] ),
+			$receiving_product,
+			it_exchange_get_transaction( $session['_txn'] )
+		);
 	}
 
 	/**

@@ -57,6 +57,38 @@ abstract class ITE_Prorate_Credit_Request {
 		$this->providing = $providing;
 		$this->receiving = $receiving;
 		$this->customer  = $customer;
+
+		$this->update_additional_session_details( array(
+			'_prod' => $providing->ID
+		) );
+	}
+
+	/**
+	 * Retrieve a credit request from the session.
+	 *
+	 * @since 2.0
+	 *
+	 * @param IT_Exchange_Product $receiving_product
+	 *
+	 * @return static
+	 */
+	public static function get( IT_Exchange_Product $receiving_product ) {
+
+		$session = it_exchange_get_session_data( 'updowngrade_details' );
+
+		if ( ! isset( $session[ $receiving_product->ID ] ) ) {
+			return null;
+		}
+
+		$data = $session[ $receiving_product->ID ];
+
+		if ( ! isset( $data['_class'] ) ) {
+			throw new UnexpectedValueException( '_class property not found in session.' );
+		}
+
+		$class = $data['_class'];
+
+		return call_user_func( array( $class, '_get' ), $receiving_product, $data );
 	}
 
 	/**
@@ -160,9 +192,9 @@ abstract class ITE_Prorate_Credit_Request {
 
 	/**
 	 * Get the upgrade type used to fufill the credit request.
-	 * 
+	 *
 	 * @since 1.9
-	 * 
+	 *
 	 * @return string|null Null if the upgrade type has not been set yet.
 	 */
 	public function get_upgrade_type() {
@@ -171,9 +203,9 @@ abstract class ITE_Prorate_Credit_Request {
 
 	/**
 	 * Set the upgrade type used to fufill the credit request.
-	 * 
+	 *
 	 * @since 1.9
-	 * 
+	 *
 	 * @param string $upgrade_type Accepts 'days' or 'credit'.
 	 */
 	public function set_upgrade_type( $upgrade_type ) {
@@ -187,7 +219,7 @@ abstract class ITE_Prorate_Credit_Request {
 	 *
 	 * @return array
 	 */
-	public function get_session_details() {
+	public function get_additional_session_details() {
 		return $this->session_details;
 	}
 
@@ -198,18 +230,51 @@ abstract class ITE_Prorate_Credit_Request {
 	 *
 	 * @param array $session_details
 	 */
-	public function set_session_details( array $session_details ) {
+	public function set_additional_session_details( array $session_details ) {
 		$this->session_details = $session_details;
 	}
 
 	/**
 	 * Update the details that are added to the `updowngrade` session data.
-	 * 
+	 *
 	 * @since 1.9
-	 * 
+	 *
 	 * @param array $session_details
 	 */
-	public function update_session_details( array $session_details ) {
-		$this->session_details = wp_parse_args( $session_details, $this->get_session_details() );
+	public function update_additional_session_details( array $session_details ) {
+		$this->session_details = wp_parse_args( $session_details, $this->get_additional_session_details() );
+	}
+
+	/**
+	 * Persist this credit request to the session.
+	 *
+	 * @since 1.9
+	 */
+	public function persist() {
+
+		$details = array(
+			'credit'       => round( $this->get_credit(), 2 ),
+			'free_days'    => $this->get_free_days(),
+			'upgrade_type' => $this->get_upgrade_type(),
+		);
+
+		$details = array_merge( $details, $this->get_additional_session_details() );
+
+		$data = it_exchange_get_session_data( 'updowngrade_details' );
+
+		$data[ $this->get_product_receiving_credit()->ID ] = $details;
+
+		it_exchange_update_session_data( 'updowngrade_details', $data );
+	}
+
+	/**
+	 * Remove this credit request from the session.
+	 *
+	 * @since 1.9
+	 */
+	public function fail() {
+		$data = it_exchange_get_session_data( 'updowngrade_details' );
+		unset( $data[ $this->get_product_receiving_credit()->ID ] );
+		it_exchange_update_session_data( 'updowngrade_details', $data );
 	}
 }

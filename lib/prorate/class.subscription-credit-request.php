@@ -26,6 +26,33 @@ class ITE_Prorate_Subscription_Credit_Request extends ITE_Prorate_Credit_Request
 		parent::__construct( $subscription->get_product(), $receiving, $subscription->get_customer() );
 
 		$this->subscription = $subscription;
+
+		$this->update_additional_session_details( array(
+			'_txn'   => $subscription->get_transaction()->ID,
+			'_class' => get_class()
+		) );
+	}
+
+	/**
+	 * Helper method for reconstructing the credit request from the session.
+	 *
+	 * @since 2.0
+	 *
+	 * @param IT_Exchange_Product $receiving_product
+	 * @param array               $session
+	 *
+	 * @return ITE_Prorate_Subscription_Credit_Request|null
+	 */
+	protected static function _get( IT_Exchange_Product $receiving_product, $session ) {
+
+		if ( ! isset( $session['_txn'], $session['_prod'] ) ) {
+			return null;
+		}
+
+		return new self( IT_Exchange_Subscription::from_transaction(
+			it_exchange_get_transaction( $session['_txn'] ),
+			it_exchange_get_product( $session['_prod'] )
+		), $receiving_product );
 	}
 
 	/**

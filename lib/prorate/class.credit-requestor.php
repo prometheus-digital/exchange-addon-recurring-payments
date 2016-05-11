@@ -39,18 +39,18 @@ class ITE_Prorate_Credit_Requestor {
 	 *
 	 * @param ITE_Prorate_Credit_Request $request
 	 *
-	 * @return array
-	 *
 	 * @throws RuntimeException If no prorate credit provider is found.
 	 */
 	public function request_upgrade( ITE_Prorate_Credit_Request $request ) {
 
-		$provider = $request->get_product_providing_credit();
 		$receiver = $request->get_product_receiving_credit();
 
 		// Life to recurring is not allowed
 		if ( ! $request->is_provider_recurring() && $receiver->get_feature( 'recurring-payments' ) ) {
-			return array();
+			
+			$request->fail();
+			
+			return;
 		}
 
 		$this->handle_request( $request, 'upgrade' );
@@ -74,16 +74,17 @@ class ITE_Prorate_Credit_Requestor {
 
 		// If we don't have any credit, or free days, we can just stop here
 		if ( empty( $credit ) && empty( $free_days ) ) {
-			return array();
+
+			$request->fail();
+
+			return;
 		}
 
 		// Life to Life memberships apply credit directly
 		if ( ! $request->is_provider_recurring() && ! $receiver->get_feature( 'recurring-payments' ) ) {
-			return $this->update_session( $request, array(
-				'credit'       => round( $credit, 2 ),
-				'free_days'    => 0,
-				'upgrade_type' => 'credit'
-			) );
+			$request->persist();
+
+			return;
 		}
 
 
@@ -95,11 +96,7 @@ class ITE_Prorate_Credit_Requestor {
 
 		$request->set_upgrade_type( $upgrade_type );
 
-		return $this->update_session( $request, array(
-			'credit'       => round( $credit, 2 ),
-			'free_days'    => $free_days,
-			'upgrade_type' => $upgrade_type
-		) );
+		$request->persist();
 	}
 
 	/**
@@ -175,30 +172,7 @@ class ITE_Prorate_Credit_Requestor {
 			array( 'on', 'yes' )
 		);
 	}
-
-	/**
-	 * Update the session with information about
-	 *
-	 * @since 1.9
-	 *
-	 * @param ITE_Prorate_Credit_Request $request
-	 * @param array                      $details
-	 *
-	 * @return array
-	 */
-	protected function update_session( ITE_Prorate_Credit_Request $request, array $details ) {
-
-		$details = array_merge( $details, $request->get_session_details() );
-
-		$data = it_exchange_get_session_data( 'updowngrade_details' );
-
-		$data[ $request->get_product_receiving_credit()->ID ] = $details;
-
-		it_exchange_update_session_data( 'updowngrade_details', $data );
-
-		return $details;
-	}
-
+	
 	/**
 	 * Register a credit provider.
 	 *

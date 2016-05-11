@@ -604,13 +604,13 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 
 		$request->set_credit( $credit );
 
-		$request->update_session_details( array(
+		$request->update_additional_session_details( array(
 			'old_transaction_id'     => $sub->get_transaction()->ID,
 			'old_transaction_method' => $sub->get_transaction()->transaction_method,
 		) );
 
 		if ( $sub->get_subscriber_id() && $sub->is_auto_renewing() ) {
-			$request->update_session_details( array(
+			$request->update_additional_session_details( array(
 				'old_subscriber_id' => $sub->get_subscriber_id()
 			) );
 		}
