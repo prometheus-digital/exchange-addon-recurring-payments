@@ -55,38 +55,18 @@ class ITE_Prorate_Credit_Requestor {
 
 		$this->handle_request( $request, 'upgrade' );
 
-		$credit    = $request->get_credit();
-		$free_days = $request->get_free_days();
-
-		if ( empty( $free_days ) && $receiver->get_feature( 'recurring-payments' ) ) {
-			$daily_cost_of_upgrade = $this->get_daily_cost_for_product( $receiver );
-
-			if ( empty( $daily_cost_of_upgrade ) ) {
-				$free_days = 0;
-			} else {
-				$free_days = max( round( $credit / $daily_cost_of_upgrade ), 0 );
-			}
-
-			if ( $free_days ) {
-				$request->set_free_days( $free_days );
-			}
+		if ( ! $request->get_free_days() && $receiver->get_feature( 'recurring-payments' ) ) {
+			$this->calculate_free_days_from_credit( $request );
 		}
 
 		// If we don't have any credit, or free days, we can just stop here
-		if ( empty( $credit ) && empty( $free_days ) ) {
+		if ( ! $request->get_credit() && ! $request->get_free_days() ) {
 
 			$request->fail();
 
 			return;
 		}
 
-		// Life to Life memberships apply credit directly
-		if ( ! $request->is_provider_recurring() && ! $receiver->get_feature( 'recurring-payments' ) ) {
-			$request->persist();
-
-			return;
-		}
-		
 		if ( $this->product_auto_renews( $receiver ) ) {
 			$upgrade_type = 'days';
 		} else {
@@ -122,38 +102,18 @@ class ITE_Prorate_Credit_Requestor {
 
 		$this->handle_request( $request, 'downgrade' );
 
-		$credit    = $request->get_credit();
-		$free_days = $request->get_free_days();
-
-		if ( empty( $free_days ) && $receiver->get_feature( 'recurring-payments' ) ) {
-			$daily_cost_of_upgrade = $this->get_daily_cost_for_product( $receiver );
-
-			if ( empty( $daily_cost_of_upgrade ) ) {
-				$free_days = 0;
-			} else {
-				$free_days = max( round( $credit / $daily_cost_of_upgrade ), 0 );
-			}
-
-			if ( $free_days ) {
-				$request->set_free_days( $free_days );
-			}
+		if ( ! $request->get_free_days() && $receiver->get_feature( 'recurring-payments' ) ) {
+			$this->calculate_free_days_from_credit( $request );
 		}
 
 		// If we don't have any credit, or free days, we can just stop here
-		if ( empty( $credit ) && empty( $free_days ) ) {
+		if ( ! $request->get_credit() && ! $request->get_free_days() ) {
 
 			$request->fail();
 
 			return;
 		}
 
-		// Life to Life memberships apply credit directly
-		if ( ! $request->is_provider_recurring() && ! $receiver->get_feature( 'recurring-payments' ) ) {
-			$request->persist();
-
-			return;
-		}
-		
 		if ( $this->product_auto_renews( $receiver ) ) {
 			$upgrade_type = 'days';
 		} else {
@@ -166,6 +126,28 @@ class ITE_Prorate_Credit_Requestor {
 	}
 
 	/**
+	 * Calculate the available number of free days from the given credit.
+	 *
+	 * @since 1.9
+	 *
+	 * @param ITE_Prorate_Credit_Request $request
+	 */
+	protected function calculate_free_days_from_credit( ITE_Prorate_Credit_Request $request ) {
+
+		$daily_cost_of_upgrade = $this->get_daily_cost_for_product( $request->get_product_receiving_credit() );
+
+		if ( empty( $daily_cost_of_upgrade ) ) {
+			$free_days = 0;
+		} else {
+			$free_days = max( round( $request->get_credit() / $daily_cost_of_upgrade ), 0 );
+		}
+
+		if ( $free_days ) {
+			$request->set_free_days( $free_days );
+		}
+	}
+
+	/**
 	 * Find and call the correct provider for a given request.
 	 *
 	 * @since 1.9
@@ -175,15 +157,21 @@ class ITE_Prorate_Credit_Requestor {
 	 */
 	protected function handle_request( ITE_Prorate_Credit_Request $request, $type ) {
 
+		$called = false;
+
 		foreach ( $this->providers as $provider ) {
 			if ( call_user_func( array( $provider, 'accepts_prorate_credit_request' ), $request ) ) {
 				call_user_func( array( $provider, 'handle_prorate_credit_request' ), $request, $this->calculator );
+
+				$called = true;
 			}
 		}
 
-		throw new RuntimeException(
-			sprintf( "No prorate credit provider found to handle the given %s request '%s'.", $type, get_class( $request ) )
-		);
+		if ( ! $called ) {
+			throw new RuntimeException(
+				sprintf( "No prorate credit provider found to handle the given %s request '%s'.", $type, get_class( $request ) )
+			);
+		}
 	}
 
 	/**
