@@ -59,7 +59,8 @@ abstract class ITE_Prorate_Credit_Request {
 		$this->customer  = $customer;
 
 		$this->update_additional_session_details( array(
-			'_prod' => $providing->ID
+			'_prod'  => $providing->ID,
+			'_class' => get_class( $this )
 		) );
 	}
 

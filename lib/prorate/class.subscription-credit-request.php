@@ -28,8 +28,7 @@ class ITE_Prorate_Subscription_Credit_Request extends ITE_Prorate_Credit_Request
 		$this->subscription = $subscription;
 
 		$this->update_additional_session_details( array(
-			'_txn'   => $subscription->get_transaction()->ID,
-			'_class' => get_class()
+			'_txn'   => $subscription->get_transaction()->ID
 		) );
 	}
 

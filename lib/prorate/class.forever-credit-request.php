@@ -29,8 +29,7 @@ class ITE_Prorate_Forever_Credit_Request extends ITE_Prorate_Credit_Request {
 		$this->transaction = $transaction;
 
 		$this->update_additional_session_details( array(
-			'_txn'   => $transaction->ID,
-			'_class' => get_class()
+			'_txn'   => $transaction->ID
 		) );
 	}
 
