@@ -1,0 +1,17 @@
+{
+  "name": "ithemes/exchange-addon-recurring-payments",
+  "description": "Sell Recurring Products with iThemes Exchange",
+  "type": "wp-plugin",
+  "license": "GPLv2+",
+  "authors": [
+    {
+      "name": "iThemes",
+      "email": "sales@ithemes.com"
+    }
+  ],
+  "minimum-stability": "stable",
+  "require-dev": {
+    "mockery/mockery": "0.9.4",
+    "phpunit/phpunit": "^4.8"
+  }
+}
