@@ -178,8 +178,6 @@ class ITE_Prorate_Credit_Requestor {
 		foreach ( $this->providers as $provider ) {
 			if ( call_user_func( array( $provider, 'accepts_prorate_credit_request' ), $request ) ) {
 				call_user_func( array( $provider, 'handle_prorate_credit_request' ), $request, $this->calculator );
-
-				return;
 			}
 		}
 
