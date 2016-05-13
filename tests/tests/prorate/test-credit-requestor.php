@@ -21,7 +21,24 @@ class Test_Prorate_Credit_Requestor extends IT_Exchange_UnitTestCase {
 		$requestor->register_provider( 'stdClass' );
 	}
 
-	public function test_upgrade_fails_for_non_recurring_to_recurring() {
+	/**
+	 * @expectedException RuntimeException
+	 */
+	public function test_exception_throwed_if_no_providers_found() {
+
+		$receiver = $this->getMockBuilder( 'IT_Exchange_Product' )->disableOriginalConstructor()->getMock();
+		$receiver->method( 'get_feature' )->with( 'recurring-payments' )->willReturn( true );
+
+		$request = $this->getMockBuilder( 'ITE_Prorate_Credit_Request' )->disableOriginalConstructor()
+		                ->setMethods( array( 'get_product_receiving_credit' ) )
+		                ->getMockForAbstractClass();
+		$request->method( 'get_product_receiving_credit' )->willReturn( $receiver );
+
+		$requestor = new ITE_Prorate_Credit_Requestor( new ITE_Daily_Price_Calculator() );
+		$requestor->request_upgrade( $request );
+	}
+
+	public function test_upgrade_or_downgrade_fails_for_non_recurring_to_recurring() {
 
 		$customer = $this->getMockBuilder( 'IT_Exchange_Customer' )->disableOriginalConstructor()->getMock();
 
@@ -37,13 +54,14 @@ class Test_Prorate_Credit_Requestor extends IT_Exchange_UnitTestCase {
 			'fail'
 		) )->setConstructorArgs( array( $provider, $receiver, $customer ) )->getMockForAbstractClass();
 		$request->method( 'is_provider_recurring' )->willReturn( false );
-		$request->expects( $this->once() )->method( 'fail' );
+		$request->expects( $this->exactly( 2 ) )->method( 'fail' );
 
 		$requestor = new ITE_Prorate_Credit_Requestor( new ITE_Daily_Price_Calculator() );
 		$requestor->request_upgrade( $request );
+		$requestor->request_downgrade( $request );
 	}
 
-	public function test_upgrade_fails_if_no_credit_or_free_days() {
+	public function test_upgrade_or_downgrade_fails_if_no_credit_or_free_days() {
 
 		$customer = $this->getMockBuilder( 'IT_Exchange_Customer' )->disableOriginalConstructor()->getMock();
 
@@ -62,11 +80,12 @@ class Test_Prorate_Credit_Requestor extends IT_Exchange_UnitTestCase {
 		$request = $this->getMockBuilder( 'ITE_Prorate_Credit_Request' )->setMethods( array(
 			'fail'
 		) )->setConstructorArgs( array( $provider, $receiver, $customer ) )->getMockForAbstractClass();
-		$request->expects( $this->once() )->method( 'fail' );
+		$request->expects( $this->exactly( 2 ) )->method( 'fail' );
 
 		$requestor = new ITE_Prorate_Credit_Requestor( new ITE_Daily_Price_Calculator() );
 		$requestor->register_provider( 'Mock_Prorate_Credit_Provider' );
 		$requestor->request_upgrade( $request );
+		$requestor->request_downgrade( $request );
 	}
 
 	public function test_free_days_calculated_from_credit() {
