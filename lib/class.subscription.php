@@ -10,6 +10,9 @@
  * Class IT_Exchange_Subscription
  */
 class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
+	
+	const E_NO_PROD = 1;
+	const E_NOT_RECURRING = 2;
 
 	const STATUS_ACTIVE = 'active';
 	const STATUS_SUSPENDED = 'suspended';
@@ -123,11 +126,13 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	 */
 	public static function create( IT_Exchange_Transaction $transaction, IT_Exchange_Product $product = null ) {
 
+		$found = false;
+
 		if ( $product ) {
 			foreach ( $transaction->get_products() as $cart_product ) {
 
 				if ( $cart_product['product_id'] == $product->ID ) {
-					$product = it_exchange_get_product( $cart_product['product_id'] );
+					$found = true;
 
 					break;
 				}
@@ -136,25 +141,24 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 
 			$cart_products = $transaction->get_products();
 			$cart_product  = reset( $cart_products );
+			$found         = true;
 			$product       = it_exchange_get_product( $cart_product['product_id'] );
 
 		} else {
 			throw new InvalidArgumentException( 'Ambiguous product to generate subscriptions for.' );
 		}
 
-		if ( ! isset( $product ) ) {
-			throw new UnexpectedValueException( 'Product not found.' );
+		if ( ! $found ) {
+			throw new UnexpectedValueException( 'Product not found.', self::E_NO_PROD );
 		}
 
 		if ( ! $product->supports_feature( 'recurring-payments' ) ) {
-			throw new UnexpectedValueException( 'Product does not support recurring payments.' );
+			throw new UnexpectedValueException( 'Product does not support recurring payments.', self::E_NOT_RECURRING );
 		}
 
 		if ( ! $product->get_feature( 'recurring-payments', array( 'setting' => 'recurring-enabled' ) ) ) {
-			throw new UnexpectedValueException( 'Product does not have recurring enabled.' );
+			throw new UnexpectedValueException( 'Product does not have recurring enabled.', self::E_NOT_RECURRING );
 		}
-
-		$customer = it_exchange_get_transaction_customer( $transaction );
 
 		$trial_enabled        = $product->get_feature( 'recurring-payments', array( 'setting' => 'trial-enabled' ) );
 		$auto_renew           = $product->get_feature( 'recurring-payments', array( 'setting' => 'auto-renew' ) );
@@ -164,20 +168,19 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 		$trial_interval_count = $product->get_feature( 'recurring-payments', array( 'setting' => 'trial-interval-count' ) );
 
 		if ( $trial_enabled && function_exists( 'it_exchange_is_customer_eligible_for_trial' ) ) {
+			$customer = it_exchange_get_transaction_customer( $transaction );
 			$trial_enabled = it_exchange_is_customer_eligible_for_trial( $product, $customer );
 		}
 
 		$transaction->update_meta( 'has_trial_' . $product->ID, $trial_enabled );
 		$transaction->update_meta( 'is_auto_renewing_' . $product->ID, $auto_renew );
+		$transaction->update_meta( 'subscription_autorenew_' . $product->ID, $auto_renew === 'on' );
 		$transaction->update_meta( 'interval_' . $product->ID, $interval );
 		$transaction->update_meta( 'interval_count_' . $product->ID, $interval_count );
 
-		if ( $trial_enabled && function_exists( 'it_exchange_is_customer_eligible_for_trial' ) ) {
-
-			if ( it_exchange_is_customer_eligible_for_trial( $product, $customer ) ) {
-				$transaction->update_meta( 'trial_interval_' . $product->ID, $trial_interval );
-				$transaction->update_meta( 'trial_interval_count_' . $product->ID, $trial_interval_count );
-			}
+		if ( $trial_enabled ) {
+			$transaction->update_meta( 'trial_interval_' . $product->ID, $trial_interval );
+			$transaction->update_meta( 'trial_interval_count_' . $product->ID, $trial_interval_count );
 		}
 
 		$subscription = new self( $transaction, $product );
@@ -596,7 +599,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 			);
 		}
 
-		$amount_paid = $sub->calculate_amount_paid();
+		$amount_paid = $sub->calculate_recurring_amount_paid();
 		$daily_price = $calculator->calculate( $sub->get_recurring_profile(), $amount_paid );
 		$days_left   = $sub->get_days_left_in_period();
 
@@ -624,13 +627,16 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	}
 
 	/**
-	 * Calculate the daily price for this subscription.
+	 * Calculate the amount being paid for this subscription.
+	 *
+	 * This will use the latest child payment and attempt to ignore coupons
+	 * to try and be as accurate as possible.
 	 *
 	 * @since 1.9
 	 *
 	 * @return float
 	 */
-	protected function calculate_amount_paid() {
+	public function calculate_recurring_amount_paid() {
 
 		$children = $this->get_transaction()->get_children( array(
 			'numberposts' => 1
