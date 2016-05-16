@@ -546,7 +546,7 @@ function it_exchange_recurring_payments_add_activity_on_subscriber_status( $stat
 
 	if ( $use_gateway ) {
 		$actor = new IT_Exchange_Txn_Activity_Gateway_Actor( it_exchange_get_addon( $subscription->get_transaction()->transaction_method ) );
-	} elseif ( is_user_logged_in() ) {
+	} elseif ( is_user_logged_in() && ! it_exchange_doing_guest_checkout() ) {
 		$actor = new IT_Exchange_Txn_Activity_User_Actor( wp_get_current_user() );
 	} elseif ( ( $wh = it_exchange_doing_webhook() ) && ( $addon = it_exchange_get_addon( $wh ) ) ) {
 		$actor = new IT_Exchange_Txn_Activity_Gateway_Actor( $addon );
@@ -608,7 +608,7 @@ function it_exchange_recurring_payments_add_activity_on_expiration_date( IT_Exch
 
 	if ( $use_gateway ) {
 		$actor = new IT_Exchange_Txn_Activity_Gateway_Actor( it_exchange_get_addon( $subscription->get_transaction()->transaction_method ) );
-	} elseif ( is_user_logged_in() ) {
+	} elseif ( is_user_logged_in() && ! it_exchange_doing_guest_checkout() ) {
 		$actor = new IT_Exchange_Txn_Activity_User_Actor( wp_get_current_user() );
 	} elseif ( ( $wh = it_exchange_doing_webhook() ) && ( $addon = it_exchange_get_addon( $wh ) ) ) {
 		$actor = new IT_Exchange_Txn_Activity_Gateway_Actor( $addon );
