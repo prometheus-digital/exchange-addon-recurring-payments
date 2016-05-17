@@ -352,6 +352,234 @@ class Test_Subscription extends IT_Exchange_UnitTestCase {
 		$this->assertArrayNotHasKey( 'subscription_expires_1', $manager->meta );
 		$this->assertContains( $date, $manager->meta['subscription_expired_1'] );
 	}
+
+	public function test_get_days_left_in_period_non_auto_renewing() {
+
+		$date = strtotime( '+40 days' );
+
+		$manager = new Mock_Meta_Manager();
+		$manager->add_meta( 'interval_1', true );
+
+		$transaction = $this->getMockBuilder( 'IT_Exchange_Transaction' )
+		                    ->disableOriginalConstructor()
+		                    ->setMethods( array( 'meta_exists', 'get_meta', 'add_meta', 'update_meta', 'delete_meta' ) )
+		                    ->enableProxyingToOriginalMethods()
+		                    ->setProxyTarget( $manager )
+		                    ->getMock();
+		$transaction->method( 'meta_exists' )->willReturn( true );
+
+		$product     = $this->getMockBuilder( 'IT_Exchange_Product' )->disableOriginalConstructor()->getMock();
+		$product->ID = 1;
+
+		$subscription = IT_Exchange_Subscription::from_transaction( $transaction, $product );
+		$subscription->set_expiry_date( new DateTime( "@$date", new DateTimeZone( 'UTC' ) ) );
+
+		$this->assertEquals( 40, $subscription->get_days_left_in_period() );
+	}
+
+	public function test_get_days_left_in_period_auto_renewing() {
+
+		$date = strtotime( '+40 days' );
+
+		$manager = new Mock_Meta_Manager();
+		$manager->add_meta( 'interval_1', true );
+		$manager->add_meta( 'subscription_autorenew_1', true );
+
+		$transaction = $this->getMockBuilder( 'IT_Exchange_Transaction' )
+		                    ->disableOriginalConstructor()
+		                    ->setMethods( array( 'meta_exists', 'get_meta', 'add_meta', 'update_meta', 'delete_meta' ) )
+		                    ->enableProxyingToOriginalMethods()
+		                    ->setProxyTarget( $manager )
+		                    ->getMock();
+		$transaction->method( 'meta_exists' )->willReturn( true );
+
+		$product     = $this->getMockBuilder( 'IT_Exchange_Product' )->disableOriginalConstructor()->getMock();
+		$product->ID = 1;
+
+		$subscription = IT_Exchange_Subscription::from_transaction( $transaction, $product );
+		$subscription->set_expiry_date( new DateTime( "@$date", new DateTimeZone( 'UTC' ) ) );
+
+		$this->assertEquals( 39, $subscription->get_days_left_in_period() );
+	}
+
+	public function test_calculate_recurring_amount_paid_for_auto_renewing_with_no_child_payments() {
+
+		$transaction = $this->getMockBuilder( 'IT_Exchange_Transaction' )
+		                    ->disableOriginalConstructor()
+		                    ->setMethods( array( 'meta_exists', 'get_meta', 'get_children', 'get_total' ) )
+		                    ->getMock();
+		$transaction->method( 'meta_exists' )->willReturn( true );
+		$transaction->method( 'get_meta' )->willReturnMap( array(
+			array( 'subscription_autorenew_1', true, true ),
+			array( 'interval_1', true, 'month' ),
+			array( 'interval_count_1', true, 1 ),
+		) );
+		$transaction->method( 'get_children' )->willReturn( array() );
+		$transaction->method( 'get_total' )->with( false )->willReturn( 5.00 );
+
+		$product     = $this->getMockBuilder( 'IT_Exchange_Product' )->disableOriginalConstructor()->getMock();
+		$product->ID = 1;
+
+		$subscription = IT_Exchange_Subscription::from_transaction( $transaction, $product );
+		$this->assertEquals( 5, $subscription->calculate_recurring_amount_paid() );
+	}
+
+	public function test_calculate_recurring_amount_paid_for_auto_renewing_with_child_payments() {
+
+		$child = $this->getMockBuilder( 'IT_Exchange_Transaction' )
+		              ->disableOriginalConstructor()
+		              ->setMethods( array( 'get_total' ) )
+		              ->getMock();
+		$child->method( 'get_total' )->with( false )->willReturn( 5.00 );
+
+		$transaction = $this->getMockBuilder( 'IT_Exchange_Transaction' )
+		                    ->disableOriginalConstructor()
+		                    ->setMethods( array( 'meta_exists', 'get_meta', 'get_children', 'get_total' ) )
+		                    ->getMock();
+		$transaction->method( 'meta_exists' )->willReturn( true );
+		$transaction->method( 'get_meta' )->willReturnMap( array(
+			array( 'subscription_autorenew_1', true, true ),
+			array( 'interval_1', true, 'month' ),
+			array( 'interval_count_1', true, 1 ),
+		) );
+		$transaction->method( 'get_children' )->willReturn( array( $child ) );
+		$transaction->method( 'get_total' )->with( false )->willReturn( 0 );
+
+		$product     = $this->getMockBuilder( 'IT_Exchange_Product' )->disableOriginalConstructor()->getMock();
+		$product->ID = 1;
+
+		$subscription = IT_Exchange_Subscription::from_transaction( $transaction, $product );
+		$this->assertEquals( 5, $subscription->calculate_recurring_amount_paid() );
+	}
+
+	public function test_calculate_recurring_amount_paid_for_non_auto_renewing_with_no_child_payments() {
+
+		$transaction = $this->getMockBuilder( 'IT_Exchange_Transaction' )
+		                    ->disableOriginalConstructor()
+		                    ->setMethods( array(
+			                    'meta_exists',
+			                    'get_meta',
+			                    'get_children',
+			                    'get_total',
+			                    'get_products'
+		                    ) )
+		                    ->getMock();
+		$transaction->method( 'meta_exists' )->willReturn( true );
+		$transaction->method( 'get_meta' )->willReturnMap( array(
+			array( 'subscription_autorenew_1', true, false ),
+			array( 'interval_1', true, 'month' ),
+			array( 'interval_count_1', true, 1 ),
+		) );
+		$transaction->method( 'get_children' )->willReturn( array() );
+		$transaction->method( 'get_total' )->with( false )->willReturn( 7.50 );
+		$transaction->method( 'get_products' )->willReturn( array(
+			'1-hash' => array(
+				'product_id'       => 1,
+				'product_subtotal' => 5.00
+			)
+		) );
+
+		$product     = $this->getMockBuilder( 'IT_Exchange_Product' )->disableOriginalConstructor()->getMock();
+		$product->ID = 1;
+
+		$subscription = IT_Exchange_Subscription::from_transaction( $transaction, $product );
+		$this->assertEquals( 5, $subscription->calculate_recurring_amount_paid() );
+	}
+
+	public function test_calculate_recurring_amount_paid_for_non_auto_renewing_with_no_child_payments_coupon() {
+
+		$this->markTestSkipped( "Coupons aren't properly handled yet." );
+
+		$transaction = $this->getMockBuilder( 'IT_Exchange_Transaction' )
+		                    ->disableOriginalConstructor()
+		                    ->setMethods( array(
+			                    'meta_exists',
+			                    'get_meta',
+			                    'get_children',
+			                    'get_total',
+			                    'get_products'
+		                    ) )
+		                    ->getMock();
+		$transaction->method( 'meta_exists' )->willReturn( true );
+		$transaction->method( 'get_meta' )->willReturnMap( array(
+			array( 'subscription_autorenew_1', true, false ),
+			array( 'interval_1', true, 'month' ),
+			array( 'interval_count_1', true, 1 ),
+		) );
+		$transaction->method( 'get_children' )->willReturn( array() );
+		$transaction->method( 'get_total' )->with( false )->willReturn( 10.80 );
+		$transaction->method( 'get_products' )->willReturn( array(
+			'1-hash' => array(
+				'product_id'       => 1,
+				'product_subtotal' => 5.00
+			),
+			'2-hash' => array(
+				'product_id'       => 2,
+				'product_subtotal' => 7.00
+			)
+		) );
+
+		$product     = $this->getMockBuilder( 'IT_Exchange_Product' )->disableOriginalConstructor()->getMock();
+		$product->ID = 1;
+
+		$subscription = IT_Exchange_Subscription::from_transaction( $transaction, $product );
+		$this->assertEquals( 4.50, $subscription->calculate_recurring_amount_paid() );
+	}
+
+	public function test_handle_prorate_credit_request() {
+
+		$provider     = $this->getMockBuilder( 'IT_Exchange_Product' )->disableOriginalConstructor()->getMock();
+		$provider->ID = 1;
+
+		$receiving     = $this->getMockBuilder( 'IT_Exchange_Product' )->disableOriginalConstructor()->getMock();
+		$receiving->ID = 1;
+
+		$transaction = $this->getMockBuilder( 'IT_Exchange_Transaction' )->disableOriginalConstructor()->getMock();
+
+		$transaction->ID                 = 1;
+		$transaction->transaction_method = 'method';
+
+		$profile = new IT_Exchange_Recurring_Profile( 'month', 1 );
+
+		$subscription = $this->getMockBuilder( 'IT_Exchange_Subscription' )
+		                     ->disableOriginalConstructor()
+		                     ->setMethods( array(
+			                     'get_product',
+			                     'get_customer',
+			                     'get_transaction',
+			                     'calculate_recurring_amount_paid',
+			                     'get_days_left_in_period',
+			                     'get_subscriber_id',
+			                     'get_recurring_profile',
+			                     'is_auto_renewing'
+		                     ) )
+		                     ->getMock();
+		$subscription->method( 'get_product' )->willReturn( $provider );
+		$subscription->method( 'get_transaction' )->willReturn( $transaction );
+		$subscription->method( 'get_customer' )->willReturn(
+			$this->getMockBuilder( 'IT_Exchange_Customer' )->disableOriginalConstructor()->getMock()
+		);
+		$subscription->method( 'calculate_recurring_amount_paid' )->willReturn( 5.00 );
+		$subscription->method( 'get_days_left_in_period' )->willReturn( 15 );
+		$subscription->method( 'get_subscriber_id' )->willReturn( 'sub-id' );
+		$subscription->method( 'get_recurring_profile' )->willReturn( $profile );
+		$subscription->method( 'is_auto_renewing' )->willReturn( true );
+
+		$calculator = $this->getMock( 'ITE_Daily_Price_Calculator' );
+		$calculator->expects( $this->once() )->method( 'calculate' )->with( $profile, 5.00 )->willReturn( 0.10 );
+
+		$request = new ITE_Prorate_Subscription_Credit_Request( $subscription, $receiving );
+
+		IT_Exchange_Subscription::handle_prorate_credit_request( $request, $calculator );
+
+		$this->assertEquals( 1.5, $request->get_credit() );
+
+		$this->assertArraySubset( array(
+			'old_transaction_id'     => 1,
+			'old_transaction_method' => 'method',
+			'old_subscriber_id'      => 'sub-id'
+		), $request->get_additional_session_details() );
+	}
 }
 
 class Mock_Meta_Manager {

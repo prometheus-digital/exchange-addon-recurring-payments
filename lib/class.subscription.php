@@ -607,7 +607,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 
 		$request->set_credit( $credit );
 
-		$request->update_additional_session_details( array(
+		$request->update_additional_session_details( array( 
 			'old_transaction_id'     => $sub->get_transaction()->ID,
 			'old_transaction_method' => $sub->get_transaction()->transaction_method,
 		) );
@@ -640,7 +640,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 
 		$children = $this->get_transaction()->get_children( array(
 			'numberposts' => 1
-		) );
+		), true );
 
 		if ( $children ) {
 			$transaction = $children[0];
