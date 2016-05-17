@@ -13,5 +13,10 @@
   "require-dev": {
     "mockery/mockery": "0.9.4",
     "phpunit/phpunit": "^4.8"
+  },
+  "config": {
+    "platform": {
+      "php": "5.3.29"
+    }
   }
 }

@@ -486,7 +486,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	 */
 	public function bump_expiration_date( DateTime $from = null ) {
 
-		if ( $this->get_trial_profile() && ! $this->get_transaction()->has_children() ) {
+		if ( $this->is_trial_period() ) {
 			$profile = $this->get_trial_profile();
 		} else {
 			$profile = $this->get_recurring_profile();
