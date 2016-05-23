@@ -122,3 +122,5 @@
 	Fix: iThemes Exchange version nag
 1.8.4.2 - 2016-04-28 - Timothy Jacobs
 	Fix: t_paamayim_nekudotayim error on PHP 5.2
+1.8.5 - 2016-05-23 - Timothy Jacobs
+	Fix: Error with Guest Checkout
