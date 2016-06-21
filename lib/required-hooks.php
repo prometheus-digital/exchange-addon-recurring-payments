@@ -135,10 +135,11 @@ add_filter( 'it_exchange_possible_template_paths', 'it_exchange_recurring_paymen
  * @since 1.0.0
  *
  * @param bool $allowed Current status of multi-cart being allowed
+ * @param \ITE_Cart $cart
  *
  * @return bool True or False if multi-cart is allowed
  */
-function it_exchange_recurring_payments_multi_item_cart_allowed( $allowed ) {
+function it_exchange_recurring_payments_multi_item_cart_allowed( $allowed, ITE_Cart $cart ) {
 	if ( ! $allowed ) {
 		return $allowed;
 	}
@@ -159,18 +160,12 @@ function it_exchange_recurring_payments_multi_item_cart_allowed( $allowed ) {
 		}
 	}
 
-	$cart = it_exchange_get_cart_products();
-
-	if ( ! empty( $cart ) ) {
-		foreach ( $cart as $product ) {
-			if ( ! empty( $product['product_id'] ) ) {
-				if ( it_exchange_product_supports_feature( $product['product_id'], 'recurring-payments', array( 'setting' => 'recurring-enabled' ) ) ) {
-					if ( it_exchange_product_has_feature( $product['product_id'], 'recurring-payments', array( 'setting' => 'recurring-enabled' ) ) ) {
-						if ( it_exchange_product_supports_feature( $product['product_id'], 'recurring-payments', array( 'setting' => 'auto-renew' ) ) ) {
-							if ( it_exchange_product_has_feature( $product['product_id'], 'recurring-payments', array( 'setting' => 'auto-renew' ) ) ) {
-								return false;
-							}
-						}
+	foreach ( $cart->get_items( 'product' ) as $product ) {
+		if ( $product->get_product()->supports_feature( 'recurring-payments', array( 'setting' => 'recurring-enabled' ) ) ) {
+			if ( $product->get_product()->has_feature( 'recurring-payments', array( 'setting' => 'recurring-enabled' ) ) ) {
+				if ( $product->get_product()->supports_feature( 'recurring-payments', array( 'setting' => 'auto-renew' ) ) ) {
+					if ( $product->get_product()->has_feature( 'recurring-payments', array( 'setting' => 'auto-renew' ) ) ) {
+						return false;
 					}
 				}
 			}
@@ -180,7 +175,7 @@ function it_exchange_recurring_payments_multi_item_cart_allowed( $allowed ) {
 	return $allowed;
 }
 
-add_filter( 'it_exchange_multi_item_cart_allowed', 'it_exchange_recurring_payments_multi_item_cart_allowed' );
+add_filter( 'it_exchange_multi_item_cart_allowed', 'it_exchange_recurring_payments_multi_item_cart_allowed', 10, 2 );
 
 /**
  * Disables multi item products if viewing product with auto-renew enabled
