@@ -179,6 +179,10 @@ class IT_Exchange_Subscription {
 			}
 		}
 
+		if ( $transaction->payment_token ) {
+			$transaction->update_meta( 'subscription_payment_token', $transaction->payment_token->ID );
+		}
+
 		return new self( $transaction, $product );
 	}
 
@@ -502,6 +506,49 @@ class IT_Exchange_Subscription {
 		do_action( "it_exchange_cancel_{$method}_subscription", array(
 			'old_subscriber_id' => $this->get_subscriber_id()
 		) );
+	}
+
+	/**
+	 * Get the payment token used for the subscription.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @return ITE_Payment_Token|null
+	 */
+	public function get_payment_token() {
+
+		$token_id =  $this->get_transaction()->get_meta( 'subscription_payment_token' );
+
+		if ( ! $token_id ) {
+			return null;
+		}
+
+		return ITE_Payment_Token::get( $token_id );
+	}
+
+	/**
+	 * Set the payment token to use for this subscription.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @param \ITE_Payment_Token|null $token
+	 *
+	 * @return bool
+	 */
+	public function set_payment_token( ITE_Payment_Token $token = null ) {
+
+		/**
+		 * Fires when the payment token is updated for a subscription.
+		 *
+		 * @since 1.9.0
+		 *
+		 * @param \ITE_Payment_Token|null   $new
+		 * @param \ITE_Payment_Token|null   $old
+		 * @param \IT_Exchange_Subscription $this
+		 */
+		do_action( 'it_exchange_update_subscription_payment_token', $token, $this->get_payment_token(), $this );
+
+		return (bool) $this->get_transaction()->update_meta( 'subscription_payment_token', $token ? $token->ID : 0 );
 	}
 
 	/**
