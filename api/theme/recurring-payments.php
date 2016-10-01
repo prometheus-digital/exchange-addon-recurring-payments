@@ -17,7 +17,7 @@ class IT_Theme_API_Recurring_Payments implements IT_Theme_API {
 
 	/**
 	 * The current transaction
-	 * @var array
+	 * @var IT_Exchange_Transaction
 	 * @since 1.0.0
 	*/
 	public $_transaction = false;
@@ -162,8 +162,9 @@ class IT_Theme_API_Recurring_Payments implements IT_Theme_API {
 		);
 		$options = ITUtility::merge_defaults( $options, $defaults );
 		$output = '';
-		if ( $this->_transaction->has_children() ) {
-			$payment_transactions = $this->_transaction->get_children();
+
+		if ( $this->_transaction->children->count() ) {
+			$payment_transactions = $this->_transaction->children;
 			
 			$output .= $options['before'];
 			$output .= '<ul class="' . $options['class'] . '">';

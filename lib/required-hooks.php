@@ -139,7 +139,7 @@ add_filter( 'it_exchange_possible_template_paths', 'it_exchange_recurring_paymen
  *
  * @return bool True or False if multi-cart is allowed
  */
-function it_exchange_recurring_payments_multi_item_cart_allowed( $allowed, ITE_Cart $cart ) {
+function it_exchange_recurring_payments_multi_item_cart_allowed( $allowed, ITE_Cart $cart = null ) {
 	if ( ! $allowed ) {
 		return $allowed;
 	}
@@ -158,6 +158,10 @@ function it_exchange_recurring_payments_multi_item_cart_allowed( $allowed, ITE_C
 				}
 			}
 		}
+	}
+
+	if ( ! $cart ) {
+		return true;
 	}
 
 	foreach ( $cart->get_items( 'product' ) as $product ) {
@@ -375,6 +379,11 @@ function it_exchange_recurring_payments_handle_expired() {
 
 		$product_id  = str_replace( '_it_exchange_transaction_subscription_expires_', '', $result->meta_key );
 		$transaction = it_exchange_get_transaction( $result->post_id );
+
+		if ( ! $transaction ) {
+			continue;
+		}
+
 		if ( $expired = apply_filters( 'it_exchange_recurring_payments_handle_expired', true, $product_id, $transaction ) ) {
 			$transaction->update_transaction_meta( 'subscription_expired_' . $product_id, $result->meta_value );
 			$transaction->delete_transaction_meta( 'subscription_expires_' . $product_id );
