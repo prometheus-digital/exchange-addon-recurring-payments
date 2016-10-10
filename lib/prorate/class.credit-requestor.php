@@ -154,6 +154,8 @@ class ITE_Prorate_Credit_Requestor {
 	 *
 	 * @param ITE_Prorate_Credit_Request $request
 	 * @param string                     $type Request type. 'upgrade' or 'downgrade'.
+	 *
+	 * @throws \RuntimeException
 	 */
 	protected function handle_request( ITE_Prorate_Credit_Request $request, $type ) {
 
@@ -206,7 +208,8 @@ class ITE_Prorate_Credit_Requestor {
 	protected function product_auto_renews( IT_Exchange_Product $product ) {
 		return in_array(
 			$product->get_feature( 'recurring-payments', array( 'setting' => 'auto-renew' ) ),
-			array( 'on', 'yes' )
+			array( 'on', 'yes' ),
+			true
 		);
 	}
 
@@ -219,7 +222,7 @@ class ITE_Prorate_Credit_Requestor {
 	 */
 	public function register_provider( $provider ) {
 
-		if ( ! in_array( 'ITE_Contract_Prorate_Credit_Provider', class_implements( $provider ) ) ) {
+		if ( ! in_array( 'ITE_Contract_Prorate_Credit_Provider', class_implements( $provider ), true ) ) {
 			throw new InvalidArgumentException(
 				"The given provider, '$provider', must implement 'ITE_Contract_Prorate_Credit_Provider'."
 			);

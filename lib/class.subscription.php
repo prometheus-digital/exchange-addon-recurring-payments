@@ -304,7 +304,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	 * @return DateTime
 	 */
 	public function get_start_date() {
-		return new DateTime( $this->get_transaction()->post_date_gmt, new DateTimeZone( 'UTC' ) );
+		return new DateTime( $this->get_transaction()->get_date( true ), new DateTimeZone( 'UTC' ) );
 	}
 
 	/**
@@ -582,6 +582,8 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 
 	/**
 	 * @inheritDoc
+	 *
+	 * @param ITE_Prorate_Subscription_Credit_Request $request
 	 */
 	public static function handle_prorate_credit_request( ITE_Prorate_Credit_Request $request, ITE_Daily_Price_Calculator $calculator ) {
 
@@ -589,7 +591,6 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 			throw new DomainException( "This credit request can't be handled by this provider." );
 		}
 
-		/** @var IT_Exchange_Subscription $sub */
 		$sub = $request->get_subscription();
 		$for = $request->get_product_providing_credit();
 
@@ -608,8 +609,8 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 		$request->set_credit( $credit );
 
 		$request->update_additional_session_details( array( 
-			'old_transaction_id'     => $sub->get_transaction()->ID,
-			'old_transaction_method' => $sub->get_transaction()->transaction_method,
+			'old_transaction_id'     => $sub->get_transaction()->get_ID(),
+			'old_transaction_method' => $sub->get_transaction()->get_method(),
 		) );
 
 		if ( $sub->get_subscriber_id() && $sub->is_auto_renewing() ) {

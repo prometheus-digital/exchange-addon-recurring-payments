@@ -19,7 +19,7 @@ class Test_Prorate_Subscription_Request extends IT_Exchange_UnitTestCase {
 	public function setUp() {
 		parent::setUp();
 
-		$GLOBALS['it_exchange']['session'] = new IT_Exchange_Mock_Session();
+		$GLOBALS['it_exchange']['session'] = new IT_Exchange_In_Memory_Session( null );
 	}
 
 	public function test_accessors() {
@@ -30,8 +30,9 @@ class Test_Prorate_Subscription_Request extends IT_Exchange_UnitTestCase {
 		$providing     = $this->getMockBuilder( 'IT_Exchange_Product' )->disableOriginalConstructor()->getMock();
 		$providing->ID = 2;
 
-		$transaction     = $this->getMockBuilder( 'IT_Exchange_Transaction' )->disableOriginalConstructor()->getMock();
-		$transaction->ID = 1;
+		$transaction = $this->getMockBuilder( 'IT_Exchange_Transaction' )
+		                    ->disableOriginalConstructor()->setMethods( array( 'get_ID' ) )->getMock();
+		$transaction->method( 'get_ID' )->willReturn( 1 );
 
 		$subscription = $this->getMockBuilder( 'IT_Exchange_Subscription' )->disableOriginalConstructor()->getMock();
 		$subscription->method( 'is_auto_renewing' )->willReturn( true );

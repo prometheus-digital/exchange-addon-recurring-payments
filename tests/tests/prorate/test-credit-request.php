@@ -10,14 +10,14 @@
  * Class Test_Prorate_Credit_Request
  */
 class Test_Prorate_Credit_Request extends IT_Exchange_UnitTestCase {
-	
+
 	/**
 	 * @inheritDoc
 	 */
 	public function setUp() {
 		parent::setUp();
 
-		$GLOBALS['it_exchange']['session'] = new IT_Exchange_Mock_Session();
+		$GLOBALS['it_exchange']['session'] = new IT_Exchange_In_Memory_Session( null );
 	}
 
 	public function test_class_session_property_set() {
@@ -137,13 +137,13 @@ class Test_Prorate_Credit_Request extends IT_Exchange_UnitTestCase {
 		$request->set_free_days( 2 );
 		$request->set_upgrade_type( 'days' );
 
-		$session = it_exchange_get_session_data( 'updowngrade_details' );
+		$cart = it_exchange_get_current_cart();
 
-		$this->assertArrayNotHasKey( 2, $session, 'Request persisted before persist() call.' );
-		
+		$this->assertFalse( $cart->has_meta( ITE_Prorate_Credit_Request::META ) );
+
 		$request->persist();
-		$session = it_exchange_get_session_data( 'updowngrade_details' );
-		
+		$session = it_exchange_get_current_cart()->get_meta( ITE_Prorate_Credit_Request::META );
+
 		$this->assertArrayHasKey( 2, $session, 'Session not updated.' );
 
 		$this->assertEqualSets( array(

@@ -9,7 +9,12 @@
 /**
  * Class ITE_Prorate_Credit_Request
  */
-abstract class ITE_Prorate_Credit_Request {
+abstract class ITE_Prorate_Credit_Request implements ITE_Cart_Aware {
+
+	const META = 'updowngrade';
+
+	/** @var ITE_Cart */
+	private $cart;
 
 	/**
 	 * @var IT_Exchange_Product
@@ -70,12 +75,15 @@ abstract class ITE_Prorate_Credit_Request {
 	 * @since 2.0
 	 *
 	 * @param IT_Exchange_Product $receiving_product
+	 * @param \ITE_Cart           $cart
 	 *
 	 * @return static
 	 */
-	public static function get( IT_Exchange_Product $receiving_product ) {
+	public static function get( IT_Exchange_Product $receiving_product, ITE_Cart $cart = null ) {
 
-		$session = it_exchange_get_session_data( 'updowngrade_details' );
+		$cart = $cart ?: it_exchange_get_current_cart();
+
+		$session = $cart->has_meta( self::META ) ? $cart->get_meta( self::META ) : array();
 
 		if ( ! isset( $session[ $receiving_product->ID ] ) ) {
 			return null;
@@ -89,7 +97,10 @@ abstract class ITE_Prorate_Credit_Request {
 
 		$class = $data['_class'];
 
-		return call_user_func( array( $class, '_get' ), $receiving_product, $data );
+		$request = call_user_func( array( $class, '_get' ), $receiving_product, $data );
+		$request->set_cart( $cart );
+
+		return $request;
 	}
 
 	/**
@@ -247,6 +258,29 @@ abstract class ITE_Prorate_Credit_Request {
 	}
 
 	/**
+	 * @inheritDoc
+	 */
+	public function set_cart( ITE_Cart $cart ) {
+		$this->cart = $cart;
+	}
+
+	/**
+	 * Get the cart.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @return \ITE_Cart
+	 */
+	public function get_cart() {
+
+		if ( ! $this->cart ) {
+			$this->cart = it_exchange_get_current_cart();
+		}
+
+		return $this->cart;
+	}
+
+	/**
 	 * Persist this credit request to the session.
 	 *
 	 * @since 1.9
@@ -261,11 +295,11 @@ abstract class ITE_Prorate_Credit_Request {
 
 		$details = array_merge( $details, $this->get_additional_session_details() );
 
-		$data = it_exchange_get_session_data( 'updowngrade_details' );
+		$data = $this->get_cart()->has_meta( self::META ) ? $this->get_cart()->get_meta( self::META ) : array();
 
 		$data[ $this->get_product_receiving_credit()->ID ] = $details;
 
-		it_exchange_update_session_data( 'updowngrade_details', $data );
+		$this->get_cart()->set_meta( self::META, $data );
 	}
 
 	/**
@@ -274,8 +308,13 @@ abstract class ITE_Prorate_Credit_Request {
 	 * @since 1.9
 	 */
 	public function fail() {
-		$data = it_exchange_get_session_data( 'updowngrade_details' );
+		$data = $this->get_cart()->has_meta( self::META ) ? $this->get_cart()->get_meta( self::META ) : array();
 		unset( $data[ $this->get_product_receiving_credit()->ID ] );
-		it_exchange_update_session_data( 'updowngrade_details', $data );
+
+		if ( $data ) {
+			$this->get_cart()->set_meta( self::META, $data );
+		} else {
+			$this->get_cart()->remove_meta( self::META );
+		}
 	}
 }

@@ -152,10 +152,10 @@ class Test_Subscription extends IT_Exchange_UnitTestCase {
 	public function test_get_start_date() {
 
 		$transaction = $this->getMockBuilder( 'IT_Exchange_Transaction' )->disableOriginalConstructor()
-		                    ->setMethods( array( 'meta_exists', 'get_meta' ) )
+		                    ->setMethods( array( 'meta_exists', 'get_meta', 'get_date' ) )
 		                    ->getMock();
 		$transaction->method( 'meta_exists' )->willReturn( true );
-		$transaction->post_date_gmt = '2016-01-01 12:00:00';
+		$transaction->method( 'get_date' )->with( true )->willReturn( '2016-01-01 12:00:00' );
 
 		$product     = $this->getMockBuilder( 'IT_Exchange_Product' )->disableOriginalConstructor()->getMock();
 		$product->ID = 1;
@@ -534,10 +534,11 @@ class Test_Subscription extends IT_Exchange_UnitTestCase {
 		$receiving     = $this->getMockBuilder( 'IT_Exchange_Product' )->disableOriginalConstructor()->getMock();
 		$receiving->ID = 1;
 
-		$transaction = $this->getMockBuilder( 'IT_Exchange_Transaction' )->disableOriginalConstructor()->getMock();
+		$transaction = $this->getMockBuilder( 'IT_Exchange_Transaction' )->disableOriginalConstructor()
+		                    ->setMethods( array( 'get_ID', 'get_method' ) )->getMock();
 
-		$transaction->ID                 = 1;
-		$transaction->transaction_method = 'method';
+		$transaction->method( 'get_ID' )->willReturn( 1 );
+		$transaction->method( 'get_method' )->willReturn( 'method' );
 
 		$profile = new IT_Exchange_Recurring_Profile( 'month', 1 );
 

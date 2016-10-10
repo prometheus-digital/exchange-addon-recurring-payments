@@ -66,7 +66,6 @@ require dirname( __FILE__ ) . '/../../ithemes-exchange/tests/framework/transacti
 require dirname( __FILE__ ) . '/../../ithemes-exchange/tests/framework/product-factory.php';
 require dirname( __FILE__ ) . '/../../ithemes-exchange/tests/framework/download-factory.php';
 require dirname( __FILE__ ) . '/../../ithemes-exchange/tests/framework/test-case.php';
-require dirname( __FILE__ ) . '/../../ithemes-exchange/tests/mocks/mock-session.php';
 
 activate_plugin( 'ithemes-exchange/init.php' );
 activate_plugin( 'exchange-addon-recurring-payments/exchange-addon-recurring-payments.php' );
