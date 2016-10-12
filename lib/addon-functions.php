@@ -47,7 +47,7 @@ function it_exchange_recurring_payments_customer_notification( $customer, $statu
  * @since 1.0.0
  *
  * @param IT_Exchange_Transaction $transaction iThemes Exchange Transaction Object
- * @param DateTime                $from From date to base the new expiration date off of.
+ * @param DateTime                $from        From date to base the new expiration date off of.
  *
  * @return void
  */
@@ -114,4 +114,62 @@ function it_exchange_recurring_payments_addon_recurring_label( $product_id ) {
 	}
 
 	return apply_filters( 'it_exchange_recurring_payments_addon_expires_time_label', $label, $product_id );
+}
+
+/**
+ * For hierarchical subscriptions.
+ * Prints or returns an HTML formatted list of subscriptions and their children
+ *
+ * @since 1.9.0
+ *
+ * @param array $product_ids Parent IDs of subscription products
+ * @param array $args        array of arguments for the function
+ *
+ * @return string|null
+ */
+function it_exchange_recurring_payments_addon_display_subscription_hierarchy( $product_ids, $args = array() ) {
+	$args = wp_parse_args( $args, array(
+		'echo'         => true,
+		'delete'       => true,
+		'hidden_input' => true,
+	) );
+
+	$echo         = $args['echo'];
+	$delete       = $args['delete'];
+	$hidden_input = $args['hidden_input'];
+
+	$output = '';
+	foreach ( $product_ids as $product_id ) {
+		if ( false !== get_post_status( $product_id ) ) {
+			$output .= '<ul>';
+			$output .= '<li data-child-id="' . $product_id . '"><div class="inner-wrapper">' . get_the_title( $product_id );
+
+			if ( $delete ) {
+				$output .= ' <a href data-subscription-id="' . $product_id . '" class="it-exchange-subscription-addon-delete-subscription-child it-exchange-remove-item">&times;</a>';
+			}
+
+			if ( $hidden_input ) {
+				$output .= ' <input type="hidden" name="it-exchange-subscription-child-ids[]" value="' . $product_id . '" />';
+			}
+
+			$output .= '</div>';
+
+			if ( $child_ids = it_exchange_get_product_feature( $product_id, 'subscription-hierarchy', array( 'setting' => 'children' ) ) ) {
+				$output .= it_exchange_recurring_payments_addon_display_subscription_hierarchy( $child_ids, array(
+					'echo'         => false,
+					'delete'       => false,
+					'hidden_input' => false
+				) );
+			}
+
+			$output .= '</li>';
+			$output .= '</ul>';
+		}
+	}
+
+	if ( $echo ) {
+		echo $output;
+	} else {
+		return $output;
+	}
 }

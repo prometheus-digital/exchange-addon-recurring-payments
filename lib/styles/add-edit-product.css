@@ -1,0 +1,35 @@
+#it-exchange-product-subscription-hierarchy ul {
+	margin: 0;
+}
+
+#it-exchange-product-subscription-hierarchy li .inner-wrapper {
+	position: relative;
+	border: 1px solid #D7D7D7;
+	padding: 1em;
+}
+
+#it-exchange-product-subscription-hierarchy li li {
+	margin-left: 2em;
+}
+
+#it-exchange-product-subscription-hierarchy li li .inner-wrapper {
+	margin-top: 6px;
+}
+
+#it-exchange-product-subscription-hierarchy .it-exchange-remove-item {
+	position: absolute;
+	right: 0;
+	top: 0;
+}
+
+#it-exchange-product-subscription-hierarchy .it-exchange-subscription-hierarchy-add {
+	margin-top: 1em;
+}
+
+#it-exchange-product-subscription-hierarchy .it-exchange-subscription-label {
+	margin-top: 2em;
+}
+
+.it-exchange-subscription-group-rule-title {
+	margin: 7px 0 5px 1em;
+}

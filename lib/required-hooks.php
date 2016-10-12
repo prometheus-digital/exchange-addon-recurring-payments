@@ -46,8 +46,7 @@ function it_exchange_recurring_payments_addon_admin_wp_enqueue_styles( $hook_suf
 	global $wp_version;
 
 	if ( isset( $post_type ) && 'it_exchange_prod' === $post_type ) {
-		// no longer needed as of 1.6.1
-		//wp_enqueue_style( 'it-exchange-recurring-payments-addon-add-edit-product', ITUtility::get_url_from_file( dirname( __FILE__ ) ) . '/styles/add-edit-product.css' );
+		wp_enqueue_style( 'it-exchange-recurring-payments-addon-add-edit-product', ITUtility::get_url_from_file( dirname( __FILE__ ) ) . '/styles/add-edit-product.css' );
 
 		if ( $wp_version <= 3.7 ) {
 			wp_enqueue_style( 'it-exchange-recurring-payments-addon-add-edit-product-pre-3-8', ITUtility::get_url_from_file( dirname( __FILE__ ) ) . '/styles/add-edit-product-pre-3-8.css' );
@@ -884,3 +883,74 @@ function it_exchange_addon_recurring_payments_show_version_nag() {
 }
 
 add_action( 'admin_notices', 'it_exchange_addon_recurring_payments_show_version_nag' );
+
+/**
+ * AJAX to add new member relatives
+ *
+ * @since 1.9.0
+ */
+function it_exchange_recurring_payments_addon_ajax_add_subscription_child() {
+
+	$return = '';
+
+	if ( ! empty( $_REQUEST['post_id'] ) && ! empty( $_REQUEST['product_id'] ) ) {
+		$child_ids = array();
+
+		if ( ! empty( $_REQUEST['child_ids'] ) ) {
+			foreach ( $_REQUEST['child_ids'] as $child_id ) {
+				if ( 'it-exchange-subscription-child-ids[]' === $child_id['name'] ) {
+					$child_ids[] = $child_id['value'];
+				}
+			}
+		}
+
+		if ( ! in_array( $_REQUEST['product_id'], $child_ids ) ) {
+			$child_ids[] = $_REQUEST['product_id'];
+		}
+
+		$return = it_exchange_recurring_payments_addon_display_subscription_hierarchy( $child_ids, array( 'echo' => false ) );
+	}
+
+	die( $return );
+}
+
+add_action( 'wp_ajax_it-exchange-recurring-payments-addon-add-subscription-child', 'it_exchange_recurring_payments_addon_ajax_add_subscription_child' );
+
+/**
+ * AJAX to add new member relatives
+ *
+ * @since 1.9.0
+ */
+function it_exchange_recurring_payments_addon_ajax_add_subscription_parent() {
+
+	$return = '';
+
+	if ( ! empty( $_REQUEST['post_id'] ) && ! empty( $_REQUEST['product_id'] ) ) {
+		$parent_ids = array();
+		if ( ! empty( $_REQUEST['parent_ids'] ) ) {
+			foreach ( $_REQUEST['parent_ids'] as $parent_id ) {
+				if ( 'it-exchange-subscription-parent-ids[]' === $parent_id['name'] ) {
+					$parent_ids[] = $parent_id['value'];
+				}
+			}
+		}
+
+		if ( ! in_array( $_REQUEST['product_id'], $parent_ids ) ) {
+			$parent_ids[] = $_REQUEST['product_id'];
+		}
+
+		$return .= '<ul>';
+		foreach ( $parent_ids as $parent_id ) {
+			$return .= '<li data-parent-id="' . $parent_id . '">';
+			$return .= '<div class="inner-wrapper">' . get_the_title( $parent_id ) . ' <a data-membership-id="' . $parent_id . '" class="it-exchange-subscription-addon-delete-subscription-parent it-exchange-remove-item">x</a>';
+			$return .= '<input type="hidden" name="it-exchange-subscription-parent-ids[]" value="' . $parent_id . '" /></div>';
+			$return .= '</li>';
+		}
+		$return .= '</ul>';
+	}
+
+	die( $return );
+}
+
+add_action( 'wp_ajax_it-exchange-recurring-payments-addon-add-subscription-parent', 'it_exchange_recurring_payments_addon_ajax_add_subscription_parent' );
+

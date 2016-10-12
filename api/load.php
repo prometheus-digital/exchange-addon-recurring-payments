@@ -16,3 +16,4 @@ if ( is_admin() ) {
 // Transaction Add-ons
 require_once( dirname( __FILE__ ) . '/transactions.php' );
 require_once( dirname( __FILE__ ) . '/subscriptions.php' );
+require_once( dirname( __FILE__ ) . '/hierarchy.php' );
