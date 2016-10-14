@@ -15,10 +15,18 @@ class IT_Exchange_Subscription_Hierarchy_Product_Feature extends IT_Exchange_Pro
 	 * @inheritDoc
 	 */
 	public function __construct() {
+
+		$product_types = array();
+
+		foreach ( it_exchange_get_addons( array( 'category' => 'product-type' ) ) as $product_type => $addon ) {
+			$product_types[] = $product_type;
+		}
+
 		parent::__construct( array(
 			'slug'          => 'subscription-hierarchy',
 			'description'   => __( 'Allows you to define an upgrade or downgrade hierarchy for subscriptions.', 'LION' ),
-			'metabox_title' => __( 'Subscription Hierarchy', 'LION' )
+			'metabox_title' => __( 'Upgrades & Downgrades', 'LION' ),
+			'product_types' => $product_types,
 		) );
 	}
 
@@ -33,37 +41,23 @@ class IT_Exchange_Subscription_Hierarchy_Product_Feature extends IT_Exchange_Pro
 	 */
 	public function print_metabox( $post ) {
 
-		$meta_query = array(
-			'relation' => 'OR',
-			array(
+		$subscriptions = it_exchange_get_products( array(
+			'meta_query' => array(
 				'key'   => '_it-exchange-product-recurring-enabled',
 				'value' => 'on',
 			),
-		);
-
-		if ( it_exchange_get_product_type( $post ) === 'membership-product-type' ) {
-			$meta_query[] = array(
-				'key'   => '_it_exchange_product_type',
-				'value' => 'membership-product-type',
-			);
-		}
-
-		$subscriptions = get_posts( array(
-			'numberposts' => - 1,
-			'meta_query'  => $meta_query,
-			'post_type'   => 'it_exchange_prod',
+			'show_hidden' => true
 		) );
 
 		// Grab the iThemes Exchange Product object from the WP $post object
 		$product = it_exchange_get_product( $post );
 
-		echo '<p>' . __( 'View and edit subscription relationships below. You can add child subscriptions to include the content and files from another subscription with this subscription. You can also add and remove parent subscriptions that include this subscription.', 'LION' ) . '</p>';
+		echo '<p>' . __( 'View and edit subscription relationships below. Customers can upgrade to parent subscriptions and downgrade to child subscriptions.', 'LION' ) . '</p>';
 
 		$child_ids  = it_exchange_get_product_feature( $product->ID, 'subscription-hierarchy', array( 'setting' => 'children' ) );
 		$parent_ids = it_exchange_get_product_feature( $product->ID, 'subscription-hierarchy', array( 'setting' => 'parents' ) );
 
-		echo '<p><label for="it-exchange-subscription-child-id" class="it-exchange-subscription-label it-exchange-subscription-child-label">' . __( 'Child Subscriptions', 'LION' ) . ' <span class="tip" title="' . __( "A Parent gets all of its own access, plus all of it's Child(ren)'s access.", 'LION' ) . '">i</span></label></p>';
-		echo '<p>' . __( 'Additional subscriptions available to owners of this subscription level.', 'LION' ) . '</p>';
+		echo '<p><label for="it-exchange-subscription-child-id" class="it-exchange-subscription-label it-exchange-subscription-child-label">' . __( 'Child Subscriptions', 'LION' ) . '</label></p>';
 
 		echo '<div class="it-exchange-subscription-child-ids-list-div">';
 		it_exchange_recurring_payments_addon_display_subscription_hierarchy( $child_ids );
@@ -81,8 +75,7 @@ class IT_Exchange_Subscription_Hierarchy_Product_Feature extends IT_Exchange_Pro
 		echo '<a href class="button">' . __( 'Add Child Subscription', 'LION' ) . '</a>';
 		echo '</div>';
 
-		echo '<p><label for="it-exchange-subscription-parent-id" class="it-exchange-subscription-label it-exchange-subscription-parent-label">' . __( 'Parent Subscriptions', 'LION' ) . ' <span class="tip" title="' . __( "A Parent gets all of its own access, plus all of it's Child(ren)'s access.", 'LION' ) . '">i</span></label></p>';
-		echo '<p>' . __( 'Subscriptions that include content and benefits from this subscription and all children of it.', 'LION' ) . '</p>';
+		echo '<p><label for="it-exchange-subscription-parent-id" class="it-exchange-subscription-label it-exchange-subscription-parent-label">' . __( 'Parent Subscriptions', 'LION' ) . '</label></p>';
 
 		echo '<div class="it-exchange-subscription-parent-ids-list-div">';
 		echo '<ul>';
@@ -154,6 +147,11 @@ class IT_Exchange_Subscription_Hierarchy_Product_Feature extends IT_Exchange_Pro
 	 * @return string product feature
 	 */
 	public function save_feature( $product_id, $new_value, $options = array() ) {
+
+		if ( it_exchange_get_product_type( $product_id ) === 'membership-product-type' ) {
+			return it_exchange_update_product_feature( $product_id, 'membership-hierarchy', $new_value, $options );
+		}
+
 		switch ( $options['setting'] ) {
 
 			case 'children':
@@ -229,6 +227,11 @@ class IT_Exchange_Subscription_Hierarchy_Product_Feature extends IT_Exchange_Pro
 	 * @return string product feature
 	 */
 	public function get_feature( $existing, $product_id, $options = array() ) {
+
+		if ( it_exchange_get_product_type( $product_id ) === 'membership-product-type' ) {
+			return it_exchange_get_product_feature( $product_id, 'membership-hierarchy', $options );
+		}
+
 		switch ( $options['setting'] ) {
 
 			case 'children':
