@@ -15,7 +15,7 @@
  * @param int   $product_id product ID of membership
  * @param array $parent_ids array of of current parent_ids
  *
- * @return array|bool
+ * @return array|false
  */
 function it_exchange_get_all_subscription_product_parents( $product_id, $parent_ids = array() ) {
 	$parents = it_exchange_get_product_feature( $product_id, 'subscription-hierarchy', array( 'setting' => 'parents' ) );
@@ -43,7 +43,7 @@ function it_exchange_get_all_subscription_product_parents( $product_id, $parent_
  * @param int   $product_id product ID of membership
  * @param array $child_ids  array of of current child_ids
  *
- * @return array|bool
+ * @return array|false
  */
 function it_exchange_get_all_subscription_product_children( $product_id, $child_ids = array() ) {
 	$children = it_exchange_get_product_feature( $product_id, 'subscription-hierarchy', array( 'setting' => 'children' ) );

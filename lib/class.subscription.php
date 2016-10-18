@@ -10,7 +10,7 @@
  * Class IT_Exchange_Subscription
  */
 class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
-	
+
 	const E_NO_PROD = 1;
 	const E_NOT_RECURRING = 2;
 
@@ -168,7 +168,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 		$trial_interval_count = $product->get_feature( 'recurring-payments', array( 'setting' => 'trial-interval-count' ) );
 
 		if ( $trial_enabled && function_exists( 'it_exchange_is_customer_eligible_for_trial' ) ) {
-			$customer = it_exchange_get_transaction_customer( $transaction );
+			$customer      = it_exchange_get_transaction_customer( $transaction );
 			$trial_enabled = it_exchange_is_customer_eligible_for_trial( $product, $customer );
 		}
 
@@ -608,7 +608,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 
 		$request->set_credit( $credit );
 
-		$request->update_additional_session_details( array( 
+		$request->update_additional_session_details( array(
 			'old_transaction_id'     => $sub->get_transaction()->get_ID(),
 			'old_transaction_method' => $sub->get_transaction()->get_method(),
 		) );
@@ -685,6 +685,62 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 			'customer'          => $this->get_customer(),
 			'subscription'      => $this
 		) );
+	}
+
+	/**
+	 * Get all available upgrades for this subscription.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @return ITE_Prorate_Credit_Request[]
+	 */
+	public function get_available_upgrades() {
+
+		$all_parents = it_exchange_get_all_subscription_product_parents( $this->get_product()->ID );
+
+		if ( ! $all_parents ) {
+			return array();
+		}
+
+		$requests = array();
+
+		foreach ( $all_parents as $parent_id ) {
+			$parent = it_exchange_get_product( $parent_id );
+
+			if ( $parent ) {
+				$requests[] = new ITE_Prorate_Subscription_Credit_Request( $this, $parent );
+			}
+		}
+
+		return $requests;
+	}
+
+	/**
+	 * Get all available downgrades for this subscription.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @return ITE_Prorate_Credit_Request[]
+	 */
+	public function get_available_downgrades() {
+
+		$all_children = it_exchange_get_all_subscription_product_children( $this->get_product()->ID );
+
+		if ( ! $all_children ) {
+			return array();
+		}
+
+		$requests = array();
+
+		foreach ( $all_children as $child_id ) {
+			$child = it_exchange_get_product( $child_id );
+
+			if ( $child ) {
+				$requests[] = new ITE_Prorate_Subscription_Credit_Request( $this, $child );
+			}
+		}
+
+		return $requests;
 	}
 
 	/**
