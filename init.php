@@ -73,6 +73,5 @@ if ( $current_version != ITE_RECURRING_PAYMENTS_VERSION ) {
 		update_option( 'it_exchange_show_upgrades_nag', true );
 	}
 }
-include( 'lib/addon-functions.php' );
 
 require_once( dirname( __FILE__ ) . '/lib/class.email.php' );

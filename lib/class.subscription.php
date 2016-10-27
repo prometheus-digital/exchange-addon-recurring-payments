@@ -183,6 +183,10 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 			$transaction->update_meta( 'trial_interval_count_' . $product->ID, $trial_interval_count );
 		}
 
+		if ( $transaction->payment_token ) {
+			$transaction->update_meta( 'subscription_payment_token', $transaction->payment_token->ID );
+		}
+
 		$subscription = new self( $transaction, $product );
 
 		/**
@@ -194,11 +198,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 		 */
 		do_action( 'it_exchange_subscription_created', $subscription );
 
-		if ( $transaction->payment_token ) {
-			$transaction->update_meta( 'subscription_payment_token', $transaction->payment_token->ID );
-		}
-
-		return new self( $transaction, $product );
+		return $subscription;
 	}
 
 	/**
