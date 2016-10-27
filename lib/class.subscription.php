@@ -9,12 +9,16 @@
 /**
  * Class IT_Exchange_Subscription
  */
-class IT_Exchange_Subscription {
+class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
+
+	const E_NO_PROD = 1;
+	const E_NOT_RECURRING = 2;
 
 	const STATUS_ACTIVE = 'active';
 	const STATUS_SUSPENDED = 'suspended';
 	const STATUS_CANCELLED = 'cancelled';
 	const STATUS_DEACTIVATED = 'deactivated';
+	const STATUS_COMPLIMENTARY = 'complimentary';
 
 	/**
 	 * @var IT_Exchange_Transaction
@@ -122,11 +126,13 @@ class IT_Exchange_Subscription {
 	 */
 	public static function create( IT_Exchange_Transaction $transaction, IT_Exchange_Product $product = null ) {
 
+		$found = false;
+
 		if ( $product ) {
 			foreach ( $transaction->get_products() as $cart_product ) {
 
 				if ( $cart_product['product_id'] == $product->ID ) {
-					$product = it_exchange_get_product( $cart_product['product_id'] );
+					$found = true;
 
 					break;
 				}
@@ -135,25 +141,24 @@ class IT_Exchange_Subscription {
 
 			$cart_products = $transaction->get_products();
 			$cart_product  = reset( $cart_products );
+			$found         = true;
 			$product       = it_exchange_get_product( $cart_product['product_id'] );
 
 		} else {
 			throw new InvalidArgumentException( 'Ambiguous product to generate subscriptions for.' );
 		}
 
-		if ( ! isset( $product ) ) {
-			throw new UnexpectedValueException( 'Product not found.' );
+		if ( ! $found ) {
+			throw new UnexpectedValueException( 'Product not found.', self::E_NO_PROD );
 		}
 
 		if ( ! $product->supports_feature( 'recurring-payments' ) ) {
-			throw new UnexpectedValueException( 'Product does not support recurring payments.' );
+			throw new UnexpectedValueException( 'Product does not support recurring payments.', self::E_NOT_RECURRING );
 		}
 
 		if ( ! $product->get_feature( 'recurring-payments', array( 'setting' => 'recurring-enabled' ) ) ) {
-			throw new UnexpectedValueException( 'Product does not have recurring enabled.' );
+			throw new UnexpectedValueException( 'Product does not have recurring enabled.', self::E_NOT_RECURRING );
 		}
-
-		$customer = it_exchange_get_transaction_customer( $transaction );
 
 		$trial_enabled        = $product->get_feature( 'recurring-payments', array( 'setting' => 'trial-enabled' ) );
 		$auto_renew           = $product->get_feature( 'recurring-payments', array( 'setting' => 'auto-renew' ) );
@@ -163,21 +168,31 @@ class IT_Exchange_Subscription {
 		$trial_interval_count = $product->get_feature( 'recurring-payments', array( 'setting' => 'trial-interval-count' ) );
 
 		if ( $trial_enabled && function_exists( 'it_exchange_is_customer_eligible_for_trial' ) ) {
+			$customer      = it_exchange_get_transaction_customer( $transaction );
 			$trial_enabled = it_exchange_is_customer_eligible_for_trial( $product, $customer );
 		}
 
 		$transaction->update_meta( 'has_trial_' . $product->ID, $trial_enabled );
 		$transaction->update_meta( 'is_auto_renewing_' . $product->ID, $auto_renew );
+		$transaction->update_meta( 'subscription_autorenew_' . $product->ID, $auto_renew === 'on' );
 		$transaction->update_meta( 'interval_' . $product->ID, $interval );
 		$transaction->update_meta( 'interval_count_' . $product->ID, $interval_count );
 
-		if ( $trial_enabled && function_exists( 'it_exchange_is_customer_eligible_for_trial' ) ) {
-
-			if ( it_exchange_is_customer_eligible_for_trial( $product, $customer ) ) {
-				$transaction->update_meta( 'trial_interval_' . $product->ID, $trial_interval );
-				$transaction->update_meta( 'trial_interval_count_' . $product->ID, $trial_interval_count );
-			}
+		if ( $trial_enabled ) {
+			$transaction->update_meta( 'trial_interval_' . $product->ID, $trial_interval );
+			$transaction->update_meta( 'trial_interval_count_' . $product->ID, $trial_interval_count );
 		}
+
+		$subscription = new self( $transaction, $product );
+
+		/**
+		 * Fires when a subscription is created.
+		 *
+		 * @since 1.8.4
+		 *
+		 * @param IT_Exchange_Subscription $subscription
+		 */
+		do_action( 'it_exchange_subscription_created', $subscription );
 
 		if ( $transaction->payment_token ) {
 			$transaction->update_meta( 'subscription_payment_token', $transaction->payment_token->ID );
@@ -293,7 +308,7 @@ class IT_Exchange_Subscription {
 	 * @return DateTime
 	 */
 	public function get_start_date() {
-		return new DateTime( $this->get_transaction()->post_date_gmt, new DateTimeZone( 'UTC' ) );
+		return new DateTime( $this->get_transaction()->get_date( true ), new DateTimeZone( 'UTC' ) );
 	}
 
 	/**
@@ -327,7 +342,8 @@ class IT_Exchange_Subscription {
 	 */
 	public function set_expiry_date( DateTime $date ) {
 
-		$now = new DateTime( 'now', new DateTimeZone( 'UTC' ) );
+		$previous = $this->get_expiry_date();
+		$now      = new DateTime( 'now', new DateTimeZone( 'UTC' ) );
 
 		if ( $now < $date ) {
 			$this->get_transaction()->update_meta( 'subscription_expires_' . $this->get_product()->ID, $date->format( 'U' ) );
@@ -336,6 +352,16 @@ class IT_Exchange_Subscription {
 			$this->get_transaction()->delete_meta( 'subscription_expires_' . $this->get_product()->ID );
 			$this->get_transaction()->update_meta( 'subscription_expired_' . $this->get_product()->ID, $date->format( 'U' ) );
 		}
+
+		/**
+		 * Fires when a subscription's expiry date has been updated.
+		 *
+		 * @since 1.8.4
+		 *
+		 * @param IT_Exchange_Subscription $this
+		 * @param DateTime|null            $previous
+		 */
+		do_action( 'it_exchange_subscription_set_expiry_date', $this, $previous );
 	}
 
 	/**
@@ -357,7 +383,29 @@ class IT_Exchange_Subscription {
 	 * @param string $new_id
 	 */
 	public function set_subscriber_id( $new_id ) {
+
+		$old_id = $this->get_subscriber_id();
 		$this->get_transaction()->update_meta( 'subscriber_id', $new_id );
+
+		$customer_subscription_ids = $this->get_customer()->get_customer_meta( 'subscription_ids' );
+
+		if ( ! empty( $old_id ) ) {
+			unset( $customer_subscription_ids[ $old_id ] );
+		}
+
+		$customer_subscription_ids[ $new_id ]['txn_id'] = $this->get_transaction()->ID;
+		$customer_subscription_ids[ $new_id ]['status'] = $this->get_status();
+		$this->get_customer()->update_customer_meta( 'subscription_ids', $customer_subscription_ids );
+
+		/**
+		 * Fires when a subscription's subscriber ID has been updated.
+		 *
+		 * @since 1.8.4
+		 *
+		 * @param IT_Exchange_Subscription $this
+		 * @param string                   $old_id
+		 */
+		do_action( 'it_exchange_subscription_set_subscriber_id', $this, $old_id );
 	}
 
 	/**
@@ -384,7 +432,7 @@ class IT_Exchange_Subscription {
 		if ( $label ) {
 			$labels = self::get_statuses();
 
-			return $labels[ $status ];
+			return isset( $labels[ $status ] ) ? $labels[ $status ] : ucfirst( $status );
 		}
 
 		return $status;
@@ -401,17 +449,16 @@ class IT_Exchange_Subscription {
 	 */
 	public function set_status( $new_status ) {
 
-		if ( $new_status === $this->get_status() ) {
+		$old_status = $this->get_status();
+
+		if ( $new_status === $old_status ) {
 			throw new InvalidArgumentException( '$new_status === $old_status' );
 		}
 
-		$subscriber_id = $this->get_subscriber_id();
-
 		$this->get_transaction()->update_meta( 'subscriber_status_' . $this->get_product()->ID, $new_status );
 		$this->get_transaction()->update_meta( 'subscriber_status', $new_status ); // back-compat
-		$subscriptions = $this->get_customer()->get_customer_meta( 'subscription_ids' );
 
-		$old_status = isset( $subscriptions[ $subscriber_id ]['status'] ) ? $subscriptions[ $subscriber_id ]['status'] : '';
+		$subscriptions = $this->get_customer()->get_customer_meta( 'subscription_ids' );
 
 		$subscriptions[ $this->get_subscriber_id() ]['status'] = $new_status;
 		$this->get_customer()->update_customer_meta( 'subscription_ids', $subscriptions );
@@ -427,6 +474,10 @@ class IT_Exchange_Subscription {
 		 */
 		do_action( 'it_exchange_transition_subscription_status', $new_status, $old_status, $this );
 
+		if ( $new_status === self::STATUS_COMPLIMENTARY && $old_status === self::STATUS_ACTIVE && $this->is_auto_renewing() ) {
+			$this->cancel();
+		}
+
 		return $old_status;
 	}
 
@@ -434,18 +485,26 @@ class IT_Exchange_Subscription {
 	 * Bump the expiration date.
 	 *
 	 * @since 1.8
+	 *
+	 * @param DateTime $from
 	 */
-	public function bump_expiration_date() {
+	public function bump_expiration_date( DateTime $from = null ) {
 
-		if ( $this->get_trial_profile() && ! $this->get_transaction()->has_children() ) {
+		if ( $this->is_trial_period() ) {
 			$profile = $this->get_trial_profile();
 		} else {
 			$profile = $this->get_recurring_profile();
 		}
 
-		$time = strtotime( $profile->get_interval() );
-		
-		if ( $this->is_auto_renewing() ) {
+		if ( $from ) {
+			$now = (int) $from->format( 'U' );
+		} else {
+			$now = time();
+		}
+
+		$time = strtotime( $profile->get_interval(), $now );
+
+		if ( $this->is_auto_renewing() && $this->get_status() !== self::STATUS_COMPLIMENTARY ) {
 			$time += DAY_IN_SECONDS;
 		}
 
@@ -463,8 +522,7 @@ class IT_Exchange_Subscription {
 			return;
 		}
 
-		$this->transaction->update_meta( 'subscription_expires_' . $this->get_product()->ID, $time );
-		$this->transaction->delete_meta( 'subscription_expired_' . $this->get_product()->ID );
+		$this->set_expiry_date( new DateTime( "@$time", new DateTimeZone( 'UTC' ) ) );
 
 		/**
 		 * Fires when a subscription's expiration date is bumped.
@@ -495,6 +553,129 @@ class IT_Exchange_Subscription {
 	}
 
 	/**
+	 * The total number of days left in this subscription period.
+	 *
+	 * @since 1.9
+	 *
+	 * @return int
+	 */
+	public function get_days_left_in_period() {
+
+		$now     = new DateTime( date( 'Y-m-d' ) . ' 00:00:00' );
+		$expires = $this->get_expiry_date();
+
+		if ( $expires <= $now ) {
+			return 0;
+		}
+
+		if ( method_exists( $now, 'diff' ) ) {
+			$diff = $now->diff( $expires );
+			$days = $diff->days;
+		} else {
+			// this is inaccurate, DateTime::diff handles daylight saving, etc...
+			$diff = (int) $expires->format( 'U' ) - (int) $expires->format( 'U' );
+			$days = floor( $diff / DAY_IN_SECONDS );
+		}
+
+		if ( $this->is_auto_renewing() && $this->get_status() !== self::STATUS_COMPLIMENTARY ) {
+			$days -= 1;
+		}
+
+		return max( $days, 0 );
+	}
+
+	/**
+	 * @inheritDoc
+	 *
+	 * @param ITE_Prorate_Subscription_Credit_Request $request
+	 */
+	public static function handle_prorate_credit_request( ITE_Prorate_Credit_Request $request, ITE_Daily_Price_Calculator $calculator ) {
+
+		if ( ! self::accepts_prorate_credit_request( $request ) ) {
+			throw new DomainException( "This credit request can't be handled by this provider." );
+		}
+
+		$sub = $request->get_subscription();
+		$for = $request->get_product_providing_credit();
+
+		if ( $for->ID != $sub->get_product()->ID ) {
+			throw new InvalidArgumentException(
+				"Given product with ID '$for->ID' does not match subscription product '{$sub->get_product()->ID}'."
+			);
+		}
+
+		$amount_paid = $sub->calculate_recurring_amount_paid();
+		$daily_price = $calculator->calculate( $sub->get_recurring_profile(), $amount_paid );
+		$days_left   = $sub->get_days_left_in_period();
+
+		$credit = min( $daily_price * $days_left, $amount_paid );
+
+		$request->set_credit( $credit );
+
+		$request->update_additional_session_details( array(
+			'old_transaction_id'     => $sub->get_transaction()->get_ID(),
+			'old_transaction_method' => $sub->get_transaction()->get_method(),
+		) );
+
+		if ( $sub->get_subscriber_id() && $sub->is_auto_renewing() ) {
+			$request->update_additional_session_details( array(
+				'old_subscriber_id' => $sub->get_subscriber_id()
+			) );
+		}
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public static function accepts_prorate_credit_request( ITE_Prorate_Credit_Request $request ) {
+		return $request instanceof ITE_Prorate_Subscription_Credit_Request;
+	}
+
+	/**
+	 * Calculate the amount being paid for this subscription.
+	 *
+	 * This will use the latest child payment and attempt to ignore coupons
+	 * to try and be as accurate as possible.
+	 *
+	 * @since 1.9
+	 *
+	 * @return float
+	 */
+	public function calculate_recurring_amount_paid() {
+
+		$children = $this->get_transaction()->get_children( array(
+			'numberposts' => 1
+		), true );
+
+		if ( $children ) {
+			$transaction = $children[0];
+		} else {
+			$transaction = $this->get_transaction();
+		}
+
+		// auto-renewing subscriptions only can be purchased individually
+		if ( $this->is_auto_renewing() ) {
+			$amount_paid = $transaction->get_total( false );
+		} else {
+			foreach ( $transaction->get_products() as $product ) {
+				if ( $product['product_id'] == $this->get_product()->ID ) {
+					$amount_paid = $product['product_subtotal'];
+				}
+			}
+
+			if ( ! isset( $amount_paid ) ) {
+				throw new UnexpectedValueException( 'Could not determine the amount paid for the subscription.' );
+			}
+
+			if ( $transaction->get_total( false ) < $amount_paid ) {
+				$amount_paid = $transaction->get_total( false );
+			}
+		}
+
+		return (float) $amount_paid;
+	}
+
+	/**
 	 * Cancel this subscription.
 	 *
 	 * @since 1.8
@@ -504,8 +685,81 @@ class IT_Exchange_Subscription {
 		$method = $this->get_transaction()->transaction_method;
 
 		do_action( "it_exchange_cancel_{$method}_subscription", array(
-			'old_subscriber_id' => $this->get_subscriber_id()
+			'old_subscriber_id' => $this->get_subscriber_id(),
+			'customer'          => $this->get_customer(),
+			'subscription'      => $this
 		) );
+	}
+
+	/**
+	 * Get all available upgrades for this subscription.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @return ITE_Prorate_Credit_Request[]
+	 */
+	public function get_available_upgrades() {
+
+		$all_parents = it_exchange_get_all_subscription_product_parents( $this->get_product()->ID );
+
+		if ( ! $all_parents ) {
+			return array();
+		}
+
+		$requests = array();
+
+		foreach ( $all_parents as $parent_id ) {
+			$parent = it_exchange_get_product( $parent_id );
+
+			if ( $parent ) {
+				$requests[] = new ITE_Prorate_Subscription_Credit_Request( $this, $parent );
+			}
+		}
+
+		return $requests;
+	}
+
+	/**
+	 * Get all available downgrades for this subscription.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @return ITE_Prorate_Credit_Request[]
+	 */
+	public function get_available_downgrades() {
+
+		$all_children = it_exchange_get_all_subscription_product_children( $this->get_product()->ID );
+
+		if ( ! $all_children ) {
+			return array();
+		}
+
+		$requests = array();
+
+		foreach ( $all_children as $child_id ) {
+			$child = it_exchange_get_product( $child_id );
+
+			if ( $child ) {
+				$requests[] = new ITE_Prorate_Subscription_Credit_Request( $this, $child );
+			}
+		}
+
+		return $requests;
+	}
+
+	/**
+	 * Record a gateway cancellation while the subscription is complimentary.
+	 *
+	 * @since 1.8.4
+	 *
+	 * @param string $gateway
+	 */
+	public function record_gateway_cancellation_while_complimentary( $gateway ) {
+
+		$builder = new IT_Exchange_Txn_Activity_Builder( $this->get_transaction(), 'status' );
+		$builder->set_description( "Original recurring payment has been cancelled." );
+		$builder->set_actor( new IT_Exchange_Txn_Activity_Gateway_Actor( it_exchange_get_addon( $gateway ) ) );
+		$builder->build( it_exchange_get_txn_activity_factory() );
 	}
 
 	/**
@@ -560,10 +814,11 @@ class IT_Exchange_Subscription {
 	 */
 	public static function get_statuses() {
 		return array(
-			self::STATUS_ACTIVE      => __( 'Active', 'LION' ),
-			self::STATUS_SUSPENDED   => __( 'Suspended', 'LION' ),
-			self::STATUS_DEACTIVATED => __( 'Deactivated', 'LION' ),
-			self::STATUS_CANCELLED   => __( 'Cancelled', 'LION' )
+			self::STATUS_ACTIVE        => __( 'Active', 'LION' ),
+			self::STATUS_COMPLIMENTARY => __( 'Complimentary', 'LION' ),
+			self::STATUS_SUSPENDED     => __( 'Suspended', 'LION' ),
+			self::STATUS_DEACTIVATED   => __( 'Deactivated', 'LION' ),
+			self::STATUS_CANCELLED     => __( 'Cancelled', 'LION' )
 		);
 	}
 }

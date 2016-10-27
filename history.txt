@@ -105,3 +105,20 @@
 	Fix: Fatal error on child transaction screens
 1.8.2 - 2016-02-25 - Timothy Jacobs
 	Fix: Fatal error with invalid products
+1.8.3 - 2016-03-21 - Timothy Jacobs
+	Tweak: Properly reflect subscription status
+	Tweak: Always show subscription ID field
+1.8.4 - 2016-04-28 - Timothy Jacobs
+	Major: Two new upgrade routines.
+	Add: Complimentary subscription status. Toggling to this status will cancel the existing subscription, but the customer will retain access.
+	Add: Transaction activity items when the subscription date changes.
+	Add: Action hooks when a subscription is created or its expiration dates are modified.
+	Fix: Zero Sum Checkout subscriptions losing access
+	Fix: Offline Payment Subscriptions losing access
+	Fix: Non-auto-renewing subscriptions not always granting access
+	Fix: Traverse parent transaction chain when setting subscriber ID.
+	Fix: Don't include extra day buffer for non-auto-renewing subscriptions.
+1.8.4.1 - 2016-04-28 - Timothy Jacobs
+	Fix: iThemes Exchange version nag
+1.8.4.2 - 2016-04-28 - Timothy Jacobs
+	Fix: t_paamayim_nekudotayim error on PHP 5.2
