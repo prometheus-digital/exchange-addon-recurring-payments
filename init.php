@@ -19,6 +19,8 @@ require_once( dirname( __FILE__ ) . '/lib/prorate/class.credit-requestor.php' );
 require_once( dirname( __FILE__ ) . '/lib/upgrades/class.zero-sum-checkout.php' );
 require_once( dirname( __FILE__ ) . '/lib/upgrades/class.non-auto-renewing.php' );
 
+require_once( dirname( __FILE__ ) . '/lib/REST/load.php' );
+
 require_once ( dirname( __FILE__ ) ) . '/lib/deprecated.php';
 
 /**

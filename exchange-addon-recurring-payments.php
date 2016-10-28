@@ -19,6 +19,10 @@
 define( 'ITE_RECURRING_PAYMENTS_PLUGIN_PATH', plugin_dir_path( __FILE__ ) );
 define( 'ITE_RECURRING_PAYMENTS_VERSION', '1.8.4.2' );
 
+if ( file_exists( dirname( __FILE__ ) . '/vendor/autoload.php' ) && version_compare( phpversion(), '5.3', '>=' ) ) {
+	require_once dirname( __FILE__ ) . '/vendor/autoload.php';
+}
+
 /**
  * This registers our plugin as a recurring payments addon
  *

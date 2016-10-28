@@ -18,5 +18,10 @@
     "platform": {
       "php": "5.3.29"
     }
+  },
+  "autoload": {
+    "psr-4": {
+      "iThemes\\Exchange\\RecurringPayments\\REST\\": "lib/REST/"
+    }
   }
 }
