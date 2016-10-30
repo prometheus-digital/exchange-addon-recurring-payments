@@ -479,9 +479,43 @@ function it_exchange_recurring_payments_handle_expired() {
 }
 
 /**
+ * Add an activity item when a subscription has been cancelled.
+ *
+ * @since 1.9.0
+ *
+ * @param IT_Exchange_Subscription $subscription
+ */
+function it_exchange_recurring_payments_add_activity_on_cancellation( IT_Exchange_Subscription $subscription ) {
+
+	$message = __( 'Subscription cancelled.', 'LION' );
+
+	if ( $subscription->get_cancellation_reason() ) {
+		/* translators: %s user-provided cancellation reason */
+		$message .= ' ' . sprintf( __( 'Reason: %s', 'LION' ), $subscription->get_cancellation_reason() );
+	}
+
+	if ( $subscription->get_cancelled_by() ) {
+		$actor = new IT_Exchange_Txn_Activity_User_Actor( $subscription->get_cancelled_by()->wp_user );
+	} elseif ( is_user_logged_in() ) {
+		$actor = new IT_Exchange_Txn_Activity_User_Actor( wp_get_current_user() );
+	} else {
+		$actor = null;
+	}
+
+	$builder = new IT_Exchange_Txn_Activity_Builder( $subscription->get_transaction(), 'status' );
+	$builder->set_description( $message );
+	$builder->set_public();
+	$builder->set_actor( $actor );
+
+	$builder->build( it_exchange_get_txn_activity_factory() );
+}
+
+add_action( 'it_exchange_cancel_subscription', 'it_exchange_recurring_payments_add_activity_on_cancellation' );
+
+/**
  * Add an activity item when the subscriber status changes.
  *
- * @since 1.34
+ * @since 1.8.0
  *
  * @param string                   $status
  * @param string                   $old_status
@@ -493,17 +527,21 @@ function it_exchange_recurring_payments_add_activity_on_subscriber_status( $stat
 		return;
 	}
 
+	if ( $subscription->is_cancelling() ) {
+		return;
+	}
+
 	$labels = IT_Exchange_Subscription::get_statuses();
 
-	$status_label     = isset( $labels[ $status ] ) ? $labels[ $status ] : __( 'Unknown', 'it-l10n-ithemes-exchange' );
-	$old_status_label = isset( $labels[ $old_status ] ) ? $labels[ $old_status ] : __( 'Unknown', 'it-l10n-ithemes-exchange' );
+	$status_label     = isset( $labels[ $status ] ) ? $labels[ $status ] : __( 'Unknown', 'LION' );
+	$old_status_label = isset( $labels[ $old_status ] ) ? $labels[ $old_status ] : __( 'Unknown', 'LION' );
 
 	if ( $old_status ) {
-		$message = sprintf( __( 'Subscriber status changed from %s to %s.', 'it-l10n-ithemes-exchange' ),
+		$message = sprintf( __( 'Subscriber status changed from %s to %s.', 'LION' ),
 			$old_status_label, $status_label
 		);
 	} else {
-		$message = sprintf( __( 'Subscriber status changed to %s.', 'it-l10n-ithemes-exchange' ), $status_label );
+		$message = sprintf( __( 'Subscriber status changed to %s.', 'LION' ), $status_label );
 	}
 
 	$builder = new IT_Exchange_Txn_Activity_Builder( $subscription->get_transaction(), 'status' );
@@ -522,7 +560,7 @@ function it_exchange_recurring_payments_add_activity_on_subscriber_status( $stat
 	$use_gateway = apply_filters( 'it_exchange_subscriber_status_activity_use_gateway_actor', false, $subscription, $status, $old_status );
 
 	if ( $use_gateway ) {
-		$actor = new IT_Exchange_Txn_Activity_Gateway_Actor( it_exchange_get_addon( $subscription->get_transaction()->transaction_method ) );
+		$actor = new IT_Exchange_Txn_Activity_Gateway_Actor( it_exchange_get_addon( $subscription->get_transaction()->get_method() ) );
 	} elseif ( is_user_logged_in() ) {
 		$actor = new IT_Exchange_Txn_Activity_User_Actor( wp_get_current_user() );
 	} elseif ( ( $wh = it_exchange_doing_webhook() ) && ( $addon = it_exchange_get_addon( $wh ) ) ) {
@@ -660,6 +698,11 @@ function it_exchange_recurring_payments_addon_after_payment_details() {
 	global $post;
 	$transaction        = it_exchange_get_transaction( $post->ID );
 	$transaction_method = it_exchange_get_transaction_method( $transaction->ID );
+
+	if ( ( $gateway = ITE_Gateways::get( $transaction_method ) ) && $gateway->can_handle( 'cancel-subscription' ) ) {
+		return;
+	}
+
 	do_action( 'it_exchange_after_payment_details_cancel_url_for_' . $transaction_method, $transaction );
 }
 
@@ -705,7 +748,7 @@ function it_exchange_recurring_payments_after_payment_details_recurring_payments
 	$jquery_df = it_exchange_php_date_format_to_jquery_datepicker_format( $df );
 	?>
 
-	<div class="transaction-recurring-options clearfix spacing-wrapper">
+	<div class="transaction-recurring-options clearfix spacing-wrapper bottom-border">
 
 		<h3><?php _e( 'Subscription Settings', 'LION' ); ?></h3>
 
@@ -743,7 +786,7 @@ function it_exchange_recurring_payments_after_payment_details_recurring_payments
 						<span class="tip" title="<?php _e( 'This is the status of the subscription in Exchange, not the transaction. It will not change the status in the Payment gateway.', 'LION' ); ?>">i</span>
 					</label>
 
-					<select id="rp-status-<?php echo $pid; ?>" name="rp-status[<?php echo $pid; ?>]">
+					<select id="rp-status-<?php echo $pid; ?>" name="rp-status[<?php echo $pid; ?>]" class="rp-status">
 
 						<option value=""></option>
 
@@ -779,6 +822,133 @@ function it_exchange_recurring_payments_after_payment_details_recurring_payments
 }
 
 add_action( 'it_exchange_after_payment_details', 'it_exchange_recurring_payments_after_payment_details_recurring_payments_autorenewal_details' );
+
+/**
+ * Render the cancel subscription button.
+ *
+ * @since 1.9.0
+ *
+ * @param IT_Exchange_Transaction $transaction
+ */
+function it_exchange_recurring_payments_render_admin_cancel_button( IT_Exchange_Transaction $transaction ) {
+
+	try {
+		$subscription = it_exchange_get_subscription_by_transaction( $transaction );
+	} catch ( Exception $e ) {
+		return;
+	}
+
+	if ( ! $subscription->can_be_cancelled() ) {
+		return;
+	}
+
+	$sub_id  = "{$subscription->get_transaction()->ID}:{$subscription->get_product()->ID}";
+	$url     = rest_url( "it_exchange/v1/subscriptions/{$sub_id}/cancel" );
+	$url     = add_query_arg( 'context', 'edit', $url );
+	$nonce   = wp_create_nonce( 'wp_rest' );
+	?>
+
+	<button class="button button-secondary right" id="cancel-subscription">
+		<?php _e( 'Cancel Subscription', 'LION' ); ?>
+	</button>
+
+	<script type="text/javascript">
+		jQuery( document ).ready( function( $ ) {
+			var url = '<?php echo esc_js( $url ); ?>';
+			var nonce = '<?php echo esc_js( $nonce ); ?>';
+
+
+			$( "#cancel-subscription" ).click( function( e ) {
+				e.preventDefault()
+
+				$( ".transaction-actions").slideUp();
+				$( '#subscription-cancellation-manager').slideDown();
+			} );
+
+			$( "#cancel-cancel-subscription" ).click( function ( e ) {
+
+				e.preventDefault();
+
+				$( ".transaction-actions").slideDown();
+				$( '#subscription-cancellation-manager').slideUp();
+			} );
+
+			$( '#confirm-cancel-subscription').click( function( e ) {
+				e.preventDefault();
+
+				var $this = $( this );
+				$this.attr( 'disabled', true );
+
+				$.ajax({
+					type: 'POST',
+					beforeSend: function (request)
+					{
+						request.setRequestHeader( 'X-WP-Nonce', nonce );
+					},
+					url: url,
+					data: {
+						cancelled_by: <?php echo esc_js( get_current_user_id() ); ?>,
+						reason      : $( "#cancel-subscription-reason").val(),
+					},
+					success: function( data ) {
+						wp.heartbeat.interval( 'fast', 6 );
+						$( '#rp-status-' + data.product).val( data.status.slug );
+						$this.removeAttr( 'disabled' );
+
+						$( ".transaction-actions").slideDown();
+						$( '#subscription-cancellation-manager').slideUp();
+						$( "#cancel-subscription" ).remove();
+					},
+					error: function( xhr ) {
+
+						var data = $.parseJSON( xhr.responseText );
+
+						if ( data.message ) {
+							alert( data.message );
+						} else {
+							alert( 'Error' );
+						}
+
+						$this.removeAttr( 'disabled' );
+					}
+				});
+			} );
+
+		} );
+	</script>
+
+	<?php
+}
+
+add_action( 'it_exchange_after_payment_refund', 'it_exchange_recurring_payments_render_admin_cancel_button' );
+
+/**
+ * Render admin cancellation detail.
+ *
+ * @since 1.9.0
+ *
+ * @param IT_Exchange_Transaction $transaction
+ */
+function it_exchange_recurring_payments_render_admin_cancellation_detail( IT_Exchange_Transaction $transaction ) {
+
+	?>
+	<div class="hidden spacing-wrapper bottom-border clearfix" id="subscription-cancellation-manager" style="background: #F5F5F5;">
+
+		<button class="button button-secondary left" id="cancel-cancel-subscription">
+			<?php _e( 'Back', 'it-l10n-ithemes-exchange' ); ?>
+		</button>
+
+		<button class="button button-primary right" id="confirm-cancel-subscription" style="margin-left: 10px;">
+			<?php _e( 'Cancel Subscription', 'it-l10n') ?>
+		</button>
+
+		<input type="text" placeholder="<?php esc_attr_e( 'Reason (Optional)', 'LION' ); ?>" id="cancel-subscription-reason"
+		       class="right" style="text-align: left" />
+	</div>
+<?php
+}
+
+add_action( 'it_exchange_after_payment_actions', 'it_exchange_recurring_payments_render_admin_cancellation_detail' );
 
 /**
  * Save the subscription details.
@@ -905,3 +1075,41 @@ function it_exchange_recurring_payments_addon_ajax_add_subscription_parent() {
 
 add_action( 'wp_ajax_it-exchange-recurring-payments-addon-add-subscription-parent', 'it_exchange_recurring_payments_addon_ajax_add_subscription_parent' );
 
+/**
+ * Make a cancel subscription request.
+ *
+ * @since 1.9.0
+ *
+ * @param null  $_
+ * @param array $args
+ *
+ * @return ITE_Gateway_Request
+ */
+function it_exchange_recurring_payments_make_cancel_subscription_request( $_, array $args ) {
+
+	if ( empty( $args['subscription'] ) || ! $args['subscription'] instanceof IT_Exchange_Subscription ) {
+		throw new InvalidArgumentException( 'Invalid `subscription` option.' );
+	}
+
+	$reason = empty( $args['reason'] ) ? '' : trim( $args['reason'] );
+
+	if ( empty( $args['cancelled_by'] ) ) {
+		$canceled_by = it_exchange_get_current_customer() ?: null;
+	} else {
+		$canceled_by = it_exchange_get_customer( $args['cancelled_by'] );
+
+		if ( ! $canceled_by ) {
+			throw new InvalidArgumentException( 'Invalid `cancelled_by` option.' );
+		}
+	}
+
+	$request = new ITE_Cancel_Subscription_Request( $args['subscription'], $reason, $canceled_by );
+
+	if ( isset( $args['at_period_end'] ) ) {
+		$request->set_at_period_end( $args['at_period_end'] );
+	}
+
+	return $request;
+}
+
+add_filter( 'it_exchange_make_cancel-subscription_gateway_request', 'it_exchange_recurring_payments_make_cancel_subscription_request', 10, 2 );

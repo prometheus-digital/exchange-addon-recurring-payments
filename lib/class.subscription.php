@@ -19,6 +19,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	const STATUS_CANCELLED = 'cancelled';
 	const STATUS_DEACTIVATED = 'deactivated';
 	const STATUS_COMPLIMENTARY = 'complimentary';
+	const STATUS_PENDING_CANCELLATION = 'pending-cancellation';
 
 	/**
 	 * @var IT_Exchange_Transaction
@@ -39,6 +40,9 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	 * @var IT_Exchange_Recurring_Profile
 	 */
 	private $trial_profile;
+
+	/** @var bool */
+	private $is_cancelling = false;
 
 	/**
 	 * IT_Exchange_Subscription constructor.
@@ -676,19 +680,153 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	}
 
 	/**
+	 * Can the subscription be cancelled.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @return bool
+	 */
+	public function can_be_cancelled() {
+
+		if ( ! $this->get_subscriber_id() ) {
+			return false;
+		}
+
+		if ( $this->get_status() === self::STATUS_CANCELLED || $this->get_status() === self::STATUS_PENDING_CANCELLATION ) {
+			return false;
+		}
+
+		$gateway = ITE_Gateways::get( $this->get_transaction()->get_method() );
+
+		if ( ! $gateway || ! $gateway->can_handle( 'cancel-subscription' ) ) {
+			return false;
+		}
+
+		return apply_filters( 'it_exchange_subscription_can_be_cancelled', true, $this );
+	}
+
+	/**
 	 * Cancel this subscription.
 	 *
 	 * @since 1.8
+	 *
+	 * @param IT_Exchange_Customer $cancelled_by
+	 * @param string               $reason
+	 *
+	 * @return bool
 	 */
-	public function cancel() {
+	public function cancel( IT_Exchange_Customer $cancelled_by = null, $reason = '' ) {
 
-		$method = $this->get_transaction()->transaction_method;
+		$gateway = ITE_Gateways::get( $this->get_transaction()->get_method() );
 
-		do_action( "it_exchange_cancel_{$method}_subscription", array(
-			'old_subscriber_id' => $this->get_subscriber_id(),
-			'customer'          => $this->get_customer(),
-			'subscription'      => $this
-		) );
+		if ( $gateway && $gateway->can_handle( 'cancel-subscription' ) ) {
+
+			$factory = new ITE_Gateway_Request_Factory();
+			$request = $factory->make( 'cancel-subscription', array_filter( array(
+				'subscription' => $this,
+				'reason'       => $reason,
+				'cancelled_by' => $cancelled_by
+			) ) );
+
+			$this->is_cancelling = true;
+			$handled = $gateway->get_handler_for( $request )->handle( $request );
+
+			if ( ! $handled ) {
+				return false;
+			}
+
+			/**
+			 * Fires when a subscription has been cancelled.
+			 *
+			 * This is different from listening for when the status has been updated to cancelled.
+			 *
+			 * @since 1.9.0
+			 *
+			 * @param \IT_Exchange_Subscription $this
+			 */
+			do_action( 'it_exchange_cancel_subscription', $this );
+
+			$this->is_cancelling = false;
+
+			return true;
+		} else {
+
+			$method = $this->get_transaction()->get_method();
+
+			do_action( "it_exchange_cancel_{$method}_subscription", array(
+				'old_subscriber_id' => $this->get_subscriber_id(),
+				'customer'          => $this->get_customer(),
+				'subscription'      => $this
+			) );
+
+			return true;
+		}
+	}
+
+	/**
+	 * Is this subscription being cancelled.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @return boolean
+	 */
+	public function is_cancelling() {
+		return $this->is_cancelling;
+	}
+
+	/**
+	 * Retrieve the user who cancelled the subscription.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @return IT_Exchange_Customer|null
+	 */
+	public function get_cancelled_by() {
+
+		$id = $this->get_transaction()->get_meta( "subscription_{$this->get_product()->ID}_cancelled_by" );
+
+		if ( ! $id ) {
+			return null;
+		}
+
+		return it_exchange_get_customer( $id ) ?: null;
+	}
+
+	/**
+	 * Set the person who cancelled the subscription.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @param IT_Exchange_Customer $customer
+	 *
+	 * @return bool
+	 */
+	public function set_cancelled_by( IT_Exchange_Customer $customer ) {
+		return (bool) $this->get_transaction()->update_meta( "subscription_{$this->get_product()->ID}_cancelled_by", $customer->id );
+	}
+
+	/**
+	 * Get the cancellation reason.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @return string
+	 */
+	public function get_cancellation_reason() {
+		return $this->get_transaction()->get_meta( "subscription_{$this->get_product()->ID}_cancellation_reason" );
+	}
+
+	/**
+	 * Get the cancellation reason.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @param string $reason
+	 *
+	 * @return bool
+	 */
+	public function set_cancellation_reason( $reason ) {
+		return (bool) $this->get_transaction()->update_meta( "subscription_{$this->get_product()->ID}_cancellation_reason", $reason );
 	}
 
 	/**
@@ -771,7 +909,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	 */
 	public function get_payment_token() {
 
-		$token_id =  $this->get_transaction()->get_meta( 'subscription_payment_token' );
+		$token_id = $this->get_transaction()->get_meta( 'subscription_payment_token' );
 
 		if ( ! $token_id ) {
 			return null;
@@ -814,11 +952,12 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	 */
 	public static function get_statuses() {
 		return array(
-			self::STATUS_ACTIVE        => __( 'Active', 'LION' ),
-			self::STATUS_COMPLIMENTARY => __( 'Complimentary', 'LION' ),
-			self::STATUS_SUSPENDED     => __( 'Suspended', 'LION' ),
-			self::STATUS_DEACTIVATED   => __( 'Deactivated', 'LION' ),
-			self::STATUS_CANCELLED     => __( 'Cancelled', 'LION' )
+			self::STATUS_ACTIVE               => __( 'Active', 'LION' ),
+			self::STATUS_COMPLIMENTARY        => __( 'Complimentary', 'LION' ),
+			self::STATUS_SUSPENDED            => __( 'Suspended', 'LION' ),
+			self::STATUS_DEACTIVATED          => __( 'Deactivated', 'LION' ),
+			self::STATUS_CANCELLED            => __( 'Cancelled', 'LION' ),
+			self::STATUS_PENDING_CANCELLATION => __( 'Pending Cancellation', 'LION' )
 		);
 	}
 }

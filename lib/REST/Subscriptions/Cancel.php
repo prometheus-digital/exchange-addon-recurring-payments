@@ -35,9 +35,18 @@ class Cancel extends Base implements Postable {
 	public function handle_post( Request $request ) {
 
 		$subscription = $this->get_subscription_from_id( $request->get_param( 'subscription_id', 'URL' ) );
+		$reason       = $request['reason'];
+
+		if ( it_exchange_get_customer( $request['cancelled_by'] ) ) {
+			$cancelled_by = it_exchange_get_customer( $request['cancelled_by'] );
+		} elseif ( current_user_can( 'edit_it_transaction', $subscription->get_transaction()->ID ) ) {
+			$cancelled_by = null;
+		} else {
+			$cancelled_by = it_exchange_get_current_customer();
+		}
 
 		try {
-			$subscription->cancel();
+			$subscription->cancel( $cancelled_by, $reason );
 		} catch ( \Exception $e ) {
 			return new \WP_Error(
 				'it_exchange_rest_unable_to_cancel_subscription',
@@ -53,6 +62,29 @@ class Cancel extends Base implements Postable {
 	 * @inheritDoc
 	 */
 	public function user_can_post( Request $request, \IT_Exchange_Customer $user = null ) {
+
+		$subscription = $this->get_subscription_from_id( $request->get_param( 'subscription_id', 'URL' ) );
+
+		$associated = array();
+
+		if ( $subscription->get_customer() ) {
+			$associated[] = $subscription->get_customer()->id;
+		}
+
+		if ( $subscription->get_beneficiary() ) {
+			$associated[] = $subscription->get_beneficiary()->id;
+		}
+
+		if ( $request['cancelled_by'] && $request['cancelled_by'] != $user->id ) {
+			if ( ! user_can( $user->wp_user, 'edit_it_transaction', $subscription->get_transaction()->ID ) ) {
+				return new \WP_Error(
+					'it_exchange_rest_forbidden_context',
+					__( 'You are not allowed to specify a canceller besides yourself.', 'LION' ),
+					array( 'status' => 403 )
+				);
+			}
+		}
+
 		return true; // Cascades to read transaction. Customers can cancel their own subscriptions.
 	}
 

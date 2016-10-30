@@ -29,24 +29,28 @@ class Serializer {
 		$s  = $subscription;
 		$id = "{$s->get_transaction()->get_ID()}:{$s->get_product()->ID}";
 
+		$is_cancelled = ( $s->get_status() === \IT_Exchange_Subscription::STATUS_CANCELLED );
+
 		return array(
-			'id'                => $id,
-			'product'           => $s->get_product()->ID,
-			'auto_renewing'     => $s->is_auto_renewing(),
-			'transaction'       => $s->get_transaction()->get_ID(),
-			'recurring_profile' => $this->serialize_profile( $s->get_recurring_profile() ),
-			'trial_profile'     => $this->serialize_profile( $s->get_trial_profile(), true ),
-			'trial_period'      => $s->is_trial_period(),
-			'customer'          => $s->get_customer() ? $s->get_customer()->ID : 0,
-			'beneficiary'       => $s->get_beneficiary() ? $s->get_beneficiary()->ID : 0,
-			'start_date'        => mysql_to_rfc3339( $s->get_start_date()->format( 'Y-m-d H:i:s' ) ),
-			'expiry_date'       => $s->get_expiry_date() ? mysql_to_rfc3339( $s->get_expiry_date()->format( 'Y-m-d H:i:s' ) ) : null,
-			'days_remaining'    => $s->get_days_left_in_period(),
-			'subscriber_id'     => $s->get_subscriber_id(),
-			'status'            => array(
+			'id'                  => $id,
+			'product'             => $s->get_product()->ID,
+			'auto_renewing'       => $s->is_auto_renewing(),
+			'transaction'         => $s->get_transaction()->get_ID(),
+			'recurring_profile'   => $this->serialize_profile( $s->get_recurring_profile() ),
+			'trial_profile'       => $this->serialize_profile( $s->get_trial_profile(), true ),
+			'trial_period'        => $s->is_trial_period(),
+			'customer'            => $s->get_customer() ? $s->get_customer()->ID : 0,
+			'beneficiary'         => $s->get_beneficiary() ? $s->get_beneficiary()->ID : 0,
+			'start_date'          => mysql_to_rfc3339( $s->get_start_date()->format( 'Y-m-d H:i:s' ) ),
+			'expiry_date'         => $s->get_expiry_date() ? mysql_to_rfc3339( $s->get_expiry_date()->format( 'Y-m-d H:i:s' ) ) : null,
+			'days_remaining'      => $s->get_days_left_in_period(),
+			'subscriber_id'       => $s->get_subscriber_id(),
+			'status'              => array(
 				'slug'  => $subscription->get_status(),
 				'label' => $subscription->get_status( true ),
 			),
+			'cancellation_reason' => $is_cancelled ? $s->get_cancellation_reason() : null,
+			'cancelled_by'        => $is_cancelled ? ( $s->get_cancelled_by() ? $s->get_cancelled_by()->id : 0 ) : null
 		);
 	}
 
@@ -139,81 +143,81 @@ class Serializer {
 				),
 			),
 			'properties'  => array(
-				'id'                => array(
+				'id'                  => array(
 					'description' => __( 'The unique id for this subscription.', 'LION' ),
 					'type'        => 'string',
 					'context'     => array( 'view', 'edit', 'embed' ),
 					'readonly'    => true,
 				),
-				'product'           => array(
+				'product'             => array(
 					'description' => __( 'The product ID this subscription grants access to.', 'LION' ),
 					'type'        => 'integer',
 					'context'     => array( 'view', 'edit', 'embed' )
 				),
-				'auto_renewing'     => array(
+				'auto_renewing'       => array(
 					'description' => __( 'Does this subscription automatically renew.', 'LION' ),
 					'type'        => 'boolean',
 					'context'     => array( 'view', 'edit', 'embed' )
 				),
-				'transaction'       => array(
+				'transaction'         => array(
 					'description' => __( 'The transaction ID used to purchase this transaction', 'LION' ),
 					'type'        => 'integer',
 					'context'     => array( 'view', 'edit' )
 				),
-				'recurring_profile' => array(
+				'recurring_profile'   => array(
 					'description' => __( 'The length and duration of a subscription period.', 'LION' ),
 					'$ref'        => '#definitions/recurring_profile',
 					'context'     => array( 'view', 'edit', 'embed' ),
 					'readonly'    => true,
 				),
-				'trial_profile'     => array(
+				'trial_profile'       => array(
 					'description' => __( 'The length and duration of a subscription trial period.', 'LION' ),
 					'$ref'        => '#definitions/recurring_profile',
 					'context'     => array( 'view', 'edit', 'embed' ),
 					'readonly'    => true,
 				),
-				'trial_period'      => array(
+				'trial_period'        => array(
 					'description' => __( 'Is the subscription in the trial period.', 'LION' ),
 					'type'        => 'boolean',
 					'readonly'    => true,
 					'context'     => array( 'view', 'edit', 'embed' ),
 				),
-				'customer'          => array(
+				'customer'            => array(
 					'description' => __( 'The customer paying for the subscription.', 'LION' ),
 					'type'        => 'integer',
 					'readonly'    => true,
 					'context'     => array( 'view', 'edit' ),
 				),
-				'beneficiary'       => array(
+				'beneficiary'         => array(
 					'description' => __( 'The customer receiving the benefits of the subscription.', 'LION' ),
 					'type'        => 'integer',
 					'readonly'    => true,
 					'context'     => array( 'view', 'edit', 'embed' ),
 				),
-				'start_date'        => array(
+				'start_date'          => array(
 					'description' => __( 'The date the subscription started.', 'LION' ),
 					'type'        => 'string',
 					'format'      => 'date-time',
 					'readonly'    => true,
 					'context'     => array( 'view', 'edit' )
 				),
-				'expiry_date'       => array(
+				'expiry_date'         => array(
 					'description' => __( 'The date the subscription expires.', 'LION' ),
 					'type'        => 'string',
 					'format'      => 'date-time',
 					'context'     => array( 'view', 'edit' )
 				),
-				'days_remaining'    => array(
+				'days_remaining'      => array(
 					'description' => __( 'The days remaining in the subscription.', 'LION' ),
 					'type'        => 'integer',
 					'context'     => array( 'view', 'edit', 'embed' )
 				),
-				'subscriber_id'     => array(
+				'subscriber_id'       => array(
 					'description' => __( 'The gateway subscriber ID.', 'LION' ),
 					'type'        => 'string',
 					'context'     => array( 'edit' )
 				),
-				'status'            => array(
+				'status'              => array(
 					'description' => __( 'The subscription status.', 'LION' ),
 					'type'        => 'object',
 					'context'     => array( 'view', 'edit' ),
@@ -230,6 +234,16 @@ class Serializer {
 							'context'     => array( 'view', 'edit' )
 						),
 					),
+				),
+				'cancellation_reason' => array(
+					'description' => __( 'The reason the subscription was cancelled.', 'LION' ),
+					'type'        => 'string',
+					'context'     => array( 'view', 'edit' )
+				),
+				'cancelled_by'        => array(
+					'description' => __( 'The customer who cancelled the subscription.', 'LION' ),
+					'type'        => 'integer',
+					'context'     => array( 'view', 'edit' )
 				),
 			)
 		);

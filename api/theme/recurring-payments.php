@@ -113,12 +113,113 @@ class IT_Theme_API_Recurring_Payments implements IT_Theme_API {
 				case 'active' :
 				default:
 					$transaction_method = it_exchange_get_transaction_method( $this->_transaction );
-					$output .= apply_filters( 'it_exchange_' . $transaction_method . '_unsubscribe_action', '', $options, $this->_transaction );
+
+					if ( ( $gateway = ITE_Gateways::get( $transaction_method ) ) && $gateway->can_handle( 'cancel-subscription' ) ) {
+						$output .= $this->get_cancel_api_request_link( $options['label'] );
+					} else {
+						$output .= apply_filters( 'it_exchange_' . $transaction_method . '_unsubscribe_action', '', $options, $this->_transaction );
+					}
+
 					break;
 			}
 			$output .= $options['after'];
 		}
 		return $output;
+	}
+
+	/**
+	 * Get the cancel API link.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @param string $label
+	 *
+	 * @return string
+	 */
+	protected function get_cancel_api_request_link( $label ) {
+
+		if ( ! $this->_transaction instanceof IT_Exchange_Transaction ) {
+			return '';
+		}
+
+		$subscription = it_exchange_get_subscription_by_transaction( $this->_transaction );
+
+		if ( ! $subscription->can_be_cancelled() ) {
+			return '';
+		}
+
+		$sub_id  = "{$subscription->get_transaction()->ID}:{$subscription->get_product()->ID}";
+		$url     = rest_url( "it_exchange/v1/subscriptions/{$sub_id}/cancel" );
+		$url     = wp_nonce_url( $url, 'wp_rest' );
+
+		ob_start();
+		?>
+
+		<a href="javascript:"
+		   id="it-exchange-cancel-subscription-api-<?php echo $subscription->get_transaction()->ID ?>"
+		   class="it-exchange-cancel-subscription-api"
+		   data-subscription-endpoint="<?php echo $url; ?>"
+		>
+			<?php echo $label; ?>
+		</a>
+
+		<script type="text/javascript">
+			jQuery( document ).ready( function( $ ) {
+
+				var cancelling = '<?php echo esc_js( __( 'Cancelling', 'LION' ) ); ?>';
+
+				$( '.it-exchange-cancel-subscription-api').click( function( e ) {
+					e.preventDefault();
+
+					var $this = $( this );
+
+					if ( $this.data( 'processing' ) ) {
+						return;
+					}
+
+					$this.attr( 'disabled', true );
+					$this.data( 'processing', true );
+
+					var original_text = $this.text();
+					$this.text( cancelling );
+
+					var i = 0;
+					setInterval( function() {
+						i = ++i % 4;
+						var arr = new Array( i + 1 );
+						$this.text( cancelling + arr.join( '.' ) );
+					}, 500 );
+
+					$.ajax({
+						type: 'POST',
+						url: $this.data( 'subscription-endpoint' ),
+						data: {
+							cancelled_by: <?php echo esc_js( get_current_user_id() ); ?>
+						},
+						success: function( data ) {
+							$this.replaceWith( $( '<span class="it-exchange-cancel-subscription-api-done"></span>' ).text( data.status.label ) );
+						},
+						error: function( xhr ) {
+
+							var data = $.parseJSON( xhr.responseText );
+
+							if ( data.message ) {
+								alert( data.message );
+							} else {
+								alert( 'Error' );
+							}
+
+							$this.removeAttr( 'disabled' );
+							$this.text( original_text );
+						}
+					});
+				} );
+			});
+		</script>
+
+		<?php
+
+		return ob_get_clean();
 	}
 
 	/**
