@@ -166,13 +166,13 @@ class Serializer {
 				),
 				'recurring_profile'   => array(
 					'description' => __( 'The length and duration of a subscription period.', 'LION' ),
-					'$ref'        => '#definitions/recurring_profile',
+					'$ref'        => '#/definitions/recurring_profile',
 					'context'     => array( 'view', 'edit', 'embed' ),
 					'readonly'    => true,
 				),
 				'trial_profile'       => array(
 					'description' => __( 'The length and duration of a subscription trial period.', 'LION' ),
-					'$ref'        => '#definitions/recurring_profile',
+					'$ref'        => '#/definitions/recurring_profile',
 					'context'     => array( 'view', 'edit', 'embed' ),
 					'readonly'    => true,
 				),
