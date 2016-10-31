@@ -57,6 +57,9 @@ function it_exchange_recurring_payments_addon_admin_wp_enqueue_styles( $hook_suf
 			'jquery-ui-datepicker'
 		) );
 		wp_enqueue_style( 'it-exchange-recurring-payments-addon-transaction-details-css', ITUtility::get_url_from_file( dirname( __FILE__ ) ) . '/styles/transaction-details.css' );
+		wp_localize_script( 'it-exchange-recurring-payments-addon-transaction-details-js', 'EXCHANGE_RP', array(
+			'user' => get_current_user_id()
+		) );
 	}
 
 }
@@ -623,6 +626,8 @@ function it_exchange_recurring_payments_add_activity_on_expiration_date( IT_Exch
 
 	if ( $use_gateway ) {
 		$actor = new IT_Exchange_Txn_Activity_Gateway_Actor( it_exchange_get_addon( $subscription->get_transaction()->transaction_method ) );
+	} elseif ( doing_action( 'it_exchange_add_transaction_success' ) ) {
+		$actor = new IT_Exchange_Txn_Activity_Site_Actor();
 	} elseif ( is_user_logged_in() ) {
 		$actor = new IT_Exchange_Txn_Activity_User_Actor( wp_get_current_user() );
 	} elseif ( ( $wh = it_exchange_doing_webhook() ) && ( $addon = it_exchange_get_addon( $wh ) ) ) {
@@ -761,9 +766,11 @@ function it_exchange_recurring_payments_after_payment_details_recurring_payments
 
 			$expires = $subscription->get_expiry_date();
 			$expires = $expires ? $expires->format( $df ) : '';
+			$route   = rest_url( "it_exchange/v1/subscriptions/{$subscription->get_transaction()->ID}:{$subscription->get_product()->ID}/" );
+			$route   = wp_nonce_url( $route, 'wp_rest' );
 			?>
 
-			<div class="recurring-options">
+			<div class="recurring-options" data-route="<?php echo esc_attr( $route ); ?>" data-product="<?php echo $subscription->get_product()->ID; ?>">
 
 				<?php if ( count( $subs ) > 1 ): ?>
 					<h4><?php echo $subscription->get_product()->post_title; ?></h4>
@@ -845,77 +852,12 @@ function it_exchange_recurring_payments_render_admin_cancel_button( IT_Exchange_
 	$sub_id  = "{$subscription->get_transaction()->ID}:{$subscription->get_product()->ID}";
 	$url     = rest_url( "it_exchange/v1/subscriptions/{$sub_id}/cancel" );
 	$url     = add_query_arg( 'context', 'edit', $url );
-	$nonce   = wp_create_nonce( 'wp_rest' );
+	$url     = wp_nonce_url( $url, 'wp_rest' );
 	?>
 
-	<button class="button button-secondary right" id="cancel-subscription">
+	<button class="button button-secondary right" id="cancel-subscription" data-route="<?php echo esc_attr( $url ); ?>">
 		<?php _e( 'Cancel Subscription', 'LION' ); ?>
 	</button>
-
-	<script type="text/javascript">
-		jQuery( document ).ready( function( $ ) {
-			var url = '<?php echo esc_js( $url ); ?>';
-			var nonce = '<?php echo esc_js( $nonce ); ?>';
-
-
-			$( "#cancel-subscription" ).click( function( e ) {
-				e.preventDefault()
-
-				$( ".transaction-actions").slideUp();
-				$( '#subscription-cancellation-manager').slideDown();
-			} );
-
-			$( "#cancel-cancel-subscription" ).click( function ( e ) {
-
-				e.preventDefault();
-
-				$( ".transaction-actions").slideDown();
-				$( '#subscription-cancellation-manager').slideUp();
-			} );
-
-			$( '#confirm-cancel-subscription').click( function( e ) {
-				e.preventDefault();
-
-				var $this = $( this );
-				$this.attr( 'disabled', true );
-
-				$.ajax({
-					type: 'POST',
-					beforeSend: function (request)
-					{
-						request.setRequestHeader( 'X-WP-Nonce', nonce );
-					},
-					url: url,
-					data: {
-						cancelled_by: <?php echo esc_js( get_current_user_id() ); ?>,
-						reason      : $( "#cancel-subscription-reason").val(),
-					},
-					success: function( data ) {
-						wp.heartbeat.interval( 'fast', 6 );
-						$( '#rp-status-' + data.product).val( data.status.slug );
-						$this.removeAttr( 'disabled' );
-
-						$( ".transaction-actions").slideDown();
-						$( '#subscription-cancellation-manager').slideUp();
-						$( "#cancel-subscription" ).remove();
-					},
-					error: function( xhr ) {
-
-						var data = $.parseJSON( xhr.responseText );
-
-						if ( data.message ) {
-							alert( data.message );
-						} else {
-							alert( 'Error' );
-						}
-
-						$this.removeAttr( 'disabled' );
-					}
-				});
-			} );
-
-		} );
-	</script>
 
 	<?php
 }

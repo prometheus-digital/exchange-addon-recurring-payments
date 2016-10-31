@@ -132,11 +132,11 @@ class IT_Theme_API_Recurring_Payments implements IT_Theme_API {
 	 *
 	 * @since 1.9.0
 	 *
-	 * @param string $label
+	 * @param array $options
 	 *
 	 * @return string
 	 */
-	protected function get_cancel_api_request_link( $label ) {
+	protected function get_cancel_api_request_link( array $options ) {
 
 		if ( ! $this->_transaction instanceof IT_Exchange_Transaction ) {
 			return '';
@@ -148,6 +148,9 @@ class IT_Theme_API_Recurring_Payments implements IT_Theme_API {
 			return '';
 		}
 
+		$label = $options['label'];
+		$class = $options['class'];
+
 		$sub_id  = "{$subscription->get_transaction()->ID}:{$subscription->get_product()->ID}";
 		$url     = rest_url( "it_exchange/v1/subscriptions/{$sub_id}/cancel" );
 		$url     = wp_nonce_url( $url, 'wp_rest' );
@@ -157,7 +160,7 @@ class IT_Theme_API_Recurring_Payments implements IT_Theme_API {
 
 		<a href="javascript:"
 		   id="it-exchange-cancel-subscription-api-<?php echo $subscription->get_transaction()->ID ?>"
-		   class="it-exchange-cancel-subscription-api"
+		   class="it-exchange-cancel-subscription-api <?php echo esc_attr( $class ); ?>"
 		   data-subscription-endpoint="<?php echo $url; ?>"
 		>
 			<?php echo $label; ?>
@@ -210,6 +213,7 @@ class IT_Theme_API_Recurring_Payments implements IT_Theme_API {
 							}
 
 							$this.removeAttr( 'disabled' );
+							$this.data(' processing', false );
 							$this.text( original_text );
 						}
 					});
