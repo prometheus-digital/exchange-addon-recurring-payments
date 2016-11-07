@@ -1,6 +1,7 @@
 <?php
 /**
  * iThemes Exchange Recurring Payments Add-on
+ *
  * @package exchange-addon-recurring-payments
  * @since   1.0.0
  */
@@ -13,10 +14,11 @@ require_once( dirname( __FILE__ ) . '/lib/class.expiry-date-activity.php' );
 require_once( dirname( __FILE__ ) . '/lib/prorate/class.credit-request.php' );
 require_once( dirname( __FILE__ ) . '/lib/prorate/class.forever-credit-request.php' );
 require_once( dirname( __FILE__ ) . '/lib/prorate/class.subscription-credit-request.php' );
+require_once( dirname( __FILE__ ) . '/lib/prorate/class.purchase-request.php' );
 
 require_once( dirname( __FILE__ ) . '/lib/prorate/class.credit-requestor.php' );
 
-require_once( dirname( __FILE__  ) . '/lib/requests/class.cancel.php' );
+require_once( dirname( __FILE__ ) . '/lib/requests/class.cancel.php' );
 
 require_once( dirname( __FILE__ ) . '/lib/upgrades/class.zero-sum-checkout.php' );
 require_once( dirname( __FILE__ ) . '/lib/upgrades/class.non-auto-renewing.php' );

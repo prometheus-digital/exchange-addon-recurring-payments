@@ -9,6 +9,7 @@
 namespace iThemes\Exchange\RecurringPayments\REST\Subscriptions;
 
 use iThemes\Exchange\REST\Getable;
+use iThemes\Exchange\REST\Postable;
 use iThemes\Exchange\REST\Request;
 use iThemes\Exchange\REST\Route\Base;
 

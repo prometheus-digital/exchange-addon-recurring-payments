@@ -2,6 +2,7 @@
 /**
  * iThemes Exchange Recurring Payments Add-on
  * Required Hooks
+ *
  * @package exchange-addon-recurring-payments
  * @since   1.0.0
  */
@@ -136,7 +137,7 @@ add_filter( 'it_exchange_possible_template_paths', 'it_exchange_recurring_paymen
  *
  * @since 1.0.0
  *
- * @param bool $allowed Current status of multi-cart being allowed
+ * @param bool      $allowed Current status of multi-cart being allowed
  * @param \ITE_Cart $cart
  *
  * @return bool True or False if multi-cart is allowed
@@ -353,8 +354,7 @@ function it_exchange_recurring_payments_update_status( $transaction, $sub_id, $s
 
 	try {
 		$subscription->set_status( $subscriber_status );
-	}
-	catch ( InvalidArgumentException $e ) {
+	} catch ( InvalidArgumentException $e ) {
 
 	}
 }
@@ -676,8 +676,7 @@ function it_exchange_recurring_payments_transaction_print_metabox_after_product_
 
 	try {
 		$subscription = it_exchange_get_subscription_by_transaction( $transaction, it_exchange_get_product( $product['product_id'] ) );
-	}
-	catch ( Exception $e ) {
+	} catch ( Exception $e ) {
 
 		$time = __( 'forever', 'LION' );
 		echo '<span class="recurring-product-type">' . $time . '</span>';
@@ -759,7 +758,7 @@ function it_exchange_recurring_payments_after_payment_details_recurring_payments
 
 		<?php foreach ( $subs as $subscription ) :
 
-			$pid     = $subscription->get_product()->ID;
+			$pid = $subscription->get_product()->ID;
 
 			$sub_id = $subscription->get_subscriber_id();
 			$status = $subscription->get_status();
@@ -770,7 +769,8 @@ function it_exchange_recurring_payments_after_payment_details_recurring_payments
 			$route   = wp_nonce_url( $route, 'wp_rest' );
 			?>
 
-			<div class="recurring-options" data-route="<?php echo esc_attr( $route ); ?>" data-product="<?php echo $subscription->get_product()->ID; ?>">
+			<div class="recurring-options" data-route="<?php echo esc_attr( $route ); ?>"
+			     data-product="<?php echo $subscription->get_product()->ID; ?>">
 
 				<?php if ( count( $subs ) > 1 ): ?>
 					<h4><?php echo $subscription->get_product()->post_title; ?></h4>
@@ -780,17 +780,20 @@ function it_exchange_recurring_payments_after_payment_details_recurring_payments
 					<p>
 						<label for="rp-sub-id-<?php echo $pid; ?>">
 							<?php _e( 'Subscription ID', 'LION' ); ?>
-							<span class="tip" title="<?php _e( 'This is the Subscription ID from the Payment Processor.', 'LION' ); ?>">i</span>
+							<span class="tip"
+							      title="<?php _e( 'This is the Subscription ID from the Payment Processor.', 'LION' ); ?>">i</span>
 						</label>
 
-						<input type="text" id="rp-sub-id-<?php echo $pid; ?>" name="rp-sub-id[<?php echo $pid; ?>]" value="<?php echo $sub_id; ?>" />
+						<input type="text" id="rp-sub-id-<?php echo $pid; ?>" name="rp-sub-id[<?php echo $pid; ?>]"
+						       value="<?php echo $sub_id; ?>"/>
 					</p>
 				<?php endif; ?>
 
 				<p>
 					<label for="rp-status-<?php echo $pid; ?>">
 						<?php _e( 'Subscription Status', 'LION' ); ?>
-						<span class="tip" title="<?php _e( 'This is the status of the subscription in Exchange, not the transaction. It will not change the status in the Payment gateway.', 'LION' ); ?>">i</span>
+						<span class="tip"
+						      title="<?php _e( 'This is the status of the subscription in Exchange, not the transaction. It will not change the status in the Payment gateway.', 'LION' ); ?>">i</span>
 					</label>
 
 					<select id="rp-status-<?php echo $pid; ?>" name="rp-status[<?php echo $pid; ?>]" class="rp-status">
@@ -808,10 +811,12 @@ function it_exchange_recurring_payments_after_payment_details_recurring_payments
 				<p>
 					<label for="rp-expires-<?php echo $pid; ?>">
 						<?php _e( 'Subscription Expiration', 'LION' ); ?>
-						<span class="tip" title="<?php _e( 'Set this to change what Exchange sees as the customer expiration date, the Payment processor will still send webhooks if the payment expires or if new payments come through.', 'LION' ); ?>">i</span>
+						<span class="tip"
+						      title="<?php _e( 'Set this to change what Exchange sees as the customer expiration date, the Payment processor will still send webhooks if the payment expires or if new payments come through.', 'LION' ); ?>">i</span>
 					</label>
 
-					<input type="text" id="rp-expires-<?php echo $pid; ?>" class="datepicker rp-expires" name="rp-expires[<?php echo $pid; ?>]" value="<?php echo $expires; ?>" />
+					<input type="text" id="rp-expires-<?php echo $pid; ?>" class="datepicker rp-expires"
+					       name="rp-expires[<?php echo $pid; ?>]" value="<?php echo $expires; ?>"/>
 				</p>
 			</div>
 		<?php endforeach; ?>
@@ -849,10 +854,10 @@ function it_exchange_recurring_payments_render_admin_cancel_button( IT_Exchange_
 		return;
 	}
 
-	$sub_id  = "{$subscription->get_transaction()->ID}:{$subscription->get_product()->ID}";
-	$url     = rest_url( "it_exchange/v1/subscriptions/{$sub_id}/cancel" );
-	$url     = add_query_arg( 'context', 'edit', $url );
-	$url     = wp_nonce_url( $url, 'wp_rest' );
+	$sub_id = "{$subscription->get_transaction()->ID}:{$subscription->get_product()->ID}";
+	$url    = rest_url( "it_exchange/v1/subscriptions/{$sub_id}/cancel" );
+	$url    = add_query_arg( 'context', 'edit', $url );
+	$url    = wp_nonce_url( $url, 'wp_rest' );
 	?>
 
 	<button class="button button-secondary right" id="cancel-subscription" data-route="<?php echo esc_attr( $url ); ?>">
@@ -874,20 +879,22 @@ add_action( 'it_exchange_after_payment_refund', 'it_exchange_recurring_payments_
 function it_exchange_recurring_payments_render_admin_cancellation_detail( IT_Exchange_Transaction $transaction ) {
 
 	?>
-	<div class="hidden spacing-wrapper bottom-border clearfix" id="subscription-cancellation-manager" style="background: #F5F5F5;">
+	<div class="hidden spacing-wrapper bottom-border clearfix" id="subscription-cancellation-manager"
+	     style="background: #F5F5F5;">
 
 		<button class="button button-secondary left" id="cancel-cancel-subscription">
 			<?php _e( 'Back', 'it-l10n-ithemes-exchange' ); ?>
 		</button>
 
 		<button class="button button-primary right" id="confirm-cancel-subscription" style="margin-left: 10px;">
-			<?php _e( 'Cancel Subscription', 'it-l10n') ?>
+			<?php _e( 'Cancel Subscription', 'it-l10n' ) ?>
 		</button>
 
-		<input type="text" placeholder="<?php esc_attr_e( 'Reason (Optional)', 'LION' ); ?>" id="cancel-subscription-reason"
-		       class="right" style="text-align: left" />
+		<input type="text" placeholder="<?php esc_attr_e( 'Reason (Optional)', 'LION' ); ?>"
+		       id="cancel-subscription-reason"
+		       class="right" style="text-align: left"/>
 	</div>
-<?php
+	<?php
 }
 
 add_action( 'it_exchange_after_payment_actions', 'it_exchange_recurring_payments_render_admin_cancellation_detail' );
@@ -1055,3 +1062,18 @@ function it_exchange_recurring_payments_make_cancel_subscription_request( $_, ar
 }
 
 add_filter( 'it_exchange_make_cancel-subscription_gateway_request', 'it_exchange_recurring_payments_make_cancel_subscription_request', 10, 2 );
+
+/**
+ * Decorate the purchase request to add prorate information.
+ *
+ * @since 1.9.0
+ *
+ * @param \ITE_Gateway_Purchase_Request_Interface $request
+ *
+ * @return \ITE_Gateway_Purchase_Request_Interface
+ */
+function it_exchange_recurring_payments_decorate_purchase_request( ITE_Gateway_Purchase_Request_Interface $request ) {
+	return new ITE_Gateway_Prorate_Purchase_Request( $request );
+}
+
+add_filter( 'it_exchange_make_purchase_gateway_request', 'it_exchange_recurring_payments_decorate_purchase_request' );

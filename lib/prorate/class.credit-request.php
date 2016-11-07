@@ -104,6 +104,26 @@ abstract class ITE_Prorate_Credit_Request implements ITE_Cart_Aware {
 	}
 
 	/**
+	 * Get the price description.
+	 *
+	 * @since 1.36.0
+	 *
+	 * @return string
+	 */
+	public function get_price_description() {
+
+		if ( $days = $this->get_free_days() ) {
+			return sprintf( _n( '%s day free', '%s days free', $days, 'LION' ), $days );
+		}
+
+		if ( $credit = $this->get_credit() ) {
+			return sprintf( __( ' %s upgrade credit, then regular price', 'LION' ), it_exchange_format_price( $credit ) );
+		}
+
+		return '';
+	}
+
+	/**
 	 * Get the human readable label of this credit request.
 	 *
 	 * @since 1.9.0
@@ -113,7 +133,7 @@ abstract class ITE_Prorate_Credit_Request implements ITE_Cart_Aware {
 	public function get_label() {
 
 		if ( $days = $this->get_free_days() ) {
-			return sprintf( _n( '%d days free.', '%d day free', $days, 'LION' ), $days );
+			return sprintf( _n( '%d day free.', '%d days free', $days, 'LION' ), $days );
 		}
 
 		if ( $credit = $this->get_credit() ) {
