@@ -38,19 +38,24 @@ class ITE_Prorate_Credit_Requestor {
 	 * @since 1.9
 	 *
 	 * @param ITE_Prorate_Credit_Request $request
+	 * @param bool                       $persist
+	 *
+	 * @return boolean
 	 *
 	 * @throws RuntimeException If no prorate credit provider is found.
 	 */
-	public function request_upgrade( ITE_Prorate_Credit_Request $request ) {
+	public function request_upgrade( ITE_Prorate_Credit_Request $request, $persist = true ) {
 
 		$receiver = $request->get_product_receiving_credit();
 
 		// Life to recurring is not allowed
 		if ( ! $request->is_provider_recurring() && $receiver->get_feature( 'recurring-payments' ) ) {
 
-			$request->fail();
+			if ( $persist ) {
+				$request->fail();
+			}
 
-			return;
+			return false;
 		}
 
 		$this->handle_request( $request, 'upgrade' );
@@ -62,9 +67,11 @@ class ITE_Prorate_Credit_Requestor {
 		// If we don't have any credit, or free days, we can just stop here
 		if ( ! $request->get_credit() && ! $request->get_free_days() ) {
 
-			$request->fail();
+			if ( $persist ) {
+				$request->fail();
+			}
 
-			return;
+			return false;
 		}
 
 		if ( $this->product_auto_renews( $receiver ) ) {
@@ -75,7 +82,11 @@ class ITE_Prorate_Credit_Requestor {
 
 		$request->set_upgrade_type( $upgrade_type );
 
-		$request->persist();
+		if ( $persist ) {
+			$request->persist();
+		}
+
+		return true;
 	}
 
 	/**
@@ -86,18 +97,23 @@ class ITE_Prorate_Credit_Requestor {
 	 * @since 1.9
 	 *
 	 * @param ITE_Prorate_Credit_Request $request
+	 * @param bool                       $persist
+	 *
+	 * @return boolean
 	 *
 	 * @throws RuntimeException If no prorate credit provider is found.
 	 */
-	public function request_downgrade( ITE_Prorate_Credit_Request $request ) {
+	public function request_downgrade( ITE_Prorate_Credit_Request $request, $persist = true ) {
 
 		$receiver = $request->get_product_receiving_credit();
 
 		if ( ! $request->is_provider_recurring() && $receiver->get_feature( 'recurring-payments' ) ) {
 
-			$request->fail();
+			if ( $persist ) {
+				$request->fail();
+			}
 
-			return;
+			return false;
 		}
 
 		$this->handle_request( $request, 'downgrade' );
@@ -109,9 +125,11 @@ class ITE_Prorate_Credit_Requestor {
 		// If we don't have any credit, or free days, we can just stop here
 		if ( ! $request->get_credit() && ! $request->get_free_days() ) {
 
-			$request->fail();
+			if ( $persist ) {
+				$request->fail();
+			}
 
-			return;
+			return false;
 		}
 
 		if ( $this->product_auto_renews( $receiver ) ) {
@@ -122,7 +140,11 @@ class ITE_Prorate_Credit_Requestor {
 
 		$request->set_upgrade_type( $upgrade_type );
 
-		$request->persist();
+		if ( $persist ) {
+			$request->persist();
+		}
+
+		return true;
 	}
 
 	/**

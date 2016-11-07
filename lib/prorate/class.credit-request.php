@@ -104,6 +104,26 @@ abstract class ITE_Prorate_Credit_Request implements ITE_Cart_Aware {
 	}
 
 	/**
+	 * Get the human readable label of this credit request.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @return string
+	 */
+	public function get_label() {
+
+		if ( $days = $this->get_free_days() ) {
+			return sprintf( _n( '%d days free.', '%d day free', $days, 'LION' ), $days );
+		}
+
+		if ( $credit = $this->get_credit() ) {
+			return sprintf( __( '%s off.', 'LION' ), it_exchange_format_price( $credit ) );
+		}
+
+		return '';
+	}
+
+	/**
 	 * Get the product providing the credit.
 	 *
 	 * @since 1.9

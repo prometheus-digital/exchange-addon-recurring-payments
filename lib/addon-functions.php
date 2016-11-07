@@ -2,6 +2,7 @@
 /**
  * iThemes Exchange Recurring Payments Add-on
  * Generic functions
+ *
  * @package exchange-addon-recurring-payments
  * @since   1.0.0
  */
@@ -11,9 +12,9 @@
  *
  * @since 1.0.0
  *
- * @param IT_Exchange_Customer|int      $customer    iThemes Exchange Customer Object
- * @param string                        $status      Subscription Status
- * @param IT_Exchange_Transaction|bool  $transaction Transaction
+ * @param IT_Exchange_Customer|int     $customer    iThemes Exchange Customer Object
+ * @param string                       $status      Subscription Status
+ * @param IT_Exchange_Transaction|bool $transaction Transaction
  */
 function it_exchange_recurring_payments_customer_notification( $customer, $status, $transaction = false ) {
 
@@ -31,7 +32,7 @@ function it_exchange_recurring_payments_customer_notification( $customer, $statu
 
 			it_exchange_send_email( new IT_Exchange_Email( new IT_Exchange_Email_Recipient_Customer( $customer ), $notification, array(
 				'customer' => $customer
-			) )	);
+			) ) );
 			break;
 
 		case 'cancel':
@@ -40,7 +41,7 @@ function it_exchange_recurring_payments_customer_notification( $customer, $statu
 
 			it_exchange_send_email( new IT_Exchange_Email( new IT_Exchange_Email_Recipient_Customer( $customer ), $notification, array(
 				'customer' => $customer
-			) )	);
+			) ) );
 			break;
 
 	}
@@ -75,11 +76,12 @@ function it_exchange_recurring_payments_addon_update_expirations( $transaction, 
  *
  * @since CHANGEME
  *
- * @param int $product_id iThemes Exchange Product ID
+ * @param int  $product_id iThemes Exchange Product ID
+ * @param bool $show_trial
  *
  * @return string iThemes Exchange recurring label
  */
-function it_exchange_recurring_payments_addon_recurring_label( $product_id ) {
+function it_exchange_recurring_payments_addon_recurring_label( $product_id, $show_trial = true ) {
 
 	if ( ! it_exchange_product_has_feature( $product_id, 'recurring-payments', array( 'setting' => 'recurring-enabled' ) ) ) {
 		return '';
@@ -103,8 +105,7 @@ function it_exchange_recurring_payments_addon_recurring_label( $product_id ) {
 
 	$label = ' ' . (string) $rp;
 
-	if ( $trial_enabled ) {
-		$show_trial = true;
+	if ( $trial_enabled && $show_trial ) {
 		if ( 'membership-product-type' === it_exchange_get_product_type( $product_id ) && function_exists( 'it_exchange_is_customer_eligible_for_trial' ) ) {
 			if ( is_user_logged_in() ) {
 				$show_trial = it_exchange_is_customer_eligible_for_trial( it_exchange_get_product( $product_id ) );
@@ -122,6 +123,54 @@ function it_exchange_recurring_payments_addon_recurring_label( $product_id ) {
 	}
 
 	return apply_filters( 'it_exchange_recurring_payments_addon_expires_time_label', $label, $product_id );
+}
+
+/**
+ * Get the recurring product profile.
+ *
+ * @since 1.9.0
+ *
+ * @param int|IT_Exchange_Product $product
+ *
+ * @return IT_Exchange_Recurring_Profile|null
+ */
+function it_exchange_get_recurring_product_profile( $product ) {
+	$product = it_exchange_get_product( $product );
+
+	$recurring_enabled = $product->get_feature( 'recurring-payments', array( 'setting' => 'recurring-enabled' ) );
+
+	if ( ! $recurring_enabled ) {
+		return null;
+	}
+
+	$interval       = $product->get_feature( 'recurring-payments', array( 'setting' => 'interval' ) );
+	$interval_count = $product->get_feature( 'recurring-payments', array( 'setting' => 'interval-count' ) );
+
+	return new IT_Exchange_Recurring_Profile( $interval, $interval_count );
+}
+
+/**
+ * Get the recurring product trial profile.
+ *
+ * @since 1.9.0
+ *
+ * @param int|IT_Exchange_Product $product
+ *
+ * @return IT_Exchange_Recurring_Profile|null
+ */
+function it_exchange_get_recurring_product_trial_profile( $product ) {
+	$product = it_exchange_get_product( $product );
+
+	$trial_enabled = $product->get_feature( 'recurring-payments', array( 'setting' => 'trial-enabled' ) );
+
+	if ( ! $trial_enabled ) {
+		return null;
+	}
+
+	$trial_interval       = $product->get_feature( 'recurring-payments', array( 'setting' => 'trial-interval' ) );
+	$trial_interval_count = $product->get_feature( 'recurring-payments', array( 'setting' => 'trial-interval-count' ) );
+
+	return new IT_Exchange_Recurring_Profile( $trial_interval, $trial_interval_count );
 }
 
 /**
