@@ -131,6 +131,50 @@ function it_exchange_recurring_payments_addon_template_path( $possible_template_
 add_filter( 'it_exchange_possible_template_paths', 'it_exchange_recurring_payments_addon_template_path', 10, 2 );
 
 /**
+ * Add fees when a product is added to the cart.
+ *
+ * @since 1.9.0
+ *
+ * @param ITE_Cart_Product $item
+ * @param ITE_Cart         $cart
+ */
+function it_exchange_recurring_payments_on_add_product_to_cart( ITE_Cart_Product $item, ITE_Cart $cart ) {
+
+	$product = $item->get_product();
+
+	if ( ! $product->has_feature( 'recurring-payments', array( 'setting' => 'recurring-enabled' ) ) ) {
+		return;
+	}
+
+	if ( ! $product->get_feature( 'recurring-payments', array( 'setting' => 'recurring-enabled' ) ) ) {
+		return;
+	}
+
+	$trial_enabled = $product->get_feature( 'recurring-payments', array( 'setting' => 'trial-enabled' ) );
+
+	if ( ! $trial_enabled ) {
+		return;
+	}
+
+	if ( $product instanceof IT_Exchange_Membership && function_exists( 'it_exchange_is_customer_eligible_for_trial' ) ) {
+		if ( ! it_exchange_is_customer_eligible_for_trial( $product, $cart->get_customer() ) ) {
+			return;
+		}
+	}
+
+	$fee = ITE_Fee_Line_Item::create(
+		__( 'Free Trial', 'LION' ),
+		$item->get_total() * -1,
+		false
+	);
+
+	$item->add_item( $fee );
+	$cart->get_repository()->save( $item );
+}
+
+add_action( 'it_exchange_add_product_to_cart', 'it_exchange_recurring_payments_on_add_product_to_cart', 10, 2 );
+
+/**
  * Disables multi item carts if viewing product with auto-renew enabled
  * because you cannot mix auto-renew prices with non-auto-renew prices in
  * payment gateways
