@@ -56,6 +56,7 @@ class ProrateSerializer {
 				'product'       => array(
 					'description' => __( 'The product ID being prorated to.', 'LION' ),
 					'type'        => 'integer',
+					'required'    => true,
 				),
 				'title'         => array(
 					'description' => __( 'The product title being prorated to.', 'LION' ),
