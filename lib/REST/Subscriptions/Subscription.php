@@ -34,7 +34,7 @@ class Subscription extends Base implements Getable, Putable {
 	 * @inheritDoc
 	 */
 	public function handle_get( Request $request ) {
-		$subscription = $this->get_subscription_from_id( $request->get_param( 'subscription_id', 'URL' ) );
+		$subscription = \IT_Exchange_Subscription::get( $request->get_param( 'subscription_id', 'URL' ) );
 
 		return new \WP_REST_Response( $this->serializer->serialize( $subscription ) );
 	}
@@ -53,7 +53,7 @@ class Subscription extends Base implements Getable, Putable {
 		}
 
 		$sub_id       = $request->get_param( 'subscription_id', 'URL' );
-		$subscription = $this->get_subscription_from_id( $sub_id );
+		$subscription = \IT_Exchange_Subscription::get( $request->get_param( 'subscription_id', 'URL' ) );
 
 		if ( is_wp_error( $subscription ) ) {
 			return $subscription;
@@ -77,7 +77,7 @@ class Subscription extends Base implements Getable, Putable {
 	 */
 	public function handle_put( Request $request ) {
 
-		$sub = $this->get_subscription_from_id( $request->get_param( 'subscription_id', 'URL' ) );
+		$sub = \IT_Exchange_Subscription::get( $request->get_param( 'subscription_id', 'URL' ) );
 
 		$status = is_array( $request['status'] ) ? $request['status']['slug'] : $request['status'];
 
@@ -113,7 +113,7 @@ class Subscription extends Base implements Getable, Putable {
 		}
 
 		$sub_id       = $request->get_param( 'subscription_id', 'URL' );
-		$subscription = $this->get_subscription_from_id( $sub_id );
+		$subscription = \IT_Exchange_Subscription::get( $sub_id );
 
 		if ( is_wp_error( $subscription ) ) {
 			return $subscription;
@@ -128,54 +128,6 @@ class Subscription extends Base implements Getable, Putable {
 		}
 
 		return true;
-	}
-
-	/**
-	 * Get a subscription from an "ID".
-	 *
-	 * @since 1.36.0
-	 *
-	 * @param string $id
-	 *
-	 * @return \IT_Exchange_Subscription|\WP_Error
-	 */
-	protected function get_subscription_from_id( $id ) {
-		$parts = explode( ':', $id );
-
-		if ( count( $parts ) !== 2 ) {
-			return new \WP_Error(
-				'it_exchange_rest_invalid_subscription',
-				__( 'Invalid subscription id.', 'LION' ),
-				array( 'status' => \WP_Http::BAD_REQUEST )
-			);
-		}
-
-		$transaction = it_exchange_get_transaction( $parts[0] );
-		$product     = it_exchange_get_product( $parts[1] );
-
-		if ( ! $transaction || ! $product ) {
-			return new \WP_Error(
-				'it_exchange_rest_invalid_subscription',
-				__( 'Invalid subscription id.', 'LION' ),
-				array( 'status' => \WP_Http::BAD_REQUEST )
-			);
-		}
-
-		try {
-			$subscription = \IT_Exchange_Subscription::from_transaction( $transaction, $product );
-		} catch ( \InvalidArgumentException $e ) {
-
-		}
-
-		if ( ! isset( $subscription ) ) {
-			return new \WP_Error(
-				'it_exchange_rest_invalid_subscription',
-				__( 'Invalid subscription id.', 'LION' ),
-				array( 'status' => \WP_Http::BAD_REQUEST )
-			);
-		}
-
-		return $subscription;
 	}
 
 	/**

@@ -38,7 +38,7 @@ class Upgrades extends Base implements Getable, Postable {
 	 */
 	public function handle_get( Request $request ) {
 
-		$subscription = it_exchange_get_subscription_from_rest_id( $request->get_param( 'subscription_id', 'URL' ) );
+		$subscription = \IT_Exchange_Subscription::get( $request->get_param( 'subscription_id', 'URL' ) );
 
 		$options = $subscription->get_available_upgrades();
 		$data    = array();
@@ -64,7 +64,7 @@ class Upgrades extends Base implements Getable, Postable {
 	 */
 	public function handle_post( Request $request ) {
 
-		$subscription = it_exchange_get_subscription_from_rest_id( $request->get_param( 'subscription_id', 'URL' ) );
+		$subscription = \IT_Exchange_Subscription::get( $request->get_param( 'subscription_id', 'URL' ) );
 		$product      = $request['product'];
 
 		$all_available = $subscription->get_available_upgrades();

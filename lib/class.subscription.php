@@ -115,6 +115,36 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	}
 
 	/**
+	 * Get a subscription by its ID.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @param string $id
+	 *
+	 * @return IT_Exchange_Subscription|null
+	 */
+	public static function get( $id ) {
+		$parts = explode( ':', $id );
+
+		if ( count( $parts ) !== 2 ) {
+			throw new InvalidArgumentException( 'Invalid subscription ID.' );
+		}
+
+		$transaction = it_exchange_get_transaction( $parts[0] );
+		$product     = it_exchange_get_product( $parts[1] );
+
+		if ( ! $transaction || ! $product ) {
+			throw new InvalidArgumentException( 'Invalid subscription ID.' );
+		}
+
+		try {
+			return self::from_transaction( $transaction, $product );
+		} catch ( \InvalidArgumentException $e ) {
+			return null;
+		}
+	}
+
+	/**
 	 * Create the Subscription data.
 	 *
 	 * @since 1.8
@@ -203,6 +233,17 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 		do_action( 'it_exchange_subscription_created', $subscription );
 
 		return $subscription;
+	}
+
+	/**
+	 * Get the subscription ID.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @return string
+	 */
+	public function get_id() {
+		return "{$this->get_transaction()->get_ID()}:{$this->get_product()->ID}";
 	}
 
 	/**

@@ -34,7 +34,7 @@ class Cancel extends Base implements Postable {
 	 */
 	public function handle_post( Request $request ) {
 
-		$subscription = $this->get_subscription_from_id( $request->get_param( 'subscription_id', 'URL' ) );
+		$subscription = \IT_Exchange_Subscription::get( $request->get_param( 'subscription_id', 'URL' ) );
 		$reason       = $request['reason'];
 
 		if ( it_exchange_get_customer( $request['cancelled_by'] ) ) {
@@ -63,7 +63,7 @@ class Cancel extends Base implements Postable {
 	 */
 	public function user_can_post( Request $request, \IT_Exchange_Customer $user = null ) {
 
-		$subscription = $this->get_subscription_from_id( $request->get_param( 'subscription_id', 'URL' ) );
+		$subscription = \IT_Exchange_Subscription::get( $request->get_param( 'subscription_id', 'URL' ) );
 
 		$associated = array();
 
@@ -86,54 +86,6 @@ class Cancel extends Base implements Postable {
 		}
 
 		return true; // Cascades to read transaction. Customers can cancel their own subscriptions.
-	}
-
-	/**
-	 * Get a subscription from an "ID".
-	 *
-	 * @since 1.36.0
-	 *
-	 * @param string $id
-	 *
-	 * @return \IT_Exchange_Subscription|\WP_Error
-	 */
-	protected function get_subscription_from_id( $id ) {
-		$parts = explode( ':', $id );
-
-		if ( count( $parts ) !== 2 ) {
-			return new \WP_Error(
-				'it_exchange_rest_invalid_subscription',
-				__( 'Invalid subscription id.', 'LION' ),
-				array( 'status' => \WP_Http::BAD_REQUEST )
-			);
-		}
-
-		$transaction = it_exchange_get_transaction( $parts[0] );
-		$product     = it_exchange_get_product( $parts[1] );
-
-		if ( ! $transaction || ! $product ) {
-			return new \WP_Error(
-				'it_exchange_rest_invalid_subscription',
-				__( 'Invalid subscription id.', 'LION' ),
-				array( 'status' => \WP_Http::BAD_REQUEST )
-			);
-		}
-
-		try {
-			$subscription = \IT_Exchange_Subscription::from_transaction( $transaction, $product );
-		} catch ( \InvalidArgumentException $e ) {
-
-		}
-
-		if ( ! isset( $subscription ) ) {
-			return new \WP_Error(
-				'it_exchange_rest_invalid_subscription',
-				__( 'Invalid subscription id.', 'LION' ),
-				array( 'status' => \WP_Http::BAD_REQUEST )
-			);
-		}
-
-		return $subscription;
 	}
 
 	/**
