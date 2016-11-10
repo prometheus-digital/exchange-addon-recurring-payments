@@ -36,6 +36,10 @@ class ProrateSerializer {
 			'amount_label'  => it_exchange_recurring_payments_addon_recurring_label(
 				$r->get_product_receiving_credit()->ID, false
 			),
+			'prorate'       => array(
+				'type'   => $r->get_upgrade_type(),
+				'amount' => $r->get_upgrade_type() === 'days' ? $r->get_free_days() : $r->get_credit()
+			),
 			'prorate_label' => $r->get_label(),
 		);
 	}
