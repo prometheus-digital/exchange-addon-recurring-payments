@@ -26,7 +26,7 @@ class Serializer {
 	 */
 	public function serialize( \IT_Exchange_Subscription $subscription ) {
 
-		$s  = $subscription;
+		$s = $subscription;
 
 		$is_cancelled = ( $s->get_status() === \IT_Exchange_Subscription::STATUS_CANCELLED );
 
@@ -35,6 +35,7 @@ class Serializer {
 			'product'             => $s->get_product()->ID,
 			'auto_renewing'       => $s->is_auto_renewing(),
 			'transaction'         => $s->get_transaction()->get_ID(),
+			'payment_token'       => $s->get_payment_token() ? $s->get_payment_token()->ID : 0,
 			'recurring_profile'   => $this->serialize_profile( $s->get_recurring_profile() ),
 			'trial_profile'       => $this->serialize_profile( $s->get_trial_profile(), true ),
 			'trial_period'        => $s->is_trial_period(),
@@ -49,7 +50,7 @@ class Serializer {
 				'label' => $subscription->get_status( true ),
 			),
 			'cancellation_reason' => $is_cancelled ? $s->get_cancellation_reason() : null,
-			'cancelled_by'        => $is_cancelled ? ( $s->get_cancelled_by() ? $s->get_cancelled_by()->id : 0 ) : null
+			'cancelled_by'        => $is_cancelled ? ( $s->get_cancelled_by() ? $s->get_cancelled_by()->id : 0 ) : null,
 		);
 	}
 
@@ -162,6 +163,11 @@ class Serializer {
 					'description' => __( 'The transaction ID used to purchase this transaction', 'LION' ),
 					'type'        => 'integer',
 					'context'     => array( 'view', 'edit' )
+				),
+				'payment_token'       => array(
+					'description' => __( 'Payment token being used to pay for this subscription.', 'LION' ),
+					'type'        => 'integer',
+					'context'     => array( 'view', 'edit' ),
 				),
 				'recurring_profile'   => array(
 					'description' => __( 'The length and duration of a subscription period.', 'LION' ),
