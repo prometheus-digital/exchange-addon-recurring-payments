@@ -105,4 +105,14 @@ class ITE_Gateway_Prorate_Purchase_Request implements ITE_Gateway_Purchase_Reque
 	 * @inheritDoc
 	 */
 	public static function get_name() { return 'purchase'; }
+
+	/**
+	 * @inheritdoc
+	 */
+	public function get_redirect_to() {	return $this->original->get_redirect_to(); }
+
+	/**
+	 * @inheritdoc
+	 */
+	public function set_redirect_to( $redirect_to ) { $this->original->set_redirect_to( $redirect_to );	}
 }
