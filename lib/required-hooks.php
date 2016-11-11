@@ -175,6 +175,42 @@ function it_exchange_recurring_payments_on_add_product_to_cart( ITE_Cart_Product
 add_action( 'it_exchange_add_product_to_cart', 'it_exchange_recurring_payments_on_add_product_to_cart', 10, 2 );
 
 /**
+ * Add fees when the prorate meta has been updated.
+ *
+ * @since 1.9.0
+ *
+ * @param string   $key
+ * @param array    $value
+ * @param ITE_Cart $cart
+ * @param array    $previous
+ */
+function it_exchange_recurring_payments_add_credit_fees_on_meta( $key, $value, ITE_Cart $cart, $previous ) {
+
+	if ( $key !== ITE_Prorate_Credit_Request::META ) {
+		return;
+	}
+
+	$previous = is_array( $previous ) ? $previous : array();
+
+	foreach ( $value as $product_id => $_ ) {
+
+		if ( isset( $previous[ $product_id ] ) ) {
+			continue;
+		}
+
+		$item = $cart->get_items( 'product' )->filter( function ( \ITE_Cart_Product $cart_product ) use ( $product_id ) {
+			return $cart_product->get_product()->ID == $product_id;
+		} )->first();
+
+		if ( $item ) {
+			it_exchange_recurring_payments_add_credit_fees( $item, $cart );
+		}
+	}
+}
+
+add_action( 'it_exchange_set_cart_meta', 'it_exchange_recurring_payments_add_credit_fees_on_meta', 10, 4 );
+
+/**
  * Disables multi item carts if viewing product with auto-renew enabled
  * because you cannot mix auto-renew prices with non-auto-renew prices in
  * payment gateways

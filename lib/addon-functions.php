@@ -174,6 +174,64 @@ function it_exchange_get_recurring_product_trial_profile( $product ) {
 }
 
 /**
+ * Add fees for prorate requests that use the 'credit' type.
+ *
+ * @since 1.9.0
+ *
+ * @param ITE_Cart_Product $item
+ * @param ITE_Cart         $cart
+ */
+function it_exchange_recurring_payments_add_credit_fees( ITE_Cart_Product $item, ITE_Cart $cart ) {
+
+	$product_id = $item->get_product()->ID;
+	$request    = ITE_Prorate_Credit_Request::get( $item->get_product(), $cart );
+	$credit     = 0;
+
+	if ( $request && $request->get_credit_type() === 'credit' ) {
+		$credit = min( $request->get_credit(), $item->get_total() );
+	} elseif ( $cart->get_customer() && ! $cart->get_customer() instanceof IT_Exchange_Guest_Customer ) {
+
+		$recurring_profile = it_exchange_get_recurring_product_profile( $product_id );
+
+		$query = new ITE_Transaction_Query( array(
+			'items'      => array( 'product' => $product_id ),
+			'customer'   => $cart->get_customer()->ID,
+			'order_date' => array(
+				// Credit can only be used once the first period of the subscription has passed.
+				// Give them a day lee-way to use the credit before hand if they don't want service interruption
+				'before' => date( 'Y-m-d H:i:s', time() - $recurring_profile->get_interval_seconds() + DAY_IN_SECONDS )
+			),
+			'order'      => array(
+				'order_date' => 'DESC'
+			)
+		) );
+
+		foreach ( $query->results() as $transaction ) {
+			if ( $transaction->cart()->has_meta( 'prorate_credit_remaining_' . $product_id ) ) {
+				$credit = $transaction->cart()->get_meta( 'prorate_credit_remaining_' . $product_id );
+				break;
+			}
+		}
+	}
+
+	if ( ! $credit ) {
+		return;
+	}
+
+	$fee = ITE_Fee_Line_Item::create(
+		$request->get_prorate_type() === 'upgrade' ? __( 'Upgrade Credit', 'LION' ) : __( 'Downgrade Credit', 'LION' ),
+		$credit * - 1,
+		false
+	);
+	$item->add_item( $fee );
+	$cart->get_repository()->save( $item );
+
+	if ( $credit < $request->get_credit() ) {
+		$cart->set_meta( 'prorate_credit_remaining_' . $product_id, $request->get_credit() - $credit );
+	}
+}
+
+/**
  * For hierarchical subscriptions.
  * Prints or returns an HTML formatted list of subscriptions and their children
  *
