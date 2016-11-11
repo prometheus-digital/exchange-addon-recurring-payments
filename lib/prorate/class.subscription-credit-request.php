@@ -28,7 +28,7 @@ class ITE_Prorate_Subscription_Credit_Request extends ITE_Prorate_Credit_Request
 		$this->subscription = $subscription;
 
 		$this->update_additional_session_details( array(
-			'_txn'   => $subscription->get_transaction()->get_ID()
+			'_txn' => $subscription->get_transaction()->get_ID()
 		) );
 	}
 
@@ -70,5 +70,21 @@ class ITE_Prorate_Subscription_Credit_Request extends ITE_Prorate_Credit_Request
 	 */
 	public function get_subscription() {
 		return $this->subscription;
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public function cancel_provider() {
+
+		if ( $this->get_prorate_type() === 'upgrade' ) {
+			$reason = __( 'Cancelled during upgrade.', 'LION' );
+		} elseif ( $this->get_prorate_type() === 'downgrade' ) {
+			$reason = __( 'Cancelled during downgrade.', 'LION' );
+		} else {
+			$reason = __( 'Cancelled during prorate.', 'LION' );
+		}
+
+		return $this->get_subscription()->cancel( null, $reason );
 	}
 }

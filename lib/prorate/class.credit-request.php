@@ -49,7 +49,10 @@ abstract class ITE_Prorate_Credit_Request implements ITE_Cart_Aware {
 	/**
 	 * @var string
 	 */
-	protected $upgrade_type = null;
+	protected $credit_type = null;
+
+	/** @var string */
+	protected $prorate_type;
 
 	/**
 	 * ITE_Prorate_Credit_Request constructor.
@@ -97,8 +100,25 @@ abstract class ITE_Prorate_Credit_Request implements ITE_Cart_Aware {
 
 		$class = $data['_class'];
 
+		/** @var ITE_Prorate_Credit_Request $request */
 		$request = call_user_func( array( $class, '_get' ), $receiving_product, $data );
 		$request->set_cart( $cart );
+
+		if ( ! empty( $data['prorate_type'] ) ) {
+			$request->set_prorate_type( $data['prorate_type'] );
+		}
+
+		if ( ! empty( $data['credit_type'] ) ) {
+			$request->set_credit_type( $data['credit_type'] );
+		}
+
+		if ( ! empty( $data['credit'] ) ) {
+			$request->set_credit( $data['credit'] );
+		}
+
+		if ( ! empty( $data['free_days'] ) ) {
+			$request->set_free_days( $data['free_days'] );
+		}
 
 		return $request;
 	}
@@ -249,8 +269,8 @@ abstract class ITE_Prorate_Credit_Request implements ITE_Cart_Aware {
 	 *
 	 * @return string|null Null if the upgrade type has not been set yet.
 	 */
-	public function get_upgrade_type() {
-		return $this->upgrade_type;
+	public function get_credit_type() {
+		return $this->credit_type;
 	}
 
 	/**
@@ -258,11 +278,46 @@ abstract class ITE_Prorate_Credit_Request implements ITE_Cart_Aware {
 	 *
 	 * @since 1.9
 	 *
-	 * @param string $upgrade_type Accepts 'days' or 'credit'.
+	 * @param string $credit_type Accepts 'days' or 'credit'.
 	 */
-	public function set_upgrade_type( $upgrade_type ) {
-		$this->upgrade_type = $upgrade_type;
+	public function set_credit_type( $credit_type ) {
+		$this->credit_type = $credit_type;
 	}
+
+	/**
+	 * Get the prorate type.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @return string Either 'upgrade' or 'downgrade'.
+	 */
+	public function get_prorate_type() {
+		return $this->prorate_type;
+	}
+
+	/**
+	 * Set the prorate type.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @param string $prorate_type
+	 *
+	 * @return $this
+	 */
+	public function set_prorate_type( $prorate_type ) {
+		$this->prorate_type = $prorate_type;
+
+		return $this;
+	}
+
+	/**
+	 * Cancel the provider of credit.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @return bool
+	 */
+	public abstract function cancel_provider();
 
 	/**
 	 * Get the details to be added to the `updowngrade` session data.
@@ -330,7 +385,8 @@ abstract class ITE_Prorate_Credit_Request implements ITE_Cart_Aware {
 		$details = array(
 			'credit'       => round( $this->get_credit(), 2 ),
 			'free_days'    => $this->get_free_days(),
-			'upgrade_type' => $this->get_upgrade_type(),
+			'credit_type'  => $this->get_credit_type(),
+			'prorate_type' => $this->get_prorate_type(),
 		);
 
 		$details = array_merge( $details, $this->get_additional_session_details() );

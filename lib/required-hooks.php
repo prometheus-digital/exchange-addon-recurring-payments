@@ -267,11 +267,12 @@ add_filter( 'it_exchange_multi_item_product_allowed', 'it_exchange_recurring_pay
  *
  * @since 1.0.0
  *
- * @param int $transaction_id iThemes Exchange Transaction ID
+ * @param int            $transaction_id iThemes Exchange Transaction ID
+ * @param \ITE_Cart|null $cart
  *
  * @return void
  */
-function it_exchange_recurring_payments_addon_add_transaction( $transaction_id ) {
+function it_exchange_recurring_payments_addon_add_transaction( $transaction_id, ITE_Cart $cart = null ) {
 	$transaction = it_exchange_get_transaction( $transaction_id );
 
 	foreach ( $transaction->get_products() as $product ) {
@@ -285,9 +286,19 @@ function it_exchange_recurring_payments_addon_add_transaction( $transaction_id )
 
 	$from = new DateTime( $transaction->post_date_gmt, new DateTimeZone( 'UTC' ) );
 	it_exchange_recurring_payments_addon_update_expirations( $transaction, $from );
+
+	if ( $cart && $cart->has_meta( ITE_Prorate_Credit_Request::META ) ) {
+		foreach ( $cart->get_meta( ITE_Prorate_Credit_Request::META ) as $product_id => $_ ) {
+			$product = it_exchange_get_product( $product_id );
+
+			if ( $request = ITE_Prorate_Credit_Request::get( $product, $cart ) ) {
+				$request->cancel_provider();
+			}
+		}
+	}
 }
 
-add_action( 'it_exchange_add_transaction_success', 'it_exchange_recurring_payments_addon_add_transaction', 0 );
+add_action( 'it_exchange_add_transaction_success', 'it_exchange_recurring_payments_addon_add_transaction', 0, 2 );
 
 /**
  * Bump expirations when a child transaction occurs.

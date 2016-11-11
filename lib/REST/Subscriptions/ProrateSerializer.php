@@ -37,8 +37,8 @@ class ProrateSerializer {
 				$r->get_product_receiving_credit()->ID, false
 			),
 			'prorate'       => array(
-				'type'   => $r->get_upgrade_type(),
-				'amount' => $r->get_upgrade_type() === 'days' ? $r->get_free_days() : $r->get_credit()
+				'type'   => $r->get_credit_type(),
+				'amount' => $r->get_credit_type() === 'days' ? $r->get_free_days() : $r->get_credit()
 			),
 			'prorate_label' => $r->get_label(),
 		);

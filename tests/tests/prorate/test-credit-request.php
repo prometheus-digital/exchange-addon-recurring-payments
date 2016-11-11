@@ -95,9 +95,9 @@ class Test_Prorate_Credit_Request extends IT_Exchange_UnitTestCase {
 		$request->set_free_days( 5 );
 		$this->assertEquals( 5, $request->get_free_days(), 'Free days failed.' );
 
-		$this->assertNull( $request->get_upgrade_type(), 'Initial upgrade type not null.' );
-		$request->set_upgrade_type( 'days' );
-		$this->assertEquals( 'days', $request->get_upgrade_type(), 'Upgrade type failed' );
+		$this->assertNull( $request->get_credit_type(), 'Initial upgrade type not null.' );
+		$request->set_credit_type( 'days' );
+		$this->assertEquals( 'days', $request->get_credit_type(), 'Upgrade type failed' );
 
 		$request->set_additional_session_details( array() );
 		$this->assertEquals( array(), $request->get_additional_session_details(), 'Set session details failed.' );
@@ -135,7 +135,7 @@ class Test_Prorate_Credit_Request extends IT_Exchange_UnitTestCase {
 		$request->set_additional_session_details( array( 'p1' => 'v1' ) );
 		$request->set_credit( 29.740 );
 		$request->set_free_days( 2 );
-		$request->set_upgrade_type( 'days' );
+		$request->set_credit_type( 'days' );
 
 		$cart = it_exchange_get_current_cart();
 

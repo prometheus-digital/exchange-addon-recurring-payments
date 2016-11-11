@@ -80,7 +80,8 @@ class ITE_Prorate_Credit_Requestor {
 			$upgrade_type = 'credit';
 		}
 
-		$request->set_upgrade_type( $upgrade_type );
+		$request->set_credit_type( $upgrade_type );
+		$request->set_prorate_type( 'upgrade' );
 
 		if ( $persist ) {
 			$request->persist();
@@ -138,7 +139,8 @@ class ITE_Prorate_Credit_Requestor {
 			$upgrade_type = 'credit';
 		}
 
-		$request->set_upgrade_type( $upgrade_type );
+		$request->set_credit_type( $upgrade_type );
+		$request->set_prorate_type( 'downgrade' );
 
 		if ( $persist ) {
 			$request->persist();

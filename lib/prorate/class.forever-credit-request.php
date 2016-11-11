@@ -80,4 +80,18 @@ class ITE_Prorate_Forever_Credit_Request extends ITE_Prorate_Credit_Request {
 	public function get_transaction() {
 		return $this->transaction;
 	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public function cancel_provider() {
+		$membership = new IT_Exchange_User_Membership_Transaction_Driver(
+			$this->get_transaction(),
+			$this->get_product_providing_credit()
+		);
+
+		$membership->set_status( 'cancelled' );
+
+		return true;
+	}
 }
