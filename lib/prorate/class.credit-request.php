@@ -132,11 +132,11 @@ abstract class ITE_Prorate_Credit_Request implements ITE_Cart_Aware {
 	 */
 	public function get_price_description() {
 
-		if ( $days = $this->get_free_days() ) {
+		if ( $this->get_credit_type() === 'days' && $days = $this->get_free_days() ) {
 			return sprintf( _n( '%s day free', '%s days free', $days, 'LION' ), $days );
 		}
 
-		if ( $credit = $this->get_credit() ) {
+		if ( $this->get_credit_type() === 'credit' && $credit = $this->get_credit() ) {
 			return sprintf( __( ' %s upgrade credit, then regular price', 'LION' ), it_exchange_format_price( $credit ) );
 		}
 

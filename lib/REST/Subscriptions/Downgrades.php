@@ -104,6 +104,7 @@ class Downgrades extends Base implements Getable, Postable {
 
 		$product         = it_exchange_get_product( $product );
 		$prorate_request = new \ITE_Prorate_Subscription_Credit_Request( $subscription, $product );
+		$prorate_request->set_cart( $cart );
 
 		if ( ! $this->requestor->request_downgrade( $prorate_request ) ) {
 			return new \WP_Error(

@@ -21,7 +21,9 @@ add_action( 'it_exchange_register_rest_routes', function ( \iThemes\Exchange\RES
 	$manager->register_route( $cancel->set_parent( $subscription ) );
 
 	$prorate_serializer = new ProrateSerializer();
-	$requestor          = new ITE_Prorate_Credit_Requestor( new ITE_Daily_Price_Calculator() );
+	$requestor = new ITE_Prorate_Credit_Requestor( new ITE_Daily_Price_Calculator() );
+	$requestor->register_provider( 'IT_Exchange_Subscription' );
+	$requestor->register_provider( 'IT_Exchange_Transaction' );
 
 	$upgrades   = new Upgrades( $prorate_serializer, $requestor );
 	$downgrades = new Downgrades( $prorate_serializer, $requestor );

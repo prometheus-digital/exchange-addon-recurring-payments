@@ -167,6 +167,7 @@ function it_exchange_recurring_payments_on_add_product_to_cart( ITE_Cart_Product
 		$item->get_total() * -1,
 		false
 	);
+	$fee->set_param( 'is_free_trial', true );
 
 	$item->add_item( $fee );
 	$cart->get_repository()->save( $item );
@@ -182,21 +183,14 @@ add_action( 'it_exchange_add_product_to_cart', 'it_exchange_recurring_payments_o
  * @param string   $key
  * @param array    $value
  * @param ITE_Cart $cart
- * @param array    $previous
  */
-function it_exchange_recurring_payments_add_credit_fees_on_meta( $key, $value, ITE_Cart $cart, $previous ) {
+function it_exchange_recurring_payments_add_credit_fees_on_meta( $key, $value, ITE_Cart $cart ) {
 
 	if ( $key !== ITE_Prorate_Credit_Request::META ) {
 		return;
 	}
 
-	$previous = is_array( $previous ) ? $previous : array();
-
 	foreach ( $value as $product_id => $_ ) {
-
-		if ( isset( $previous[ $product_id ] ) ) {
-			continue;
-		}
 
 		$item = $cart->get_items( 'product' )->filter( function ( \ITE_Cart_Product $cart_product ) use ( $product_id ) {
 			return $cart_product->get_product()->ID == $product_id;
@@ -204,11 +198,12 @@ function it_exchange_recurring_payments_add_credit_fees_on_meta( $key, $value, I
 
 		if ( $item ) {
 			it_exchange_recurring_payments_add_credit_fees( $item, $cart );
+			it_exchange_recurring_payments_add_free_days_fees( $item, $cart );
 		}
 	}
 }
 
-add_action( 'it_exchange_set_cart_meta', 'it_exchange_recurring_payments_add_credit_fees_on_meta', 10, 4 );
+add_action( 'it_exchange_set_cart_meta', 'it_exchange_recurring_payments_add_credit_fees_on_meta', 10, 3 );
 
 /**
  * Disables multi item carts if viewing product with auto-renew enabled

@@ -35,6 +35,7 @@ class Serializer {
 			'product'             => $s->get_product()->ID,
 			'auto_renewing'       => $s->is_auto_renewing(),
 			'transaction'         => $s->get_transaction()->get_ID(),
+			'recurring_amount'    => $s->calculate_recurring_amount_paid(),
 			'payment_token'       => $s->get_payment_token() ? $s->get_payment_token()->ID : 0,
 			'recurring_profile'   => $this->serialize_profile( $s->get_recurring_profile() ),
 			'trial_profile'       => $this->serialize_profile( $s->get_trial_profile(), true ),
@@ -162,6 +163,11 @@ class Serializer {
 				'transaction'         => array(
 					'description' => __( 'The transaction ID used to purchase this transaction', 'LION' ),
 					'type'        => 'integer',
+					'context'     => array( 'view', 'edit' )
+				),
+				'recurring_amount'    => array(
+					'description' => __( 'The recurring payment amount.', 'LION' ),
+					'type'        => 'number',
 					'context'     => array( 'view', 'edit' )
 				),
 				'payment_token'       => array(

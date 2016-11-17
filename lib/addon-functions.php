@@ -174,6 +174,46 @@ function it_exchange_get_recurring_product_trial_profile( $product ) {
 }
 
 /**
+ * Add fees for free days.
+ *
+ * @since 1.9.0
+ *
+ * @param ITE_Cart_Product $item
+ * @param ITE_Cart         $cart
+ */
+function it_exchange_recurring_payments_add_free_days_fees( ITE_Cart_Product $item, ITE_Cart $cart ) {
+
+	$request = ITE_Prorate_Credit_Request::get( $item->get_product(), $cart );
+
+	if ( ! $request ) {
+		return;
+	}
+
+	if ( $request->get_credit_type() !== 'days' ) {
+		return;
+	}
+
+	$existing = $item->get_line_items()->with_only( 'fee' )->filter( function( ITE_Fee_Line_Item $fee ) {
+		return $fee->has_param( 'is_prorate_days' );
+	} );
+
+	if ( $existing->count() > 0 ) {
+		return;
+	}
+
+	$fee = ITE_Fee_Line_Item::create(
+		$request->get_prorate_type() === 'upgrade' ? __( 'Upgrade Trial', 'LION' ) : __( 'Downgrade Trial', 'LION' ),
+		$item->get_total() * -1,
+		false
+	);
+
+	$fee->set_param( 'is_prorate_days', true );
+
+	$item->add_item( $fee );
+	$cart->get_repository()->save( $item );
+}
+
+/**
  * Add fees for prorate requests that use the 'credit' type.
  *
  * @since 1.9.0
@@ -186,6 +226,14 @@ function it_exchange_recurring_payments_add_credit_fees( ITE_Cart_Product $item,
 	$product_id = $item->get_product()->ID;
 	$request    = ITE_Prorate_Credit_Request::get( $item->get_product(), $cart );
 	$credit     = 0;
+
+	$existing = $item->get_line_items()->with_only( 'fee' )->filter( function( ITE_Fee_Line_Item $fee ) {
+		return $fee->has_param( 'is_prorate_credit' );
+	} );
+
+	if ( $existing->count() > 0 ) {
+		return;
+	}
 
 	if ( $request && $request->get_credit_type() === 'credit' ) {
 		$credit = min( $request->get_credit(), $item->get_total() );
@@ -223,6 +271,7 @@ function it_exchange_recurring_payments_add_credit_fees( ITE_Cart_Product $item,
 		$credit * - 1,
 		false
 	);
+	$fee->set_param( 'is_prorate_credit', true );
 	$item->add_item( $fee );
 	$cart->get_repository()->save( $item );
 

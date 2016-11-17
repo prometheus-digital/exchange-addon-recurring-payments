@@ -693,7 +693,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 		), true );
 
 		if ( $children ) {
-			$transaction = $children[0];
+			$transaction = reset( $children );
 		} else {
 			$transaction = $this->get_transaction();
 		}

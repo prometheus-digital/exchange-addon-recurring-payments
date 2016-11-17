@@ -96,14 +96,7 @@ class Upgrades extends Base implements Getable, Postable {
 
 		$product         = it_exchange_get_product( $product );
 		$prorate_request = new \ITE_Prorate_Subscription_Credit_Request( $subscription, $product );
-
-		if ( ! $this->requestor->request_upgrade( $prorate_request ) ) {
-			return new \WP_Error(
-				'it_exchange_rest_unable_to_prorate',
-				__( 'Unable to complete the prorate request.', 'LION' ),
-				array( 'status' => \WP_Http::INTERNAL_SERVER_ERROR )
-			);
-		}
+		$prorate_request->set_cart( $cart );
 
 		if ( ! $item = $cart->get_items( 'product' )->filter( function ( \ITE_Cart_Product $cart_product ) use ( $product ) {
 			return $cart_product->get_product()->ID == $product;
@@ -111,6 +104,14 @@ class Upgrades extends Base implements Getable, Postable {
 		) {
 			$item = \ITE_Cart_Product::create( $product );
 			$cart->add_item( $item );
+		}
+
+		if ( ! $this->requestor->request_upgrade( $prorate_request ) ) {
+			return new \WP_Error(
+				'it_exchange_rest_unable_to_prorate',
+				__( 'Unable to complete the prorate request.', 'LION' ),
+				array( 'status' => \WP_Http::INTERNAL_SERVER_ERROR )
+			);
 		}
 
 		/** @var Item $route */
