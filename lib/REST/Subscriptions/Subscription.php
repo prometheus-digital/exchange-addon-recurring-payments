@@ -23,20 +23,27 @@ class Subscription extends Base implements Getable, Putable {
 	/** @var Serializer */
 	private $serializer;
 
+	/** @var \ITE_Gateway_Request_Factory */
+	private $request_factory;
+
 	/**
 	 * Subscription constructor.
 	 *
-	 * @param Serializer $serializer
+	 * @param Serializer                   $serializer
+	 * @param \ITE_Gateway_Request_Factory $request_factory
 	 */
-	public function __construct( Serializer $serializer ) { $this->serializer = $serializer; }
+	public function __construct( Serializer $serializer, \ITE_Gateway_Request_Factory $request_factory ) {
+		$this->serializer      = $serializer;
+		$this->request_factory = $request_factory;
+	}
 
 	/**
 	 * @inheritDoc
 	 */
 	public function handle_get( Request $request ) {
-		$subscription = \IT_Exchange_Subscription::get( $request->get_param( 'subscription_id', 'URL' ) );
 
-		$response = new \WP_REST_Response( $this->serializer->serialize( $subscription ) );
+		$subscription = \IT_Exchange_Subscription::get( rawurldecode( $request->get_param( 'subscription_id', 'URL' ) ) );
+		$response     = new \WP_REST_Response( $this->serializer->serialize( $subscription ) );
 
 		if ( $subscription->get_transaction() ) {
 			$route = $this->get_manager()->get_first_route( 'iThemes\Exchange\REST\Route\Transaction\Transaction' );
@@ -72,7 +79,7 @@ class Subscription extends Base implements Getable, Putable {
 			);
 		}
 
-		$subscription = \IT_Exchange_Subscription::get( $request->get_param( 'subscription_id', 'URL' ) );
+		$subscription = \IT_Exchange_Subscription::get( rawurldecode( $request->get_param( 'subscription_id', 'URL' ) ) );
 
 		if ( is_wp_error( $subscription ) ) {
 			return $subscription;
@@ -96,20 +103,44 @@ class Subscription extends Base implements Getable, Putable {
 	 */
 	public function handle_put( Request $request ) {
 
-		$s = \IT_Exchange_Subscription::get( $request->get_param( 'subscription_id', 'URL' ) );
+		$s = \IT_Exchange_Subscription::get( rawurldecode( $request->get_param( 'subscription_id', 'URL' ) ) );
 
-		if ( $request['payment_token'] && $s->get_payment_token() && $s->get_payment_token()->ID != $request['payment_token'] ) {
-			$payment_token = \ITE_Payment_Token::get( $request['payment_token'] );
+		$token = isset( $request['payment_method']['token'] ) ? (int) $request['payment_method']['token'] : 0;
+		$card  = isset( $request['payment_method']['card'] ) ? $request['payment_method']['card'] : array();
 
-			if ( ! $payment_token || $payment_token->gateway->get_slug() !== $s->get_payment_token()->gateway->get_slug() ) {
+		$update_payment_method_args = array( 'subscription' => $s );
+
+		if ( $token && $s->get_payment_token() && $token !== $s->get_payment_token()->get_ID() ) {
+			$update_payment_method_args['token'] = $token;
+		} elseif (
+			is_array( $card ) &&
+			isset( $card['number'] ) &&
+			strlen( $card['number'] > 4 ) &&
+			strpos( strtolower( $card['number'] ), 'x' ) === false
+		) {
+			$update_payment_method_args['card'] = $card;
+		}
+
+		if ( count( $update_payment_method_args ) > 1 ) {
+			if ( ! ( $gateway = $s->get_transaction()->get_gateway() ) || ! $gateway->can_handle( 'update-subscription-payment-method' ) ) {
 				return new \WP_Error(
-					'it_exchange_rest_invalid_payment_token',
-					__( 'The payment token is invalid.', 'LION' ),
+					'it_exchange_rest_gateway_not_supported',
+					__( 'Sorry, this subscription cannot have its payment information updated.', 'LION' ),
 					array( 'status' => \WP_Http::BAD_REQUEST )
 				);
 			}
 
-			$s->set_payment_token( $payment_token );
+			try {
+				$update_request = $this->request_factory->make( 'update-subscription-payment-method', $update_payment_method_args );
+			} catch ( \InvalidArgumentException $e ) {
+				return new \WP_Error(
+					'it_exchange_rest_invalid_param',
+					$e->getMessage(),
+					array( 'status' => \WP_Http::BAD_REQUEST )
+				);
+			}
+
+			$gateway->get_handler_for( $update_request )->handle( $update_request );
 		}
 
 		$status = is_array( $request['status'] ) ? $request['status']['slug'] : $request['status'];
@@ -145,7 +176,7 @@ class Subscription extends Base implements Getable, Putable {
 			);
 		}
 
-		$sub_id       = $request->get_param( 'subscription_id', 'URL' );
+		$sub_id       = rawurldecode( $request->get_param( 'subscription_id', 'URL' ) );
 		$subscription = \IT_Exchange_Subscription::get( $sub_id );
 
 		if ( is_wp_error( $subscription ) ) {
@@ -160,6 +191,14 @@ class Subscription extends Base implements Getable, Putable {
 			);
 		}
 
+		if ( $request['payment_method']['token'] && ! user_can( $user->wp_user, 'it_use_payment_token', $request['payment_method']['token'] ) ) {
+			return new \WP_Error(
+				'it_exchange_rest_invalid_payment_token',
+				__( 'Sorry, you are not allowed to use this payment token.', 'LION' ),
+				array( 'status' => \WP_Http::UNAUTHORIZED )
+			);
+		}
+
 		return true;
 	}
 
@@ -171,7 +210,7 @@ class Subscription extends Base implements Getable, Putable {
 	/**
 	 * @inheritDoc
 	 */
-	public function get_path() { return 'subscriptions/(?P<subscription_id>\d+\:\d+)/'; }
+	public function get_path() { return 'subscriptions/(?P<subscription_id>\d+(?:\:|\%3A)\d+)/'; }
 
 	/**
 	 * @inheritDoc

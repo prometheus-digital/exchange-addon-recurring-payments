@@ -30,28 +30,53 @@ class Serializer {
 
 		$is_cancelled = ( $s->get_status() === \IT_Exchange_Subscription::STATUS_CANCELLED );
 
+		$payment_method = array(
+			'method'   => array(
+				'slug'  => $s->get_transaction()->get_method(),
+				'label' => $s->get_transaction()->get_method( true ),
+			),
+			'editable' => ( $g = $s->get_transaction()->get_gateway() ) && $g->can_handle( 'update-subscription-payment-method' ),
+		);
+
+		if ( $source = $s->get_payment_source() ) {
+			$payment_method['source'] = array(
+				'identifier' => $source->get_identifier(),
+				'label'      => $source->get_label()
+			);
+
+			if ( $source instanceof \ITE_Payment_Token ) {
+				$payment_method['token'] = $source->get_ID();
+			} elseif ( $source instanceof \ITE_Gateway_Card ) {
+				$payment_method['card'] = array(
+					'number' => $source->get_number(),
+					'month'  => $source->get_expiration_month(),
+					'year'   => $source->get_expiration_year(),
+				);
+			}
+		}
+
 		return array(
 			'id'                  => $s->get_id(),
 			'product'             => $s->get_product()->ID,
 			'auto_renewing'       => $s->is_auto_renewing(),
 			'transaction'         => $s->get_transaction()->get_ID(),
 			'recurring_amount'    => $s->calculate_recurring_amount_paid(),
-			'payment_token'       => $s->get_payment_token() ? $s->get_payment_token()->ID : 0,
 			'recurring_profile'   => $this->serialize_profile( $s->get_recurring_profile() ),
 			'trial_profile'       => $this->serialize_profile( $s->get_trial_profile(), true ),
 			'trial_period'        => $s->is_trial_period(),
 			'customer'            => $s->get_customer() ? $s->get_customer()->ID : 0,
 			'beneficiary'         => $s->get_beneficiary() ? $s->get_beneficiary()->ID : 0,
-			'start_date'          => mysql_to_rfc3339( $s->get_start_date()->format( 'Y-m-d H:i:s' ) ),
-			'expiry_date'         => $s->get_expiry_date() ? mysql_to_rfc3339( $s->get_expiry_date()->format( 'Y-m-d H:i:s' ) ) : null,
+			'start_date'          => mysql2date( 'c', $s->get_start_date()->format( 'Y-m-d H:i:s' ), false ),
+			'expiry_date'         => $s->get_expiry_date() ? mysql2date( 'c', $s->get_expiry_date()->format( 'Y-m-d H:i:s' ), false ) : null,
 			'days_remaining'      => $s->get_days_left_in_period(),
 			'subscriber_id'       => $s->get_subscriber_id(),
 			'status'              => array(
 				'slug'  => $subscription->get_status(),
 				'label' => $subscription->get_status( true ),
 			),
-			'cancellation_reason' => $is_cancelled ? $s->get_cancellation_reason() : null,
-			'cancelled_by'        => $is_cancelled ? ( $s->get_cancelled_by() ? $s->get_cancelled_by()->id : 0 ) : null,
+			'cancellation_reason' => $is_cancelled ? $s->get_cancellation_reason() : '',
+			'cancelled_by'        => $is_cancelled ? ( $s->get_cancelled_by() ? $s->get_cancelled_by()->id : 0 ) : 0,
+			'payment_method'      => $payment_method,
 		);
 	}
 
@@ -170,11 +195,6 @@ class Serializer {
 					'type'        => 'number',
 					'context'     => array( 'view', 'edit' )
 				),
-				'payment_token'       => array(
-					'description' => __( 'Payment token being used to pay for this subscription.', 'LION' ),
-					'type'        => 'integer',
-					'context'     => array( 'view', 'edit' ),
-				),
 				'recurring_profile'   => array(
 					'description' => __( 'The length and duration of a subscription period.', 'LION' ),
 					'$ref'        => '#/definitions/recurring_profile',
@@ -183,7 +203,10 @@ class Serializer {
 				),
 				'trial_profile'       => array(
 					'description' => __( 'The length and duration of a subscription trial period.', 'LION' ),
-					'$ref'        => '#/definitions/recurring_profile',
+					'oneOf'       => array(
+						array( '$ref' => '#/definitions/recurring_profile', ),
+						array( 'type' => 'null' ),
+					),
 					'context'     => array( 'view', 'edit', 'embed' ),
 					'readonly'    => true,
 				),
@@ -214,8 +237,16 @@ class Serializer {
 				),
 				'expiry_date'         => array(
 					'description' => __( 'The date the subscription expires.', 'LION' ),
-					'type'        => 'string',
-					'format'      => 'date-time',
+					'oneOf'       => array(
+						array(
+							'type'   => 'string',
+							'format' => 'date-time',
+						),
+						array(
+							'type' => 'string',
+							'enum' => array( '' ),
+						)
+					),
 					'context'     => array( 'view', 'edit' )
 				),
 				'days_remaining'      => array(
@@ -256,6 +287,75 @@ class Serializer {
 					'type'        => 'integer',
 					'context'     => array( 'view', 'edit' )
 				),
+				'payment_method'      => array(
+					'description' => __( 'The means by which the subscription is being paid for.', 'LION' ),
+					'type'        => 'object',
+					'properties'  => array(
+						'method'   => array(
+							'description' => __( 'The payment method used.', 'LION' ),
+							'type'        => 'object',
+							'context'     => array( 'view', 'edit' ),
+							'readonly'    => true,
+							'properties'  => array(
+								'slug'  => array(
+									'description' => __( 'The payment method slug.', 'LION' ),
+									'type'        => 'string',
+									'readonly'    => true,
+									'context'     => array( 'edit' ),
+								),
+								'label' => array(
+									'description' => __( 'The payment method label.', 'LION' ),
+									'type'        => 'string',
+									'readonly'    => true,
+									'context'     => array( 'view', 'edit' )
+								)
+							),
+							'required'    => true,
+						),
+						'editable' => array(
+							'description' => __( 'Is the payment source editable.', 'LION' ),
+							'type'        => 'boolean',
+							'readonly'    => true,
+							'context'     => array( 'view', 'edit' )
+						),
+						'token'    => array(
+							'description' => __( 'The payment token id.', 'LION' ),
+							'type'        => 'integer',
+							'context'     => array( 'view', 'edit' ),
+						),
+						'card'     => array(
+							'description'          => __( 'The card used.', 'LION' ),
+							'type'                 => 'object',
+							'context'              => array( 'view', 'edit' ),
+							'properties'           => array(
+								'number' => array(
+									'description' => __( 'The card number.', 'LION' ),
+									'type'        => 'string',
+									'required'    => true,
+								),
+								'month'  => array(
+									'description' => __( 'The expiration month.', 'LION' ),
+									'type'        => 'string',
+									'required'    => true,
+								),
+								'year'   => array(
+									'description' => __( 'The expiration year.', 'LION' ),
+									'type'        => 'string',
+									'required'    => true,
+								),
+								'cvc'    => array(
+									'description' => __( 'The CVC code.', 'LION' ),
+									'type'        => 'integer',
+								),
+								'name'   => array(
+									'description' => __( 'The card holder name.', 'LION' ),
+									'type'        => 'string',
+								),
+							),
+							'additionalProperties' => false,
+						)
+					)
+				)
 			)
 		);
 	}

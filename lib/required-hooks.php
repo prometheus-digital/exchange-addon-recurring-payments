@@ -94,6 +94,93 @@ function it_exchange_recurring_payments_addon_admin_wp_enqueue_scripts( $hook_su
 add_action( 'it_exchange_admin_wp_enqueue_scripts', 'it_exchange_recurring_payments_addon_admin_wp_enqueue_scripts', 10, 2 );
 
 /**
+ * Enqueue the purchases script.
+ *
+ * @since 1.9.0
+ */
+function it_exchange_recurring_payments_enqueue_purchases() {
+
+	if ( ! it_exchange_is_page( 'purchases' ) ) {
+		return;
+	}
+
+	wp_enqueue_script(
+		'it-exchange-recurring-payments-purchases',
+		plugin_dir_url( __FILE__ ) . '/js/purchases.js',
+		array( 'it-exchange-rest', 'jquery.payment' ),
+		'1.9.0',
+		true
+	);
+
+	it_exchange_add_inline_script(
+		'it-exchange-rest',
+		include IT_Exchange::$dir . '/lib/assets/templates/token-selector.html'
+	);
+
+	it_exchange_add_inline_script(
+		'it-exchange-rest',
+		include IT_Exchange::$dir . '/lib/assets/templates/visual-cc.html'
+	);
+
+	it_exchange_add_inline_script(
+		'it-exchange-recurring-payments-purchases',
+		include dirname( __FILE__ ) . '/js/templates/update-payment-method.html'
+	);
+
+	add_filter( 'it_exchange_preload_schemas', function( $schemas ) {
+
+		$schemas = is_array( $schemas ) ? $schemas : array();
+
+		return array_merge( $schemas, array(
+			'subscription',
+			'payment-token',
+			'customer',
+		) );
+	} );
+}
+
+add_action( 'wp_enqueue_scripts', 'it_exchange_recurring_payments_enqueue_purchases' );
+
+/**
+ * Localize the purchases.
+ *
+ * @since 1.9.0
+ */
+function it_exchange_recurring_payments_localize_purchases() {
+
+	if ( ! it_exchange_is_page( 'purchases' ) ) {
+		return;
+	}
+
+	$subscriptions = array();
+	$serializer    = new \iThemes\Exchange\RecurringPayments\REST\Subscriptions\Serializer();
+
+	foreach ( IT_Theme_API_Transactions::$transactions as $transaction ) {
+
+		try {
+			$s = it_exchange_get_subscription_by_transaction( $transaction );
+
+			if ( $s && ( $s->get_status() === 'active' || $s->get_status() === 'deactivated' ) ) {
+				$subscriptions[] = $serializer->serialize( $s );
+			}
+		} catch ( Exception $e ) {
+
+		}
+	}
+
+	wp_localize_script( 'it-exchange-recurring-payments-purchases', 'ITExchangeRecurringPayments', array(
+		'i18n' => array(
+			'updateSource' => __( 'Update Payment Method', 'LION' ),
+			'save'         => __( 'Save', 'LION' ),
+			'cancel'       => __( 'Cancel', 'LION' ),
+		),
+		'subscriptions' => $subscriptions
+	) );
+}
+
+add_action( 'wp_print_footer_scripts', 'it_exchange_recurring_payments_localize_purchases', 1 );
+
+/**
  * Function to modify the default purchases fields elements
  *
  * @since 1.0.0
@@ -104,6 +191,7 @@ add_action( 'it_exchange_admin_wp_enqueue_scripts', 'it_exchange_recurring_payme
  */
 function it_exchange_recurring_payments_addon_content_purchases_fields_elements( $elements ) {
 	$elements[] = 'payments';
+	$elements[] = 'update-payment';
 	$elements[] = 'unsubscribe';
 	$elements[] = 'expiration';
 
@@ -129,6 +217,72 @@ function it_exchange_recurring_payments_addon_template_path( $possible_template_
 }
 
 add_filter( 'it_exchange_possible_template_paths', 'it_exchange_recurring_payments_addon_template_path', 10, 2 );
+
+add_filter( 'it_exchange_make_update-subscription-payment-method_gateway_request',
+	function( $_, $args, $type, ITE_Gateway_Request_Factory $factory ) {
+
+		if ( isset( $args['subscription'] ) ) {
+			if ( is_scalar( $args['subscription'] ) ) {
+				$subscription = IT_Exchange_Subscription::get( $args['subscription'] );
+			} else {
+				$subscription = $args['subscription'];
+			}
+		}
+
+		if ( ! isset( $subscription ) || ! $subscription instanceof IT_Exchange_Subscription ) {
+			throw new InvalidArgumentException( 'Invalid `subscription` option' );
+		}
+
+		$request = new ITE_Update_Subscription_Payment_Method_Request( $subscription );
+
+		if ( ! empty( $args['card'] ) ) {
+			$card = $args['card'];
+
+			if ( is_array( $card ) ) {
+				$card = $factory->build_card( $card );
+			}
+
+			if ( ! $card instanceof ITE_Gateway_Card ) {
+				throw new InvalidArgumentException( 'Invalid `card` option.' );
+			}
+
+			$request->set_card( $args['card'] );
+		}
+
+		if ( ! empty( $args['token'] ) ) {
+			$token = $args['token'];
+
+			if ( is_int( $token ) ) {
+				$token = ITE_Payment_Token::get( $token );
+			}
+
+			if ( ! $token instanceof ITE_Payment_Token ) {
+				throw new InvalidArgumentException( 'Invalid `token` option.' );
+			}
+
+			$request->set_payment_token( $token );
+		}
+
+		if ( ! empty( $args['tokenize'] ) ) {
+
+			if ( ! is_object( $args['tokenize'] ) ) {
+				$tokenize = $factory->make( 'tokenize', array(
+					'source'   => $args['tokenize'],
+					'customer' => $subscription->get_customer()
+				) );
+			} else {
+				$tokenize = $args['tokenize'];
+			}
+
+			if ( ! $tokenize instanceof ITE_Gateway_Tokenize_Request ) {
+				throw new InvalidArgumentException( 'Invalid `tokenize` option.' );
+			}
+
+			$request->set_tokenize( $tokenize );
+		}
+
+		return $request;
+}, 10, 4 );
 
 /**
  * Add fees when a product is added to the cart.

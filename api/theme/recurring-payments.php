@@ -7,7 +7,7 @@
 */
 
 class IT_Theme_API_Recurring_Payments implements IT_Theme_API {
-	
+
 	/**
 	 * API context
 	 * @var string $_context
@@ -35,16 +35,17 @@ class IT_Theme_API_Recurring_Payments implements IT_Theme_API {
 	 * @since 1.0.0
 	*/
 	public $_customer = false;
-	
+
 	/**
 	 * Maps api tags to methods
 	 * @var array $_tag_map
 	 * @since 1.0.0
 	*/
 	public $_tag_map = array(
-		'unsubscribe' => 'unsubscribe',
-		'expiration'  => 'expiration',
-		'payments'    => 'payments',
+		'unsubscribe'   => 'unsubscribe',
+		'expiration'    => 'expiration',
+		'payments'      => 'payments',
+		'updatepayment' => 'update_payment',
 	);
 
 	/**
@@ -76,7 +77,7 @@ class IT_Theme_API_Recurring_Payments implements IT_Theme_API {
 	 * Returns the context. Also helps to confirm we are an iThemes Exchange theme API class
 	 *
 	 * @since 1.0.0
-	 * 
+	 *
 	 * @return string
 	*/
 	function get_api_context() {
@@ -99,7 +100,7 @@ class IT_Theme_API_Recurring_Payments implements IT_Theme_API {
 		if ( it_exchange_get_recurring_payments_addon_transaction_subscription_id( $this->_transaction ) ) {
 			$output .= $options['before'];
 			$subscription_status = $this->_transaction->get_transaction_meta( 'subscriber_status' );
-			
+
 			switch( $subscription_status ) {
 				case 'deactivated' :
 					$output .= __( 'Subscription deactivated', 'LION' );
@@ -115,7 +116,7 @@ class IT_Theme_API_Recurring_Payments implements IT_Theme_API {
 					$transaction_method = it_exchange_get_transaction_method( $this->_transaction );
 
 					if ( ( $gateway = ITE_Gateways::get( $transaction_method ) ) && $gateway->can_handle( 'cancel-subscription' ) ) {
-						$output .= $this->get_cancel_api_request_link( $options['label'] );
+						$output .= $this->get_cancel_api_request_link( $options );
 					} else {
 						$output .= apply_filters( 'it_exchange_' . $transaction_method . '_unsubscribe_action', '', $options, $this->_transaction );
 					}
@@ -227,6 +228,50 @@ class IT_Theme_API_Recurring_Payments implements IT_Theme_API {
 	}
 
 	/**
+	 * Display the update payment method form if necessary.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @param array $options
+	 *
+	 * @return string
+	 */
+	public function update_payment( $options = array() ) {
+
+		if ( ! $this->_transaction instanceof IT_Exchange_Transaction ) {
+			return '';
+		}
+
+		try {
+			$s = it_exchange_get_subscription_by_transaction( $this->_transaction );
+		} catch ( Exception $e ) {
+			return '';
+		}
+
+		if ( ! $s->get_subscriber_id() ) {
+			return '';
+		}
+
+		if ( ! $s->get_payment_token() ) {
+			return '';
+		}
+
+		if ( ! in_array( $s->get_status(), array( IT_Exchange_Subscription::STATUS_ACTIVE, IT_Exchange_Subscription::STATUS_DEACTIVATED ) ) ) {
+			return '';
+		}
+
+		$gateway = $s->get_transaction()->get_gateway();
+
+		if ( ! $gateway || ! $gateway->can_handle( 'update-subscription-payment-method' ) ) {
+			return '';
+		}
+
+		return "<div class='it-exchange-update-subscription-payment-method-container'" .
+		       " id='it-exchange-update-subscription-payment-method-container-{$s->get_transaction()->ID}' data-ID='{$s->get_id()}'>" .
+		       "</div>";
+	}
+
+	/**
 	 * @since 1.0.0
 	 * @return string
 	*/
@@ -270,7 +315,7 @@ class IT_Theme_API_Recurring_Payments implements IT_Theme_API {
 
 		if ( $this->_transaction->children->count() ) {
 			$payment_transactions = $this->_transaction->children;
-			
+
 			$output .= $options['before'];
 			$output .= '<ul class="' . $options['class'] . '">';
 			foreach ( $payment_transactions as $transaction ) {

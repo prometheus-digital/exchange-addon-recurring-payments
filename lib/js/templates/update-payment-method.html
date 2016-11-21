@@ -1,0 +1,29 @@
+<script type="text/template" id="tmpl-it-exchange-update-subscription-payment-method">
+    <div class="it-exchange-current-subscription-payment-method-container"></div>
+    <div class="it-exchange-update-subscription-payment-method-source-container"></div>
+</script>
+
+<script type="text/template" id="tmpl-it-exchange-current-subscription-payment-method">
+    <!--<span class="it-exchange-current-subscription-payment-method">
+        {{ data.method.label }}
+    </span>-->
+
+    <span class="it-exchange-current-subscription-payment-method-source">
+        {{ data.source.label }}
+    </span>
+</script>
+
+<script type="text/template" id="tmpl-it-exchange-update-subscription-payment-method-source">
+    <button class="it-exchange-update-subscription-payment-method-source-trigger">
+        {{ data.i18n.updateSource }}
+    </button>
+
+    <div class="it-exchange-update-subscription-payment-method-source-form-container" style="display: none;"></div>
+
+    <button class="it-exchange-update-subscription-payment-method-source-save" style="display: none;">
+        {{ data.i18n.save }}
+    </button>
+    <button class="it-exchange-update-subscription-payment-method-source-cancel" style="display: none;">
+        {{ data.i18n.cancel }}
+    </button>
+</script>

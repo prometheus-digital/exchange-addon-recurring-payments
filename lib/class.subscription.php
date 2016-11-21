@@ -770,7 +770,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 			) ) );
 
 			$this->is_cancelling = true;
-			$handled = $gateway->get_handler_for( $request )->handle( $request );
+			$handled             = $gateway->get_handler_for( $request )->handle( $request );
 
 			if ( ! $handled ) {
 				return false;
@@ -939,6 +939,22 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 		$builder->set_description( "Original recurring payment has been cancelled." );
 		$builder->set_actor( new IT_Exchange_Txn_Activity_Gateway_Actor( it_exchange_get_addon( $gateway ) ) );
 		$builder->build( it_exchange_get_txn_activity_factory() );
+	}
+
+	/**
+	 * Get the payment source used for this subscription.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @return ITE_Gateway_Payment_Source|null
+	 */
+	public function get_payment_source() {
+
+		if ( $t = $this->get_payment_token() ) {
+			return $t;
+		}
+
+		return $this->get_transaction()->get_card();
 	}
 
 	/**

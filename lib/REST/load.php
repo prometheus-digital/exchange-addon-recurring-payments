@@ -15,7 +15,7 @@ use iThemes\Exchange\RecurringPayments\REST\Subscriptions\Upgrades;
 
 add_action( 'it_exchange_register_rest_routes', function ( \iThemes\Exchange\REST\Manager $manager ) {
 
-	$subscription = new Subscription( new SubscriptionSerializer() );
+	$subscription = new Subscription( new SubscriptionSerializer(), new ITE_Gateway_Request_Factory() );
 	$manager->register_route( $subscription );
 	$cancel = new Cancel( new SubscriptionSerializer() );
 	$manager->register_route( $cancel->set_parent( $subscription ) );
