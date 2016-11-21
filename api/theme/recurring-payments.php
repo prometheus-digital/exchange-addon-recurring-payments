@@ -314,12 +314,23 @@ class IT_Theme_API_Recurring_Payments implements IT_Theme_API {
 			'label'            => apply_filters( 'it_exchange_recurring_payments_addon_payments_label', __( 'Payment', 'LION' ) ),
 		);
 		$options = ITUtility::merge_defaults( $options, $defaults );
-		$output = '';
+		$output = $remaining = '';
+
+		try {
+			$subscription = it_exchange_get_subscription_by_transaction( $this->_transaction );
+
+			if ( $subscription && $subscription->are_occurrences_limited() ) {
+				$remaining = sprintf( __( '%d Remaining Payments', 'it-l10n-ithemes-exchange' ), $subscription->get_remaining_occurrences() );
+			}
+		} catch ( Exception $e ) {
+
+		}
 
 		if ( $this->_transaction->children->count() ) {
 			$payment_transactions = $this->_transaction->children;
 
 			$output .= $options['before'];
+			$output .= $remaining;
 			$output .= '<ul class="' . $options['class'] . '">';
 			foreach ( $payment_transactions as $transaction ) {
 				$output .= '<li>';
@@ -327,7 +338,10 @@ class IT_Theme_API_Recurring_Payments implements IT_Theme_API {
 			}
 			$output .= '</ul>';
 			$output .= $options['after'];
+		} elseif ( ! $output ) {
+			return $remaining;
 		}
+		
 		return $output;
 	}
 }
