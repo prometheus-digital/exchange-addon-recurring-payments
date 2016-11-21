@@ -705,15 +705,17 @@ function it_exchange_recurring_payments_handle_expired() {
 
 		if ( $expired = apply_filters( 'it_exchange_recurring_payments_handle_expired', true, $product_id, $transaction ) ) {
 
-			$subscription = it_exchange_get_subscription_by_transaction( $transaction, it_exchange_get_product( $product_id ) );
+			$s = it_exchange_get_subscription_by_transaction( $transaction, it_exchange_get_product( $product_id ) );
 
-			if ( $subscription->get_status() === IT_Exchange_Subscription::STATUS_ACTIVE ) {
-				$subscription->set_status( IT_Exchange_Subscription::STATUS_DEACTIVATED );
-				$subscription->mark_expired();
-			} elseif ( $subscription->get_status() === IT_Exchange_Subscription::STATUS_COMPLIMENTARY && $subscription->is_auto_renewing() ) {
-				$subscription->bump_expiration_date();
+			$status = $s->get_status();
+
+			if ( $status === IT_Exchange_Subscription::STATUS_ACTIVE || $status === IT_Exchange_Subscription::STATUS_SUSPENDED ) {
+				$s->set_status( IT_Exchange_Subscription::STATUS_DEACTIVATED );
+				$s->mark_expired();
+			} elseif ( $status === IT_Exchange_Subscription::STATUS_COMPLIMENTARY && $s->is_auto_renewing() ) {
+				$s->bump_expiration_date();
 			} else {
-				$subscription->mark_expired();
+				$s->mark_expired();
 			}
 		}
 	}

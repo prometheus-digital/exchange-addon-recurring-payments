@@ -484,6 +484,32 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	}
 
 	/**
+	 * Is the subscription's status one of the following.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @param string|array $status,...
+	 *
+	 * @return bool
+	 */
+	public function is_status( $status ) {
+
+		if ( ! is_array( $status ) ) {
+			$status = func_get_args();
+		}
+
+		$current = $this->get_status();
+
+		foreach ( $status as $stati ) {
+			if ( $stati === $current ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
 	 * Set the subscriber status.
 	 *
 	 * @since 1.8
@@ -701,7 +727,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 		$product_id = $this->get_product()->ID;
 
 		/** @var ITE_Cart_Product $cart_product */
-		$cart_product = $transaction->get_items( 'product')->filter( function( ITE_Cart_Product $product ) use ( $product_id ) {
+		$cart_product = $transaction->get_items( 'product' )->filter( function ( ITE_Cart_Product $product ) use ( $product_id ) {
 			return $product->get_product() && $product->get_product()->ID == $product_id;
 		} )->first();
 
@@ -963,7 +989,52 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 			return $t;
 		}
 
+		return $this->get_card();
+	}
+
+	/**
+	 * Get the card used for payment.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @return ITE_Gateway_Card|null
+	 */
+	public function get_card() {
+
+		if ( $this->get_transaction()->meta_exists( 'subscription_payment_card' ) ) {
+
+			$card = $this->get_transaction()->get_meta( 'subscription_payment_card' );
+
+			if ( ! $card ) {
+				return null;
+			}
+
+			return new ITE_Gateway_Card( $card['number'], $card['year'], $card['month'], 0 );
+		}
+
 		return $this->get_transaction()->get_card();
+	}
+
+	/**
+	 * Get the card used for payment.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @param ITE_Gateway_Card|null $card
+	 *
+	 * @return bool
+	 */
+	public function set_card( ITE_Gateway_Card $card = null ) {
+
+		if ( $card ) {
+			return (bool) $this->get_transaction()->update_meta( 'subscription_payment_card', array(
+				'number' => $card->get_redacted_number(),
+				'year'   => $card->get_expiration_year(),
+				'month'  => $card->get_expiration_month(),
+			) );
+		}
+
+		return (bool) $this->get_transaction()->update_meta( 'subscription_payment_card', null );
 	}
 
 	/**

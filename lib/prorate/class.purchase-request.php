@@ -109,10 +109,22 @@ class ITE_Gateway_Prorate_Purchase_Request implements ITE_Gateway_Purchase_Reque
 	/**
 	 * @inheritdoc
 	 */
-	public function get_redirect_to() {	return $this->original->get_redirect_to(); }
+	public function get_redirect_to() { return $this->original->get_redirect_to(); }
 
 	/**
 	 * @inheritdoc
 	 */
-	public function set_redirect_to( $redirect_to ) { $this->original->set_redirect_to( $redirect_to );	}
+	public function set_redirect_to( $redirect_to ) { $this->original->set_redirect_to( $redirect_to ); }
+
+	/**
+	 * @inheritDoc
+	 */
+	public function get_child_of() { return $this->original->get_child_of(); }
+
+	/**
+	 * @inheritDoc
+	 */
+	public function set_child_of( IT_Exchange_Transaction $transaction ) {
+		$this->original->set_child_of( $transaction );
+	}
 }
