@@ -698,19 +698,28 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 			$transaction = $this->get_transaction();
 		}
 
+		$product_id = $this->get_product()->ID;
+
+		/** @var ITE_Cart_Product $cart_product */
+		$cart_product = $transaction->get_items( 'product')->filter( function( ITE_Cart_Product $product ) use ( $product_id ) {
+			return $product->get_product() && $product->get_product()->ID == $product_id;
+		} )->first();
+
 		// auto-renewing subscriptions only can be purchased individually
 		if ( $this->is_auto_renewing() ) {
 			$amount_paid = $transaction->get_total( false );
-		} else {
-			foreach ( $transaction->get_products() as $product ) {
-				if ( $product['product_id'] == $this->get_product()->ID ) {
-					$amount_paid = $product['product_subtotal'];
-				}
+
+			if ( $amount_paid <= 0 && $cart_product ) {
+				$amount_paid -= $cart_product->get_line_items()->with_only( 'fee' )->having_param( 'is_prorate_days', 'is_free_trial' )->total();
 			}
 
-			if ( ! isset( $amount_paid ) ) {
+		} else {
+
+			if ( ! $cart_product ) {
 				throw new UnexpectedValueException( 'Could not determine the amount paid for the subscription.' );
 			}
+
+			$amount_paid = $cart_product->get_amount() * $cart_product->get_quantity();
 
 			if ( $transaction->get_total( false ) < $amount_paid ) {
 				$amount_paid = $transaction->get_total( false );
