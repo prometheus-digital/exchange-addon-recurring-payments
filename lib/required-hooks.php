@@ -968,7 +968,7 @@ add_action( 'it_exchange_after_payment_details', 'it_exchange_recurring_payments
  * @return string iThemes Exchange recurring label
  */
 function it_exchange_recurring_payments_api_theme_product_base_price( $base_price, $product_id ) {
-	return $base_price . it_exchange_recurring_payments_addon_recurring_label( $product_id );
+	return it_exchange_recurring_payments_addon_recurring_label( $product_id, true, $base_price );
 }
 
 add_filter( 'it_exchange_api_theme_product_base_price', 'it_exchange_recurring_payments_api_theme_product_base_price', 100, 2 );
@@ -1032,6 +1032,12 @@ function it_exchange_recurring_payments_after_payment_details_recurring_payments
 
 						<input type="text" id="rp-sub-id-<?php echo $pid; ?>" name="rp-sub-id[<?php echo $pid; ?>]"
 						       value="<?php echo $sub_id; ?>"/>
+					</p>
+				<?php endif; ?>
+
+				<?php if ( $subscription->are_occurrences_limited() ) : ?>
+					<p>
+						<?php printf( __( 'Remaining Occurrences: %d', 'LION' ), $subscription->get_remaining_occurrences() ); ?>
 					</p>
 				<?php endif; ?>
 

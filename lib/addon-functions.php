@@ -76,12 +76,13 @@ function it_exchange_recurring_payments_addon_update_expirations( $transaction, 
  *
  * @since CHANGEME
  *
- * @param int  $product_id iThemes Exchange Product ID
- * @param bool $show_trial
+ * @param int    $product_id iThemes Exchange Product ID
+ * @param bool   $show_trial
+ * @param string $price
  *
  * @return string iThemes Exchange recurring label
  */
-function it_exchange_recurring_payments_addon_recurring_label( $product_id, $show_trial = true ) {
+function it_exchange_recurring_payments_addon_recurring_label( $product_id, $show_trial = true, $price = '' ) {
 
 	if ( ! it_exchange_product_has_feature( $product_id, 'recurring-payments', array( 'setting' => 'recurring-enabled' ) ) ) {
 		return '';
@@ -103,7 +104,15 @@ function it_exchange_recurring_payments_addon_recurring_label( $product_id, $sho
 
 	$rp = new IT_Exchange_Recurring_Profile( $interval, $interval_count );
 
-	$label = ' ' . (string) $rp;
+	$max = it_exchange_get_product_feature( $product_id, 'recurring-payments', array( 'setting' => 'max-occurrences' ) );
+
+	$label = '';
+
+	if ( $max ) {
+		$label .= sprintf( __( '%d payments of %s', 'LION' ), $max, $price ) . ' ';
+	}
+
+	$label .= (string) $rp;
 
 	if ( $trial_enabled && $show_trial ) {
 		if ( 'membership-product-type' === it_exchange_get_product_type( $product_id ) && function_exists( 'it_exchange_is_customer_eligible_for_trial' ) ) {

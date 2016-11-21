@@ -34,8 +34,8 @@ class ProrateSerializer {
 			'title'         => $r->get_product_receiving_credit()->post_title,
 			'description'   => $r->get_product_receiving_credit()->get_feature( 'description' ),
 			'amount'        => $base_price,
-			'amount_label'  => it_exchange_format_price( $base_price ) . it_exchange_recurring_payments_addon_recurring_label(
-				$r->get_product_receiving_credit()->ID, false
+			'amount_label'  => it_exchange_recurring_payments_addon_recurring_label(
+				$r->get_product_receiving_credit()->ID, false, it_exchange_format_price( $base_price )
 			),
 			'prorate'       => array(
 				'type'   => $r->get_credit_type(),
