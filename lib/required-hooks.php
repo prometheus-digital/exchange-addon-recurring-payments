@@ -494,9 +494,20 @@ add_action( 'it_exchange_add_transaction_success', 'it_exchange_recurring_paymen
  */
 function it_exchange_recurring_payments_bump_expiration_on_child_transaction( $transaction_id ) {
 
-	$parent = wp_get_post_parent_id( $transaction_id );
+	$parent = it_exchange_get_transaction( wp_get_post_parent_id( $transaction_id ) );
 
-	it_exchange_recurring_payments_addon_update_expirations( it_exchange_get_transaction( $parent ) );
+	it_exchange_recurring_payments_addon_update_expirations( $parent );
+
+	try {
+		$subscription = it_exchange_get_subscription_by_transaction( $parent );
+
+		if ( $subscription && $subscription->are_occurrences_limited() ) {
+			$subscription->decrement_remaining_occurrences();
+		}
+	} catch ( Exception $e ) {
+
+	}
+
 }
 
 add_action( 'it_exchange_add_child_transaction_success', 'it_exchange_recurring_payments_bump_expiration_on_child_transaction' );
@@ -584,13 +595,6 @@ add_action( 'it_exchange_update_transaction_status', 'it_exchange_zero_sum_mark_
 function it_exchange_recurring_payments_update_status( $transaction, $sub_id, $subscriber_status ) {
 
 	$subscription = it_exchange_get_subscription_by_transaction( it_exchange_get_transaction( $transaction ) );
-
-	// this hook is used by payment processors, we don't want them to alter the status for complimentary subscriptions
-	if ( $subscription->get_status() === IT_Exchange_Subscription::STATUS_COMPLIMENTARY && $wh = it_exchange_doing_webhook() && $subscriber_status == IT_Exchange_Subscription::STATUS_CANCELLED ) {
-		$subscription->record_gateway_cancellation_while_complimentary( $wh );
-
-		return;
-	}
 
 	try {
 		$subscription->set_status( $subscriber_status );
@@ -688,7 +692,7 @@ function it_exchange_recurring_payments_handle_expired() {
 			SELECT post_id, meta_key, meta_value
 			FROM $wpdb->postmeta
 			WHERE meta_key LIKE %s
-			  AND meta_value < %d",
+			  AND meta_value != '' AND meta_value < %d",
 			'_it_exchange_transaction_subscription_expires_%', time() )
 	);
 
@@ -1298,6 +1302,10 @@ function it_exchange_recurring_payments_make_cancel_subscription_request( $_, ar
 
 	if ( isset( $args['at_period_end'] ) ) {
 		$request->set_at_period_end( $args['at_period_end'] );
+	}
+
+	if ( isset( $args['set_status'] ) ) {
+		$request->do_set_status( (bool) $args['set_status'] );
 	}
 
 	return $request;

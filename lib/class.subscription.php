@@ -223,6 +223,15 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 
 		$subscription = new self( $transaction, $product );
 
+		if ( $max = $product->get_feature( 'recurring-payments', array( 'setting' => 'max-occurrences' ) ) ) {
+
+			if ( ! $subscription->is_trial_period() ) {
+				$max -= 1;
+			}
+
+			$transaction->update_meta( 'subscription_remaining_occurrences', $max );
+		}
+
 		/**
 		 * Fires when a subscription is created.
 		 *
@@ -383,15 +392,15 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	 *
 	 * @since 1.8
 	 *
-	 * @param DateTime $date
+	 * @param DateTime|null $date Setting the expiry date to null will allow the subscription to last forever.
 	 */
-	public function set_expiry_date( DateTime $date ) {
+	public function set_expiry_date( DateTime $date = null ) {
 
 		$previous = $this->get_expiry_date();
 		$now      = new DateTime( 'now', new DateTimeZone( 'UTC' ) );
 
-		if ( $now < $date ) {
-			$this->get_transaction()->update_meta( 'subscription_expires_' . $this->get_product()->ID, $date->format( 'U' ) );
+		if ( $date === null || $now < $date ) {
+			$this->get_transaction()->update_meta( 'subscription_expires_' . $this->get_product()->ID, $date ? $date->format( 'U' ) : '' );
 			$this->get_transaction()->delete_meta( 'subscription_expired_' . $this->get_product()->ID );
 		} else {
 			$this->get_transaction()->delete_meta( 'subscription_expires_' . $this->get_product()->ID );
@@ -546,7 +555,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 		do_action( 'it_exchange_transition_subscription_status', $new_status, $old_status, $this );
 
 		if ( $new_status === self::STATUS_COMPLIMENTARY && $old_status === self::STATUS_ACTIVE && $this->is_auto_renewing() ) {
-			$this->cancel();
+			$this->cancel( null, __( 'Original subscription cancelled during complimentary transition.', 'LION' ), false );
 		}
 
 		return $old_status;
@@ -621,6 +630,58 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 		if ( $expires ) {
 			$this->transaction->update_meta( 'subscription_expired_' . $this->get_product()->ID, $expires->format( 'U' ) );
 		}
+	}
+
+	/**
+	 * Are the occurrences of this subscription limited.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @return bool
+	 */
+	public function are_occurrences_limited() {
+		return $this->transaction->meta_exists( 'subscription_remaining_occurrences' );
+	}
+
+	/**
+	 * Get the remaining occurrences.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @return int|null
+	 */
+	public function get_remaining_occurrences() {
+
+		if ( ! $this->are_occurrences_limited() ) {
+			throw new UnexpectedValueException( 'This subscription does not have a limited number of occurrences.' );
+		}
+
+		return (int) $this->transaction->get_meta( 'subscription_remaining_occurrences' );
+	}
+
+	/**
+	 * Decrement the remaining occurrences.
+	 *
+	 * If the decrement makes it 0, the subscription will be cancelled.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @return bool
+	 */
+	public function decrement_remaining_occurrences() {
+
+		if ( ! $this->get_remaining_occurrences() ) {
+			throw new UnexpectedValueException( 'This subscription does not have a limited number of occurrences.' );
+		}
+
+		$remaining = $this->get_remaining_occurrences();
+		$remaining -= 1;
+
+		if ( $remaining === 0 ) {
+			$this->cancel( null, __( 'Number of occurrences reached.', 'LION' ), false );
+		}
+
+		return (bool) $this->transaction->update_meta( 'subscription_remaining_occurrences', $remaining );
 	}
 
 	/**
@@ -788,10 +849,11 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	 *
 	 * @param IT_Exchange_Customer $cancelled_by
 	 * @param string               $reason
+	 * @param bool                 $set_status
 	 *
 	 * @return bool
 	 */
-	public function cancel( IT_Exchange_Customer $cancelled_by = null, $reason = '' ) {
+	public function cancel( IT_Exchange_Customer $cancelled_by = null, $reason = '', $set_status = true ) {
 
 		$gateway = ITE_Gateways::get( $this->get_transaction()->get_method() );
 
@@ -801,7 +863,8 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 			$request = $factory->make( 'cancel-subscription', array_filter( array(
 				'subscription' => $this,
 				'reason'       => $reason,
-				'cancelled_by' => $cancelled_by
+				'cancelled_by' => $cancelled_by,
+				'set_status'   => $set_status
 			) ) );
 
 			$this->is_cancelling = true;
@@ -964,7 +1027,9 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	/**
 	 * Record a gateway cancellation while the subscription is complimentary.
 	 *
-	 * @since 1.8.4
+	 * @since      1.8.4
+	 *
+	 * @deprecated 1.9.0
 	 *
 	 * @param string $gateway
 	 */

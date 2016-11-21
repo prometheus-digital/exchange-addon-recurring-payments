@@ -116,6 +116,7 @@ class IT_Exchange_Recurring_Payments {
 	 * @return void
 	*/
 	function print_metabox( $post ) {
+
 		// Grab the iThemes Exchange Product object from the WP $post object
 		$product = it_exchange_get_product( $post );
 
@@ -127,6 +128,7 @@ class IT_Exchange_Recurring_Payments {
 		$auto_renew = it_exchange_get_product_feature( $product->ID, 'recurring-payments', array( 'setting' => 'auto-renew' ) );
 		$interval = it_exchange_get_product_feature( $product->ID, 'recurring-payments', array( 'setting' => 'interval' ) );
 		$interval_count = it_exchange_get_product_feature( $product->ID, 'recurring-payments', array( 'setting' => 'interval-count' ) );
+		$max = $product->get_feature( 'recurring-payments', array( 'setting' => 'max-occurrences' ) );
 		
 		if ( !$enabled ) {
 			$hidden = 'hidden';
@@ -135,6 +137,8 @@ class IT_Exchange_Recurring_Payments {
 			$hidden = '';
 		}
 
+		$max_hidden = 'hidden';
+
 	    $interval_types = array(
 		    'day'   => __( 'Day(s)', 'LION' ),
 		    'week'  => __( 'Week(s)', 'LION' ),
@@ -142,6 +146,10 @@ class IT_Exchange_Recurring_Payments {
 		    'year'  => __( 'Year(s)', 'LION' ),
 		);
 		$interval_types = apply_filters( 'it_exchange_recurring_payments_interval_types', $interval_types );
+
+		$gateways = array_map( function( ITE_Gateway $gateway ) {
+			return $gateway->get_name();
+		}, ITE_Gateways::handles( 'cancel-subscription' ) );
 		
 		// Echo the form field
 		?>
@@ -167,15 +175,29 @@ class IT_Exchange_Recurring_Payments {
 		        <label for="it-exchange-recurring-payments-auto-renew"><?php _e( "Enable Auto-Renewing?", 'LION' ); ?>
 		        	<input id="it-exchange-recurring-payments-auto-renew" type="checkbox" name="it_exchange_recurring_payments_auto_renew" <?php checked( $auto_renew, 'on' ); ?> />
 		        </label>
+
 		        <?php
 				if ( 'on' === $auto_renew ) {
 					$trial_hidden = '';
+					$max_hidden = '';
 				} else if ( !$trial_enabled ) {
 					$trial_hidden = 'hidden';
 				} else {
 					$trial_hidden = '';
 				}
 				?>
+		        <div id="max-occurrences-settings" class="<?php echo $max_hidden; ?>">
+					<label for="it-exchange-recurring-payments-max-occurrences">
+						<?php _e( 'Max Occurrences', 'LION' ); ?>
+					</label>
+					<input type="number" min="0" name="it_exchange_recurring_payments_max_occurrences" id="it-exchange-recurring-payments-max-occurrences" value="<?php echo esc_attr( $max ); ?>">
+			        <p class="description">
+				        <?php _e( 'Limit the number of intervals the customer will be billed for. At which point the customer will retain access forever.', 'LION' ); ?>
+				        <?php _e( 'A trial period does not count towards the maximum occurrences.', 'LION' ); ?>
+				        <?php printf( __( 'Max Occurrences is only supported for gateways that support cancellation: %s', 'LION' ), implode( ', ', $gateways ) ); ?>
+			        </p>
+		        </div>
+
 		        <div id="trial-period-settings" class="<?php echo $trial_hidden; ?>">
 			        <!-- We only show trial period settings for Membership products -->
 					<?php if ( 'membership-product-type' === it_exchange_get_product_type( $product->ID ) || apply_filters( 'it_exchange_recurring_payments_free_trial_allowed', false, $product ) ) { ?>
@@ -249,7 +271,14 @@ class IT_Exchange_Recurring_Payments {
 		it_exchange_update_product_feature( $product_id, 'recurring-payments', $interval, array( 'setting' => 'interval' ) );
 		$interval_count = !empty( $_POST['it_exchange_recurring_payments_interval_count'] ) ? $_POST['it_exchange_recurring_payments_interval_count'] : false;
 		it_exchange_update_product_feature( $product_id, 'recurring-payments', $interval_count, array( 'setting' => 'interval-count' ) );
-		
+
+		if ( empty( $_POST['it_exchange_recurring_payments_max_occurrences'] ) ) {
+			$max = '';
+		} else {
+			$max = absint( $_POST['it_exchange_recurring_payments_max_occurrences'] );
+		}
+
+		it_exchange_update_product_feature( $product_id, 'recurring-payments', $max, array( 'setting' => 'max-occurrences' ) );
 	}
 
 	/**
@@ -260,7 +289,8 @@ class IT_Exchange_Recurring_Payments {
 	 * @param integer $product_id the product id
 	 * @param mixed $new_price the new price
 	 * @param array $options Optional arguments used to specify which feature is saved
-	 * @return bolean
+	 *
+	 * @return boolean
 	*/
 	function save_feature( $product_id, $new_value, $options=array() ) {
 		if ( ! it_exchange_get_product( $product_id ) )
@@ -305,6 +335,9 @@ class IT_Exchange_Recurring_Payments {
 				if ( ! in_array( $new_value, array( 'on', 'off' ) ) )
 					$new_value = 'off';
 				update_post_meta( $product_id, '_it-exchange-product-recurring-enabled', $new_value );
+				break;
+			case 'max-occurrences':
+				update_post_meta( $product_id, '_it-exchange-product-recurring-max-occurrences', $new_value );
 				break;
 			
 		}
@@ -415,6 +448,9 @@ class IT_Exchange_Recurring_Payments {
 					}
 				}
 				return get_post_meta( $product_id, '_it-exchange-product-recurring-time', true );
+
+			case 'max-occurrences':
+				return get_post_meta( $product_id, '_it-exchange-product-recurring-max-occurrences', true );
 			
 		}
 		return false;

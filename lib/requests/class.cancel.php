@@ -23,6 +23,9 @@ class ITE_Cancel_Subscription_Request implements ITE_Gateway_Request {
 	/** @var bool */
 	private $at_period_end = false;
 
+	/** @var bool */
+	private $set_status = true;
+
 	/**
 	 * ITE_Cancel_Subscription_Request constructor.
 	 *
@@ -93,6 +96,28 @@ class ITE_Cancel_Subscription_Request implements ITE_Gateway_Request {
 		$this->at_period_end = (bool) $at_period_end;
 
 		return $this;
+	}
+
+	/**
+	 * Should this cancellation set the subscription status.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @return bool
+	 */
+	public function should_set_status() {
+		return $this->set_status;
+	}
+
+	/**
+	 * Set whether or not the subscription status should be set.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @param bool $set
+	 */
+	public function do_set_status( $set ) {
+		$this->set_status = (bool) $set;
 	}
 
 	/**
