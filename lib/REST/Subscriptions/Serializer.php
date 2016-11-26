@@ -66,8 +66,8 @@ class Serializer {
 			'trial_period'        => $s->is_trial_period(),
 			'customer'            => $s->get_customer() ? $s->get_customer()->ID : 0,
 			'beneficiary'         => $s->get_beneficiary() ? $s->get_beneficiary()->ID : 0,
-			'start_date'          => mysql2date( 'c', $s->get_start_date()->format( 'Y-m-d H:i:s' ), false ),
-			'expiry_date'         => $s->get_expiry_date() ? mysql2date( 'c', $s->get_expiry_date()->format( 'Y-m-d H:i:s' ), false ) : null,
+			'start_date'          => \iThemes\Exchange\REST\format_rfc339( $s->get_start_date() ),
+			'expiry_date'         => $s->get_expiry_date() ? \iThemes\Exchange\REST\format_rfc339( $s->get_expiry_date() ) : null,
 			'days_remaining'      => $s->get_days_left_in_period(),
 			'subscriber_id'       => $s->get_subscriber_id(),
 			'status'              => array(
