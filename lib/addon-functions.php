@@ -106,10 +106,10 @@ function it_exchange_recurring_payments_addon_recurring_label( $product_id, $sho
 
 	$max = it_exchange_get_product_feature( $product_id, 'recurring-payments', array( 'setting' => 'max-occurrences' ) );
 
-	$label = '';
+	$label = $price . ' ';
 
 	if ( $max ) {
-		$label .= sprintf( __( '%d payments of %s', 'LION' ), $max, $price ) . ' ';
+		$label = sprintf( __( '%d payments of %s', 'LION' ), $max, $price ) . ' ';
 	}
 
 	$label .= (string) $rp;
