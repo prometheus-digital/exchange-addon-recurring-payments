@@ -963,12 +963,13 @@ add_action( 'it_exchange_after_payment_details', 'it_exchange_recurring_payments
  *
  * @since CHANGEME
  *
- * @param int $product_id iThemes Exchange Product ID
+ * @param string $base_price
+ * @param int    $product_id iThemes Exchange Product ID
  *
  * @return string iThemes Exchange recurring label
  */
 function it_exchange_recurring_payments_api_theme_product_base_price( $base_price, $product_id ) {
-	return it_exchange_recurring_payments_addon_recurring_label( $product_id, true, $base_price );
+	return it_exchange_recurring_payments_addon_recurring_label( $product_id, true, $base_price ) ?: $base_price;
 }
 
 add_filter( 'it_exchange_api_theme_product_base_price', 'it_exchange_recurring_payments_api_theme_product_base_price', 100, 2 );
