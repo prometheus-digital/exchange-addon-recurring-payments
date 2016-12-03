@@ -54,46 +54,46 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 		$this->transaction = $transaction;
 		$this->product     = $product;
 
-		if ( ! $transaction->meta_exists( 'interval_' . $product->ID ) ) {
+		if ( ! $this->meta_exists( 'interval' ) ) {
 
 			if ( ! $product->get_feature( 'recurring-payments', array( 'setting' => 'recurring-enabled' ) ) ) {
 				throw new InvalidArgumentException();
 			}
 
 			$interval = $product->get_feature( 'recurring-payments', array( 'setting' => 'interval' ) );
-			$transaction->update_meta( 'interval_' . $product->ID, $interval );
+			$this->update_meta( 'interval', $interval );
 		}
 
-		if ( ! $transaction->meta_exists( 'interval_count_' . $product->ID ) ) {
+		if ( ! $this->meta_exists( 'interval_count' ) ) {
 			$interval_count = $product->get_feature( 'recurring-payments', array( 'setting' => 'interval-count' ) );
-			$transaction->update_meta( 'interval_count_' . $product->ID, $interval_count );
+			$this->update_meta( 'interval_count', $interval_count );
 		}
 
-		if ( ! $transaction->meta_exists( 'has_trial_' . $product->ID ) ) {
+		if ( ! $this->meta_exists( 'has_trial' ) ) {
 			$has_trial = $product->get_feature( 'recurring-payments', array( 'setting' => 'trial-enabled' ) );
-			$transaction->update_meta( 'has_trial_' . $product->ID, $has_trial );
+			$this->update_meta( 'has_trial', $has_trial );
 		}
 
-		$type  = $transaction->get_meta( 'interval_' . $product->ID );
-		$count = $transaction->get_meta( 'interval_count_' . $product->ID );
+		$type  = $this->get_meta( 'interval', true );
+		$count = $this->get_meta( 'interval_count', true );
 
 		if ( $count > 0 ) {
 			$this->recurring_profile = new IT_Exchange_Recurring_Profile( $type, $count );
 
-			if ( $transaction->get_meta( 'has_trial_' . $product->ID ) ) {
+			if ( $this->get_meta( 'has_trial', true ) ) {
 
-				if ( ! $transaction->meta_exists( 'trial_interval_' . $product->ID ) ) {
+				if ( ! $this->meta_exists( 'trial_interval' ) ) {
 					$trial_interval = $product->get_feature( 'recurring-payments', array( 'setting' => 'trial-interval' ) );
-					$transaction->update_meta( 'trial_interval_' . $product->ID, $trial_interval );
+					$this->update_meta( 'trial_interval', $trial_interval );
 				}
 
-				if ( ! $transaction->meta_exists( 'trial_interval_count_' . $product->ID ) ) {
+				if ( ! $this->meta_exists( 'trial_interval_count' ) ) {
 					$trial_interval_count = $product->get_feature( 'recurring-payments', array( 'setting' => 'trial-interval-count' ) );
-					$transaction->update_meta( 'trial_interval_count_' . $product->ID, $trial_interval_count );
+					$this->update_meta( 'trial_interval_count', $trial_interval_count );
 				}
 
-				$type  = $transaction->get_meta( 'trial_interval_' . $product->ID );
-				$count = $transaction->get_meta( 'trial_interval_count_' . $product->ID );
+				$type  = $this->get_meta( 'trial_interval', true );
+				$count = $this->get_meta( 'trial_interval_count', true );
 
 				$this->trial_profile = new IT_Exchange_Recurring_Profile( $type, $count );
 			}
@@ -217,10 +217,6 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 			$transaction->update_meta( 'trial_interval_count_' . $product->ID, $trial_interval_count );
 		}
 
-		if ( $transaction->payment_token ) {
-			$transaction->update_meta( 'subscription_payment_token', $transaction->payment_token->ID );
-		}
-
 		$subscription = new self( $transaction, $product );
 
 		if ( $max = $product->get_feature( 'recurring-payments', array( 'setting' => 'max-occurrences' ) ) ) {
@@ -229,7 +225,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 				$max -= 1;
 			}
 
-			$transaction->update_meta( 'subscription_remaining_occurrences', $max );
+			$subscription->update_meta( 'subscription_remaining_occurrences', $max );
 		}
 
 		/**
@@ -286,14 +282,14 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	 */
 	public function is_auto_renewing() {
 
-		if ( ! $this->get_transaction()->meta_exists( 'subscription_autorenew_' . $this->get_product()->ID ) ) {
+		if ( ! $this->meta_exists( 'subscription_autorenew' ) ) {
 
 			$auto_renew = $this->get_product()->get_feature( 'recurring-payments', array( 'setting' => 'auto-renew' ) ) === 'on';
 
-			$this->get_transaction()->update_meta( 'subscription_autorenew_' . $this->get_product()->ID, $auto_renew );
+			$this->update_meta( 'subscription_autorenew', $auto_renew );
 		}
 
-		return (bool) $this->get_transaction()->get_meta( 'subscription_autorenew_' . $this->get_product()->ID );
+		return (bool) $this->get_meta( 'subscription_autorenew', true );
 	}
 
 	/**
@@ -374,10 +370,10 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	 */
 	public function get_expiry_date() {
 
-		$expires = $this->get_transaction()->get_meta( 'subscription_expired_' . $this->get_product()->ID );
+		$expires = $this->get_meta( 'subscription_expires', true );
 
 		if ( ! $expires ) {
-			$expires = $this->get_transaction()->get_meta( 'subscription_expires_' . $this->get_product()->ID );
+			$expires = $this->get_meta( 'subscription_expired', true );
 		}
 
 		if ( $expires ) {
@@ -400,11 +396,11 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 		$now      = new DateTime( 'now', new DateTimeZone( 'UTC' ) );
 
 		if ( $date === null || $now < $date ) {
-			$this->get_transaction()->update_meta( 'subscription_expires_' . $this->get_product()->ID, $date ? $date->format( 'U' ) : '' );
-			$this->get_transaction()->delete_meta( 'subscription_expired_' . $this->get_product()->ID );
+			$this->update_meta( 'subscription_expires', $date ? $date->format( 'U' ) : '' );
+			$this->delete_meta( 'subscription_expired' );
 		} else {
-			$this->get_transaction()->delete_meta( 'subscription_expires_' . $this->get_product()->ID );
-			$this->get_transaction()->update_meta( 'subscription_expired_' . $this->get_product()->ID, $date->format( 'U' ) );
+			$this->update_meta( 'subscription_expired', $date->format( 'U' ) );
+			$this->delete_meta( 'subscription_expires' );
 		}
 
 		/**
@@ -473,13 +469,13 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	 */
 	public function get_status( $label = false ) {
 
-		$status = $this->get_transaction()->get_meta( 'subscriber_status_' . $this->get_product()->ID );
+		$status = $this->get_meta( 'subscriber_status', true );
 
 		if ( empty( $status ) ) {
 			$status = $this->get_transaction()->get_meta( 'subscriber_status' );
 
 			if ( $status ) {
-				$this->get_transaction()->update_meta( 'subscriber_status_' . $this->get_product()->ID, $status );
+				$this->update_meta( 'subscriber_status_' . $this->get_product()->ID, $status );
 			}
 		}
 
@@ -535,7 +531,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 			throw new InvalidArgumentException( '$new_status === $old_status' );
 		}
 
-		$this->get_transaction()->update_meta( 'subscriber_status_' . $this->get_product()->ID, $new_status );
+		$this->update_meta( 'subscriber_status', $new_status );
 		$this->get_transaction()->update_meta( 'subscriber_status', $new_status ); // back-compat
 
 		$subscriptions = $this->get_customer()->get_customer_meta( 'subscription_ids' );
@@ -625,10 +621,10 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 
 		$expires = $this->get_expiry_date();
 
-		$this->transaction->delete_meta( 'subscription_expires_' . $this->get_product()->ID );
+		$this->delete_meta( 'subscription_expires' );
 
 		if ( $expires ) {
-			$this->transaction->update_meta( 'subscription_expired_' . $this->get_product()->ID, $expires->format( 'U' ) );
+			$this->update_meta( 'subscription_expired', $expires->format( 'U' ) );
 		}
 	}
 
@@ -640,7 +636,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	 * @return bool
 	 */
 	public function are_occurrences_limited() {
-		return $this->transaction->meta_exists( 'subscription_remaining_occurrences' );
+		return $this->meta_exists( 'remaining_occurrences' );
 	}
 
 	/**
@@ -649,14 +645,16 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	 * @since 1.9.0
 	 *
 	 * @return int|null
+	 *
+	 * @throws UnexpectedValueException If the subscription is not occurrence limited.
 	 */
 	public function get_remaining_occurrences() {
 
 		if ( ! $this->are_occurrences_limited() ) {
 			throw new UnexpectedValueException( 'This subscription does not have a limited number of occurrences.' );
-		}
+		};
 
-		return (int) $this->transaction->get_meta( 'subscription_remaining_occurrences' );
+		return (int) $this->get_meta( 'remaining_occurrences', true );
 	}
 
 	/**
@@ -667,21 +665,29 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	 * @since 1.9.0
 	 *
 	 * @return bool
+	 *
+	 * @throws UnexpectedValueException If the subscription is not occurrence limited, or
+	 *                                  the remaining occurrences are aleady 0.
 	 */
 	public function decrement_remaining_occurrences() {
 
-		if ( ! $this->get_remaining_occurrences() ) {
+		if ( ! $this->are_occurrences_limited() ) {
 			throw new UnexpectedValueException( 'This subscription does not have a limited number of occurrences.' );
 		}
 
 		$remaining = $this->get_remaining_occurrences();
+
+		if ( $remaining === 0 ) {
+			throw new UnexpectedValueException( 'This subscription has already reached its occurrences limit.' );
+		}
+
 		$remaining -= 1;
 
 		if ( $remaining === 0 ) {
 			$this->cancel( null, __( 'Number of occurrences reached.', 'LION' ), false );
 		}
 
-		return (bool) $this->transaction->update_meta( 'subscription_remaining_occurrences', $remaining );
+		return (bool) $this->update_meta( 'remaining_occurrences', $remaining );
 	}
 
 	/**
@@ -714,6 +720,89 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 		}
 
 		return max( $days, 0 );
+	}
+
+	/**
+	 * Add meta.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @param string $key
+	 * @param mixed  $value
+	 * @param bool   $unique
+	 *
+	 * @return false|int
+	 */
+	public function add_meta( $key, $value, $unique = false ) {
+		return $this->get_transaction()->add_meta( $this->transform_meta_key( $key ), $value, $unique );
+	}
+
+	/**
+	 * Update metadata.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @param string $key
+	 * @param mixed  $value
+	 *
+	 * @return bool|int
+	 */
+	public function update_meta( $key, $value ) {
+		return $this->get_transaction()->update_meta( $this->transform_meta_key( $key ), $value );
+	}
+
+	/**
+	 * Get metadata.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @param string $key
+	 * @param bool   $single
+	 *
+	 * @return mixed
+	 */
+	public function get_meta( $key = '', $single = false ) {
+		return $this->get_transaction()->get_meta( $this->transform_meta_key( $key ), $single );
+	}
+
+	/**
+	 * Delete a meta key.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @param string $key
+	 * @param mixed  $value
+	 *
+	 * @return bool
+	 */
+	public function delete_meta( $key, $value = '' ) {
+		return $this->get_transaction()->delete_meta( $this->transform_meta_key( $key ), $value );
+	}
+
+	/**
+	 * Does meta with the given key exist.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @param string $key
+	 *
+	 * @return bool
+	 */
+	public function meta_exists( $key ) {
+		return $this->get_transaction()->meta_exists( $this->transform_meta_key( $key ) );
+	}
+
+	/**
+	 * Transform a meta key.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @param string $key
+	 *
+	 * @return string
+	 */
+	protected final function transform_meta_key( $key ) {
+		return "{$key}_{$this->get_product()->ID}";
 	}
 
 	/**
@@ -922,7 +1011,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	 */
 	public function get_cancelled_by() {
 
-		$id = $this->get_transaction()->get_meta( "subscription_{$this->get_product()->ID}_cancelled_by" );
+		$id = $this->get_meta( 'subscription_cancelled_by', true );
 
 		if ( ! $id ) {
 			return null;
@@ -941,7 +1030,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	 * @return bool
 	 */
 	public function set_cancelled_by( IT_Exchange_Customer $customer ) {
-		return (bool) $this->get_transaction()->update_meta( "subscription_{$this->get_product()->ID}_cancelled_by", $customer->id );
+		return (bool) $this->update_meta( 'subscription_cancelled_by', $customer->id );
 	}
 
 	/**
@@ -952,7 +1041,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	 * @return string
 	 */
 	public function get_cancellation_reason() {
-		return $this->get_transaction()->get_meta( "subscription_{$this->get_product()->ID}_cancellation_reason" );
+		return $this->get_meta( 'subscription_cancellation_reason', true );
 	}
 
 	/**
@@ -965,7 +1054,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	 * @return bool
 	 */
 	public function set_cancellation_reason( $reason ) {
-		return (bool) $this->get_transaction()->update_meta( "subscription_{$this->get_product()->ID}_cancellation_reason", $reason );
+		return (bool) $this->update_meta( 'subscription_cancellation_reason', $reason );
 	}
 
 	/**
@@ -1036,7 +1125,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	public function record_gateway_cancellation_while_complimentary( $gateway ) {
 
 		$builder = new IT_Exchange_Txn_Activity_Builder( $this->get_transaction(), 'status' );
-		$builder->set_description( "Original recurring payment has been cancelled." );
+		$builder->set_description( __( 'Original recurring payment has been cancelled.', 'LION' ) );
 		$builder->set_actor( new IT_Exchange_Txn_Activity_Gateway_Actor( it_exchange_get_addon( $gateway ) ) );
 		$builder->build( it_exchange_get_txn_activity_factory() );
 	}
@@ -1066,9 +1155,9 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	 */
 	public function get_card() {
 
-		if ( $this->get_transaction()->meta_exists( 'subscription_payment_card' ) ) {
+		if ( $this->meta_exists( 'subscription_payment_card' ) ) {
 
-			$card = $this->get_transaction()->get_meta( 'subscription_payment_card' );
+			$card = $this->get_meta( 'subscription_payment_card', true );
 
 			if ( ! $card ) {
 				return null;
@@ -1092,14 +1181,14 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	public function set_card( ITE_Gateway_Card $card = null ) {
 
 		if ( $card ) {
-			return (bool) $this->get_transaction()->update_meta( 'subscription_payment_card', array(
+			return (bool) $this->update_meta( 'subscription_payment_card', array(
 				'number' => $card->get_redacted_number(),
 				'year'   => $card->get_expiration_year(),
 				'month'  => $card->get_expiration_month(),
 			) );
 		}
 
-		return (bool) $this->get_transaction()->update_meta( 'subscription_payment_card', null );
+		return (bool) $this->update_meta( 'subscription_payment_card', null );
 	}
 
 	/**
@@ -1111,13 +1200,18 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	 */
 	public function get_payment_token() {
 
-		$token_id = $this->get_transaction()->get_meta( 'subscription_payment_token' );
+		if ( $this->meta_exists( 'subscription_payment_token' ) ) {
 
-		if ( ! $token_id ) {
-			return null;
+			$token_id = $this->get_meta( 'subscription_payment_token', true );
+
+			if ( ! $token_id ) {
+				return null;
+			}
+
+			return ITE_Payment_Token::get( $token_id );
 		}
 
-		return ITE_Payment_Token::get( $token_id );
+		return $this->get_transaction()->payment_token;
 	}
 
 	/**
@@ -1142,7 +1236,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 		 */
 		do_action( 'it_exchange_update_subscription_payment_token', $token, $this->get_payment_token(), $this );
 
-		return (bool) $this->get_transaction()->update_meta( 'subscription_payment_token', $token ? $token->ID : 0 );
+		return (bool) $this->update_meta( 'subscription_payment_token', $token ? $token->ID : 0 );
 	}
 
 	/**
