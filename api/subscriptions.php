@@ -85,11 +85,49 @@ function it_exchange_get_transaction_subscriptions( IT_Exchange_Transaction $tra
 			if ( $sub ) {
 				$subs[] = $sub;
 			}
-		}
-		catch ( Exception $e ) {
+		} catch ( Exception $e ) {
 
 		}
 	}
 
 	return $subs;
+}
+
+/**
+ * Get a subscription by the subscriber ID.
+ *
+ * @since 1.9.0
+ *
+ * @param string $method
+ * @param string $subscriber_id
+ *
+ * @return IT_Exchange_Subscription|null
+ */
+function it_exchange_get_subscription_by_subscriber_id( $method, $subscriber_id ) {
+
+	$transactions = it_exchange_get_transactions( array(
+		'transaction_method' => $method,
+		'meta_query'         => array(
+			array(
+				'key'   => '_it_exchange_transaction_subscriber_id',
+				'value' => $subscriber_id,
+			)
+		)
+	) );
+
+	if ( ! $transactions ) {
+		return null;
+	}
+
+	$transaction = reset( $transactions );
+
+	$subscriptions = it_exchange_get_transaction_subscriptions( $transaction );
+
+	foreach ( $subscriptions as $subscription ) {
+		if ( $subscription->get_subscriber_id() === $subscriber_id ) {
+			return $subscription;
+		}
+	}
+
+	return null;
 }

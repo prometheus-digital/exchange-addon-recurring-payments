@@ -225,7 +225,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 				$max -= 1;
 			}
 
-			$subscription->update_meta( 'subscription_remaining_occurrences', $max );
+			$subscription->update_meta( 'remaining_occurrences', $max );
 		}
 
 		/**
