@@ -35,7 +35,7 @@ class Serializer {
 				'slug'  => $s->get_transaction()->get_method(),
 				'label' => $s->get_transaction()->get_method( true ),
 			),
-			'editable' => ( $g = $s->get_transaction()->get_gateway() ) && $g->can_handle( 'update-subscription-payment-method' ),
+			'editable' => $s->can_payment_source_be_updated(),
 		);
 
 		if ( $source = $s->get_payment_source() ) {
@@ -290,6 +290,7 @@ class Serializer {
 				'payment_method'      => array(
 					'description' => __( 'The means by which the subscription is being paid for.', 'LION' ),
 					'type'        => 'object',
+					'context'     => array( 'view', 'edit' ),
 					'properties'  => array(
 						'method'   => array(
 							'description' => __( 'The payment method used.', 'LION' ),
@@ -308,7 +309,7 @@ class Serializer {
 									'type'        => 'string',
 									'readonly'    => true,
 									'context'     => array( 'view', 'edit' )
-								)
+								),
 							),
 							'required'    => true,
 						),
@@ -318,41 +319,30 @@ class Serializer {
 							'readonly'    => true,
 							'context'     => array( 'view', 'edit' )
 						),
+						'source'   => array(
+							'description' => __( 'Payment source for this subscription.', 'LION' ),
+							'type'        => 'object',
+							'readonly'    => true,
+							'properties'  => array(
+								'identifier' => array(
+									'type'        => 'string',
+									'description' => __( 'Identifier for this payment source. Not necessarily globally unique.', 'LION' ),
+									'readonly'    => true,
+								),
+								'label'      => array(
+									'type'        => 'string',
+									'description' => __( 'Human readable label for this payment source.', 'LION' ),
+									'readonly'    => true,
+								),
+							),
+						),
 						'token'    => array(
 							'description' => __( 'The payment token id.', 'LION' ),
 							'type'        => 'integer',
 							'context'     => array( 'view', 'edit' ),
 						),
 						'card'     => array(
-							'description'          => __( 'The card used.', 'LION' ),
-							'type'                 => 'object',
-							'context'              => array( 'view', 'edit' ),
-							'properties'           => array(
-								'number' => array(
-									'description' => __( 'The card number.', 'LION' ),
-									'type'        => 'string',
-									'required'    => true,
-								),
-								'month'  => array(
-									'description' => __( 'The expiration month.', 'LION' ),
-									'type'        => 'string',
-									'required'    => true,
-								),
-								'year'   => array(
-									'description' => __( 'The expiration year.', 'LION' ),
-									'type'        => 'string',
-									'required'    => true,
-								),
-								'cvc'    => array(
-									'description' => __( 'The CVC code.', 'LION' ),
-									'type'        => 'integer',
-								),
-								'name'   => array(
-									'description' => __( 'The card holder name.', 'LION' ),
-									'type'        => 'string',
-								),
-							),
-							'additionalProperties' => false,
+							'$ref' => \iThemes\Exchange\REST\url_for_schema( 'card' ),
 						)
 					)
 				)

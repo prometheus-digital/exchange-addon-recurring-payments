@@ -248,18 +248,7 @@ class IT_Theme_API_Recurring_Payments implements IT_Theme_API {
 			return '';
 		}
 
-		if ( ! $s->get_subscriber_id() ) {
-			return '';
-		}
-
-		if ( ! $s->get_payment_token() ) {
-			return '';
-		}
-
-		if ( ! in_array( $s->get_status(), array(
-			IT_Exchange_Subscription::STATUS_ACTIVE,
-			IT_Exchange_Subscription::STATUS_SUSPENDED
-		) ) ) {
+		if ( ! $s->can_payment_source_be_updated() ) {
 			return '';
 		}
 

@@ -105,33 +105,14 @@ class Subscription extends Base implements Getable, Putable {
 
 		$s = \IT_Exchange_Subscription::get( rawurldecode( $request->get_param( 'subscription_id', 'URL' ) ) );
 
-		$token = isset( $request['payment_method']['token'] ) ? (int) $request['payment_method']['token'] : 0;
-		$card  = isset( $request['payment_method']['card'] ) ? $request['payment_method']['card'] : array();
+		$updating_source = $this->updating_payment_source( $request, $s );
 
-		$update_payment_method_args = array( 'subscription' => $s );
+		if ( $updating_source ) {
 
-		if ( $token && $s->get_payment_token() && $token !== $s->get_payment_token()->get_ID() ) {
-			$update_payment_method_args['token'] = $token;
-		} elseif (
-			is_array( $card ) &&
-			isset( $card['number'] ) &&
-			strlen( $card['number'] > 4 ) &&
-			strpos( strtolower( $card['number'] ), 'x' ) === false
-		) {
-			$update_payment_method_args['card'] = $card;
-		}
-
-		if ( count( $update_payment_method_args ) > 1 ) {
-			if ( ! ( $gateway = $s->get_transaction()->get_gateway() ) || ! $gateway->can_handle( 'update-subscription-payment-method' ) ) {
-				return new \WP_Error(
-					'it_exchange_rest_gateway_not_supported',
-					__( 'Sorry, this subscription cannot have its payment information updated.', 'LION' ),
-					array( 'status' => \WP_Http::BAD_REQUEST )
-				);
-			}
+			$gateway = $s->get_transaction()->get_gateway();
 
 			try {
-				$update_request = $this->request_factory->make( 'update-subscription-payment-method', $update_payment_method_args );
+				$update_request = $this->request_factory->make( 'update-subscription-payment-method', $updating_source );
 			} catch ( \InvalidArgumentException $e ) {
 				return new \WP_Error(
 					'it_exchange_rest_invalid_param',
@@ -183,7 +164,28 @@ class Subscription extends Base implements Getable, Putable {
 			return $subscription;
 		}
 
-		if ( ! user_can( $user->wp_user, 'edit_it_transaction', $subscription->get_transaction()->ID ) ) {
+		$updating_source = $this->updating_payment_source( $request, $subscription );
+
+		if ( is_wp_error( $updating_source ) ) {
+			return $updating_source;
+		} elseif ( $updating_source ) {
+
+			if ( ! user_can( $user->wp_user, 'read_it_transaction', $subscription->get_transaction()->ID ) ) {
+				return new \WP_Error(
+					'it_exchange_rest_invalid_context',
+					__( 'Sorry, you are not allowed to access this subscription.', 'LION' ),
+					array( 'status' => \WP_Http::FORBIDDEN )
+				);
+			}
+
+			if ( isset( $updating_source['token'] ) && ! user_can( $user->wp_user, 'it_use_payment_token', $updating_source['token'] ) ) {
+				return new \WP_Error(
+					'it_exchange_rest_invalid_payment_token',
+					__( 'Sorry, you are not allowed to use this payment token.', 'LION' ),
+					array( 'status' => \WP_Http::UNAUTHORIZED )
+				);
+			}
+		} elseif ( ! user_can( $user->wp_user, 'edit_it_transaction', $subscription->get_transaction()->ID ) ) {
 			return new \WP_Error(
 				'it_exchange_rest_invalid_context',
 				__( 'Sorry, you are not allowed to access this subscription.', 'LION' ),
@@ -191,15 +193,52 @@ class Subscription extends Base implements Getable, Putable {
 			);
 		}
 
-		if ( $request['payment_method']['token'] && ! user_can( $user->wp_user, 'it_use_payment_token', $request['payment_method']['token'] ) ) {
-			return new \WP_Error(
-				'it_exchange_rest_invalid_payment_token',
-				__( 'Sorry, you are not allowed to use this payment token.', 'LION' ),
-				array( 'status' => \WP_Http::UNAUTHORIZED )
-			);
-		}
 
 		return true;
+	}
+
+	/**
+	 * Are we updating the payment source for the subscription.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @param Request                   $request
+	 * @param \IT_Exchange_Subscription $s
+	 *
+	 * @return array|\WP_Error|false
+	 */
+	protected function updating_payment_source( Request $request, \IT_Exchange_Subscription $s ) {
+
+		$token = isset( $request['payment_method']['token'] ) ? (int) $request['payment_method']['token'] : 0;
+		$card  = isset( $request['payment_method']['card'] ) ? $request['payment_method']['card'] : array();
+
+		$update_payment_method_args = array( 'subscription' => $s );
+
+		if ( $token && $s->get_payment_token() && $token !== $s->get_payment_token()->get_ID() ) {
+			$update_payment_method_args['token'] = $token;
+		} elseif (
+			is_array( $card ) &&
+			isset( $card['number'] ) &&
+			strlen( $card['number'] > 4 ) &&
+			strpos( strtolower( $card['number'] ), 'x' ) === false &&
+			$s->get_card()
+		) {
+			$update_payment_method_args['card'] = $card;
+		}
+
+		if ( count( $update_payment_method_args ) > 1 ) {
+			if ( ! $s->can_payment_source_be_updated() ) {
+				return new \WP_Error(
+					'it_exchange_rest_cannot_update_subscription_payment_source',
+					__( 'Sorry, this subscription cannot have its payment information updated.', 'LION' ),
+					array( 'status' => \WP_Http::BAD_REQUEST )
+				);
+			}
+
+			return $update_payment_method_args;
+		}
+
+		return false;
 	}
 
 	/**

@@ -160,7 +160,7 @@ function it_exchange_recurring_payments_localize_purchases() {
 		try {
 			$s = it_exchange_get_subscription_by_transaction( $transaction );
 
-			if ( $s && ( $s->get_status() === 'active' || $s->get_status() === 'deactivated' ) ) {
+			if ( $s && $s->can_payment_source_be_updated() ) {
 				$subscriptions[] = $serializer->serialize( $s );
 			}
 		} catch ( Exception $e ) {

@@ -1124,10 +1124,46 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	 */
 	public function record_gateway_cancellation_while_complimentary( $gateway ) {
 
+		_deprecated_function( __FUNCTION__, '1.9.0' );
+
 		$builder = new IT_Exchange_Txn_Activity_Builder( $this->get_transaction(), 'status' );
 		$builder->set_description( __( 'Original recurring payment has been cancelled.', 'LION' ) );
 		$builder->set_actor( new IT_Exchange_Txn_Activity_Gateway_Actor( it_exchange_get_addon( $gateway ) ) );
 		$builder->build( it_exchange_get_txn_activity_factory() );
+	}
+
+	/**
+	 * Can the payment source be updated.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @return bool
+	 */
+	public function can_payment_source_be_updated() {
+
+		if ( ! $this->is_auto_renewing() ) {
+			return false;
+		}
+
+		if ( ! $this->get_subscriber_id() ) {
+			return false;
+		}
+
+		if ( ! ( $g = $this->get_transaction()->get_gateway() ) || ! $g->can_handle( 'update-subscription-payment-method' ) ) {
+			return false;
+		}
+
+		$can = $this->is_status( self::STATUS_ACTIVE, self::STATUS_SUSPENDED );
+
+		/**
+		 * Can the subscription's payment source be updated.
+		 *
+		 * @since 1.9.0
+		 *
+		 * @param bool                      $can
+		 * @param \IT_Exchange_Subscription $this
+		 */
+		return apply_filters( 'it_exchange_can_subscription_payment_source_be_updated', $can, $this );
 	}
 
 	/**
