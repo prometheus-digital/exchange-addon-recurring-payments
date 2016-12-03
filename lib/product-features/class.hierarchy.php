@@ -19,7 +19,9 @@ class IT_Exchange_Subscription_Hierarchy_Product_Feature extends IT_Exchange_Pro
 		$product_types = array();
 
 		foreach ( it_exchange_get_addons( array( 'category' => 'product-type' ) ) as $product_type => $addon ) {
-			$product_types[] = $product_type;
+			if ( $product_type !== 'membership-product-type' ) {
+				$product_types[] = $product_type;
+			}
 		}
 
 		parent::__construct( array(
@@ -42,7 +44,7 @@ class IT_Exchange_Subscription_Hierarchy_Product_Feature extends IT_Exchange_Pro
 	public function print_metabox( $post ) {
 
 		$subscriptions = it_exchange_get_products( array(
-			'meta_query' => array(
+			'meta_query'  => array(
 				'key'   => '_it-exchange-product-recurring-enabled',
 				'value' => 'on',
 			),

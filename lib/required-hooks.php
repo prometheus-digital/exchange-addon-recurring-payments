@@ -476,7 +476,7 @@ function it_exchange_recurring_payments_addon_add_transaction( $transaction_id, 
 		foreach ( $cart->get_meta( ITE_Prorate_Credit_Request::META ) as $product_id => $_ ) {
 			$product = it_exchange_get_product( $product_id );
 
-			if ( $request = ITE_Prorate_Credit_Request::get( $product, $cart ) ) {
+			if ( $product && $request = ITE_Prorate_Credit_Request::get( $product, $cart ) ) {
 				$request->cancel_provider();
 			}
 		}

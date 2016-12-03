@@ -146,7 +146,7 @@ class Test_Prorate_Credit_Request extends IT_Exchange_UnitTestCase {
 
 		$this->assertArrayHasKey( 2, $session, 'Session not updated.' );
 
-		$this->assertEqualSets( array(
+		$this->assertArraySubset( array(
 			'credit'       => 29.74,
 			'free_days'    => 2,
 			'upgrade_type' => 'days',
