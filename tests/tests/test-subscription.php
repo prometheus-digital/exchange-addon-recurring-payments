@@ -406,7 +406,7 @@ class Test_Subscription extends IT_Exchange_UnitTestCase {
 
 		$transaction = $this->getMockBuilder( 'IT_Exchange_Transaction' )
 		                    ->disableOriginalConstructor()
-		                    ->setMethods( array( 'meta_exists', 'get_meta', 'get_children', 'get_total' ) )
+		                    ->setMethods( array( 'meta_exists', 'get_meta', 'get_children', 'get_total', 'get_ID' ) )
 		                    ->getMock();
 		$transaction->method( 'meta_exists' )->willReturn( true );
 		$transaction->method( 'get_meta' )->willReturnMap( array(
@@ -416,6 +416,7 @@ class Test_Subscription extends IT_Exchange_UnitTestCase {
 		) );
 		$transaction->method( 'get_children' )->willReturn( array() );
 		$transaction->method( 'get_total' )->with( false )->willReturn( 5.00 );
+		$transaction->method( 'get_ID' )->willReturn( 1 );
 
 		$product     = $this->getMockBuilder( 'IT_Exchange_Product' )->disableOriginalConstructor()->getMock();
 		$product->ID = 1;
@@ -428,13 +429,14 @@ class Test_Subscription extends IT_Exchange_UnitTestCase {
 
 		$child = $this->getMockBuilder( 'IT_Exchange_Transaction' )
 		              ->disableOriginalConstructor()
-		              ->setMethods( array( 'get_total' ) )
+		              ->setMethods( array( 'get_total', 'get_ID' ) )
 		              ->getMock();
 		$child->method( 'get_total' )->with( false )->willReturn( 5.00 );
+		$child->method( 'get_ID' )->willReturn( 2 );
 
 		$transaction = $this->getMockBuilder( 'IT_Exchange_Transaction' )
 		                    ->disableOriginalConstructor()
-		                    ->setMethods( array( 'meta_exists', 'get_meta', 'get_children', 'get_total' ) )
+		                    ->setMethods( array( 'meta_exists', 'get_meta', 'get_children', 'get_total', 'get_ID' ) )
 		                    ->getMock();
 		$transaction->method( 'meta_exists' )->willReturn( true );
 		$transaction->method( 'get_meta' )->willReturnMap( array(
@@ -444,6 +446,7 @@ class Test_Subscription extends IT_Exchange_UnitTestCase {
 		) );
 		$transaction->method( 'get_children' )->willReturn( array( $child ) );
 		$transaction->method( 'get_total' )->with( false )->willReturn( 0 );
+		$transaction->method( 'get_ID' )->willReturn( 1 );
 
 		$product     = $this->getMockBuilder( 'IT_Exchange_Product' )->disableOriginalConstructor()->getMock();
 		$product->ID = 1;
@@ -454,6 +457,18 @@ class Test_Subscription extends IT_Exchange_UnitTestCase {
 
 	public function test_calculate_recurring_amount_paid_for_non_auto_renewing_with_no_child_payments() {
 
+		$product     = $this->getMockBuilder( 'IT_Exchange_Product' )->disableOriginalConstructor()->getMock();
+		$product->ID = 1;
+
+		$cart_product = $this->getMockBuilder( 'ITE_Cart_Product' )->disableOriginalConstructor()->setMethods( array(
+			'get_product',
+			'get_amount',
+			'get_quantity'
+		) )->getMock();
+		$cart_product->method( 'get_product' )->willReturn( $product );
+		$cart_product->method( 'get_amount' )->willReturn( 5.0 );
+		$cart_product->method( 'get_quantity' )->willReturn( 1 );
+
 		$transaction = $this->getMockBuilder( 'IT_Exchange_Transaction' )
 		                    ->disableOriginalConstructor()
 		                    ->setMethods( array(
@@ -461,7 +476,8 @@ class Test_Subscription extends IT_Exchange_UnitTestCase {
 			                    'get_meta',
 			                    'get_children',
 			                    'get_total',
-			                    'get_products'
+			                    'get_items',
+			                    'get_ID',
 		                    ) )
 		                    ->getMock();
 		$transaction->method( 'meta_exists' )->willReturn( true );
@@ -472,15 +488,11 @@ class Test_Subscription extends IT_Exchange_UnitTestCase {
 		) );
 		$transaction->method( 'get_children' )->willReturn( array() );
 		$transaction->method( 'get_total' )->with( false )->willReturn( 7.50 );
-		$transaction->method( 'get_products' )->willReturn( array(
-			'1-hash' => array(
-				'product_id'       => 1,
-				'product_subtotal' => 5.00
-			)
+		$transaction->method( 'get_ID' )->willReturn( 1 );
+		$transaction->method( 'get_items' )->withAnyParameters()->willReturn( new ITE_Line_Item_Collection(
+			array( $cart_product ),
+			new ITE_Line_Item_Transaction_Repository( new ITE_Line_Item_Repository_Events(), $transaction )
 		) );
-
-		$product     = $this->getMockBuilder( 'IT_Exchange_Product' )->disableOriginalConstructor()->getMock();
-		$product->ID = 1;
 
 		$subscription = IT_Exchange_Subscription::from_transaction( $transaction, $product );
 		$this->assertEquals( 5, $subscription->calculate_recurring_amount_paid() );

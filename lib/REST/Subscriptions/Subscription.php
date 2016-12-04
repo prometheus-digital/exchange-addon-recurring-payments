@@ -121,24 +121,32 @@ class Subscription extends Base implements Getable, Putable {
 				);
 			}
 
-			$gateway->get_handler_for( $update_request )->handle( $update_request );
+			if ( ! $gateway->get_handler_for( $update_request )->handle( $update_request ) ) {
+				return new \WP_Error(
+					'it_exchange_rest_cannot_update_subscription_payment_source',
+					__( "Unable to update the subscription's payment source.", 'LION' ),
+					array( 'status' => 400 )
+				);
+			}
 		}
 
-		$status = is_array( $request['status'] ) ? $request['status']['slug'] : $request['status'];
+		if ( current_user_can( 'edit_it_transaction', $s->get_transaction()->get_ID() ) ) {
+			$status = is_array( $request['status'] ) ? $request['status']['slug'] : $request['status'];
 
-		if ( $status && $status !== $s->get_status() ) {
-			$s->set_status( $status );
-		}
+			if ( $status && $status !== $s->get_status() ) {
+				$s->set_status( $status );
+			}
 
-		$new_expires = new \DateTime( $request['expiry_date'], new \DateTimeZone( 'UTC' ) );
-		$old_expires = $s->get_expiry_date();
+			$new_expires = new \DateTime( $request['expiry_date'], new \DateTimeZone( 'UTC' ) );
+			$old_expires = $s->get_expiry_date();
 
-		if ( $new_expires && ( ! $old_expires || $new_expires->getTimestamp() !== $old_expires->getTimestamp() ) ) {
-			$s->set_expiry_date( $new_expires );
-		}
+			if ( $new_expires && ( ! $old_expires || $new_expires->getTimestamp() !== $old_expires->getTimestamp() ) ) {
+				$s->set_expiry_date( $new_expires );
+			}
 
-		if ( $request['subscriber_id'] && $s->is_auto_renewing() && $request['subscriber_id'] !== $s->get_subscriber_id() ) {
-			$s->set_subscriber_id( $request['subscriber_id'] );
+			if ( $request['subscriber_id'] && $s->is_auto_renewing() && $request['subscriber_id'] !== $s->get_subscriber_id() ) {
+				$s->set_subscriber_id( $request['subscriber_id'] );
+			}
 		}
 
 		return new \WP_REST_Response( $this->serializer->serialize( $s ) );

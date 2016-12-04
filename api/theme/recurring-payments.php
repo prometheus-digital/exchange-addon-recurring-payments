@@ -300,7 +300,10 @@ class IT_Theme_API_Recurring_Payments implements IT_Theme_API {
 			'before'           => '',
 			'after'            => '',
 			'class'            => 'it-exchange-recurring-payments-payments',
-			'label'            => apply_filters( 'it_exchange_recurring_payments_addon_payments_label', __( 'Payment', 'LION' ) ),
+			'label'            => apply_filters(
+				'it_exchange_recurring_payments_addon_payments_label',
+				__( 'Payment of %s on %s', 'LION' )
+			),
 		);
 		$options = ITUtility::merge_defaults( $options, $defaults );
 		$output = $remaining = '';
@@ -315,6 +318,17 @@ class IT_Theme_API_Recurring_Payments implements IT_Theme_API {
 
 		}
 
+		if ( strpos( $options['label'], '%s') === false ) {
+			$sprintf = false;
+			_doing_it_wrong(
+				"it_exchange( 'recurring-payments', 'payments' )",
+				'`label` option should use sprintf placeholders for transalation.',
+				'1.9.0'
+			);
+		} else {
+			$sprintf = true;
+		}
+
 		if ( $this->_transaction->children->count() ) {
 			$payment_transactions = $this->_transaction->children;
 
@@ -323,7 +337,21 @@ class IT_Theme_API_Recurring_Payments implements IT_Theme_API {
 			$output .= '<ul class="' . $options['class'] . '">';
 			foreach ( $payment_transactions as $transaction ) {
 				$output .= '<li>';
-				$output .= $options['label'] . ' ' . __( 'of', 'LION' ) . ' ' . it_exchange_get_transaction_total( $transaction, $options['format_currency'] ) . ' on ' . it_exchange_get_transaction_date( $transaction, $options['date_format'] ) . ' - ' . it_exchange_get_transaction_status_label( $transaction );
+
+				if ( $sprintf ) {
+					$output .= sprintf(
+						$options['label'],
+						it_exchange_get_transaction_total( $transaction, $options['format_currency'] ),
+						it_exchange_get_transaction_date( $transaction, $options['date_format'] )
+					);
+				} else {
+					$output .= $options['label'] . ' ' . __( 'of', 'LION' ) . ' ' .
+			           it_exchange_get_transaction_total( $transaction, $options['format_currency'] )
+			           . ' on ' .
+			           it_exchange_get_transaction_date( $transaction, $options['date_format'] );
+				}
+
+				$output .= ' - ' . it_exchange_get_transaction_status_label( $transaction );
 			}
 			$output .= '</ul>';
 			$output .= $options['after'];
