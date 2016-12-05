@@ -688,7 +688,10 @@ function it_exchange_recurring_payments_add_activity_on_cancellation( IT_Exchang
 	$builder = new IT_Exchange_Txn_Activity_Builder( $subscription->get_transaction(), 'status' );
 	$builder->set_description( $message );
 	$builder->set_public();
-	$builder->set_actor( $actor );
+
+	if ( $actor ) {
+		$builder->set_actor( $actor );
+	}
 
 	$builder->build( it_exchange_get_txn_activity_factory() );
 }
