@@ -9,17 +9,16 @@
 /**
  * Class ITE_Gateway_Prorate_Purchase_Request
  */
-class ITE_Gateway_Prorate_Purchase_Request implements ITE_Gateway_Purchase_Request_Interface {
-
-	/** @var ITE_Gateway_Purchase_Request_Interface */
-	private $original;
+class ITE_Gateway_Prorate_Purchase_Request extends ITE_Gateway_Purchase_Request {
 
 	/**
 	 * ITE_Gateway_Prorate_Purchase_Request constructor.
 	 *
-	 * @param ITE_Gateway_Purchase_Request_Interface $original
+	 * @param ITE_Gateway_Purchase_Request $original
 	 */
-	public function __construct( ITE_Gateway_Purchase_Request_Interface $original ) { $this->original = $original; }
+	public function __construct( ITE_Gateway_Purchase_Request $original ) {
+		parent::__construct( $original->get_cart(), $original->get_nonce(), $original->get_http_request() );
+	}
 
 	/**
 	 * Get prorate requests being used.
@@ -47,84 +46,5 @@ class ITE_Gateway_Prorate_Purchase_Request implements ITE_Gateway_Purchase_Reque
 		}
 
 		return $requests;
-	}
-
-	/**
-	 * @inheritDoc
-	 */
-	public function get_cart() { return $this->original->get_cart(); }
-
-	/**
-	 * @inheritDoc
-	 */
-	public function get_http_request() { return $this->original->get_http_request(); }
-
-	/**
-	 * @inheritDoc
-	 */
-	public function get_nonce() { return $this->original->get_nonce(); }
-
-	/**
-	 * @inheritDoc
-	 */
-	public function get_card() { return $this->original->get_card(); }
-
-	/**
-	 * @inheritDoc
-	 */
-	public function set_card( ITE_Gateway_Card $card ) { return $this->original->set_card( $card ); }
-
-	/**
-	 * @inheritDoc
-	 */
-	public function get_token() { return $this->original->get_token(); }
-
-	/**
-	 * @inheritDoc
-	 */
-	public function set_token( ITE_Payment_Token $token ) { return $this->original->set_token( $token ); }
-
-	/**
-	 * @inheritDoc
-	 */
-	public function get_tokenize() { return $this->original->get_tokenize(); }
-
-	/**
-	 * @inheritDoc
-	 */
-	public function set_tokenize( ITE_Gateway_Tokenize_Request $tokenize ) {
-		return $this->original->set_tokenize( $tokenize );
-	}
-
-	/**
-	 * @inheritDoc
-	 */
-	public function get_customer() { return $this->original->get_customer(); }
-
-	/**
-	 * @inheritDoc
-	 */
-	public static function get_name() { return 'purchase'; }
-
-	/**
-	 * @inheritdoc
-	 */
-	public function get_redirect_to() { return $this->original->get_redirect_to(); }
-
-	/**
-	 * @inheritdoc
-	 */
-	public function set_redirect_to( $redirect_to ) { $this->original->set_redirect_to( $redirect_to ); }
-
-	/**
-	 * @inheritDoc
-	 */
-	public function get_child_of() { return $this->original->get_child_of(); }
-
-	/**
-	 * @inheritDoc
-	 */
-	public function set_child_of( IT_Exchange_Transaction $transaction ) {
-		$this->original->set_child_of( $transaction );
 	}
 }

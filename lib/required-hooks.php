@@ -1325,11 +1325,11 @@ add_filter( 'it_exchange_make_cancel-subscription_gateway_request', 'it_exchange
  *
  * @since 1.9.0
  *
- * @param \ITE_Gateway_Purchase_Request_Interface $request
+ * @param \ITE_Gateway_Purchase_Request $request
  *
- * @return \ITE_Gateway_Purchase_Request_Interface
+ * @return \ITE_Gateway_Purchase_Request
  */
-function it_exchange_recurring_payments_decorate_purchase_request( ITE_Gateway_Purchase_Request_Interface $request ) {
+function it_exchange_recurring_payments_decorate_purchase_request( ITE_Gateway_Purchase_Request $request ) {
 	return new ITE_Gateway_Prorate_Purchase_Request( $request );
 }
 

@@ -79,7 +79,15 @@ class Subscription extends Base implements Getable, Putable {
 			);
 		}
 
-		$subscription = \IT_Exchange_Subscription::get( rawurldecode( $request->get_param( 'subscription_id', 'URL' ) ) );
+		try {
+			$subscription = \IT_Exchange_Subscription::get( rawurldecode( $request->get_param( 'subscription_id', 'URL' ) ) );
+		} catch ( \InvalidArgumentException $e ) {
+			return new \WP_Error(
+				'it_exchange_rest_invalid_subscription',
+				__( 'Invalid subscription id.', 'LION' ),
+				array( 'status' => 400 )
+			);
+		}
 
 		if ( is_wp_error( $subscription ) ) {
 			return $subscription;
@@ -165,8 +173,15 @@ class Subscription extends Base implements Getable, Putable {
 			);
 		}
 
-		$sub_id       = rawurldecode( $request->get_param( 'subscription_id', 'URL' ) );
-		$subscription = \IT_Exchange_Subscription::get( $sub_id );
+		try {
+			$subscription = \IT_Exchange_Subscription::get( rawurldecode( $request->get_param( 'subscription_id', 'URL' ) ) );
+		} catch ( \InvalidArgumentException $e ) {
+			return new \WP_Error(
+				'it_exchange_rest_invalid_subscription',
+				__( 'Invalid subscription id.', 'LION' ),
+				array( 'status' => 400 )
+			);
+		}
 
 		if ( is_wp_error( $subscription ) ) {
 			return $subscription;

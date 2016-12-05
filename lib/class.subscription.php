@@ -134,7 +134,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 		$product     = it_exchange_get_product( $parts[1] );
 
 		if ( ! $transaction || ! $product ) {
-			throw new InvalidArgumentException( 'Invalid subscription ID.' );
+			return null;
 		}
 
 		try {
