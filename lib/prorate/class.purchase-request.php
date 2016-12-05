@@ -18,6 +18,10 @@ class ITE_Gateway_Prorate_Purchase_Request extends ITE_Gateway_Purchase_Request 
 	 */
 	public function __construct( ITE_Gateway_Purchase_Request $original ) {
 		parent::__construct( $original->get_cart(), $original->get_nonce(), $original->get_http_request() );
+
+		foreach ( get_object_vars( $original ) as $var => $val ) {
+			$this->$var = $val;
+		}
 	}
 
 	/**

@@ -218,72 +218,6 @@ function it_exchange_recurring_payments_addon_template_path( $possible_template_
 
 add_filter( 'it_exchange_possible_template_paths', 'it_exchange_recurring_payments_addon_template_path', 10, 2 );
 
-add_filter( 'it_exchange_make_update-subscription-payment-method_gateway_request',
-	function( $_, $args, $type, ITE_Gateway_Request_Factory $factory ) {
-
-		if ( isset( $args['subscription'] ) ) {
-			if ( is_scalar( $args['subscription'] ) ) {
-				$subscription = IT_Exchange_Subscription::get( $args['subscription'] );
-			} else {
-				$subscription = $args['subscription'];
-			}
-		}
-
-		if ( ! isset( $subscription ) || ! $subscription instanceof IT_Exchange_Subscription ) {
-			throw new InvalidArgumentException( 'Invalid `subscription` option' );
-		}
-
-		$request = new ITE_Update_Subscription_Payment_Method_Request( $subscription );
-
-		if ( ! empty( $args['card'] ) ) {
-			$card = $args['card'];
-
-			if ( is_array( $card ) ) {
-				$card = $factory->build_card( $card );
-			}
-
-			if ( ! $card instanceof ITE_Gateway_Card ) {
-				throw new InvalidArgumentException( 'Invalid `card` option.' );
-			}
-
-			$request->set_card( $args['card'] );
-		}
-
-		if ( ! empty( $args['token'] ) ) {
-			$token = $args['token'];
-
-			if ( is_int( $token ) ) {
-				$token = ITE_Payment_Token::get( $token );
-			}
-
-			if ( ! $token instanceof ITE_Payment_Token ) {
-				throw new InvalidArgumentException( 'Invalid `token` option.' );
-			}
-
-			$request->set_payment_token( $token );
-		}
-
-		if ( ! empty( $args['tokenize'] ) ) {
-
-			if ( ! is_object( $args['tokenize'] ) ) {
-				$tokenize = $factory->make( 'tokenize', array(
-					'source'   => $args['tokenize'],
-					'customer' => $subscription->get_customer()
-				) );
-			} else {
-				$tokenize = $args['tokenize'];
-			}
-
-			if ( ! $tokenize instanceof ITE_Gateway_Tokenize_Request ) {
-				throw new InvalidArgumentException( 'Invalid `tokenize` option.' );
-			}
-
-			$request->set_tokenize( $tokenize );
-		}
-
-		return $request;
-}, 10, 4 );
-
 /**
  * Add fees when a product is added to the cart.
  *
@@ -1319,6 +1253,90 @@ function it_exchange_recurring_payments_make_cancel_subscription_request( $_, ar
 }
 
 add_filter( 'it_exchange_make_cancel-subscription_gateway_request', 'it_exchange_recurring_payments_make_cancel_subscription_request', 10, 2 );
+
+/**
+ * Make an update subscription payment method request.
+ *
+ * @since 1.9.0
+ *
+ * @param null                        $_
+ * @param array                       $args
+ * @param string                      $__
+ * @param ITE_Gateway_Request_Factory $factory
+ *
+ * @return ITE_Update_Subscription_Payment_Method_Request
+ */
+function it_exchange_recurring_payments_make_update_subscription_payment_method_request( $_, $args, $__, ITE_Gateway_Request_Factory $factory ) {
+
+	if ( isset( $args['subscription'] ) ) {
+		if ( is_scalar( $args['subscription'] ) ) {
+			$subscription = IT_Exchange_Subscription::get( $args['subscription'] );
+		} else {
+			$subscription = $args['subscription'];
+		}
+	}
+
+	if ( ! isset( $subscription ) || ! $subscription instanceof IT_Exchange_Subscription ) {
+		throw new InvalidArgumentException( 'Invalid `subscription` option' );
+	}
+
+	$request = new ITE_Update_Subscription_Payment_Method_Request( $subscription );
+
+	if ( ! empty( $args['card'] ) ) {
+		$card = $args['card'];
+
+		if ( is_array( $card ) ) {
+			$card = $factory->build_card( $card );
+		}
+
+		if ( ! $card instanceof ITE_Gateway_Card ) {
+			throw new InvalidArgumentException( 'Invalid `card` option.' );
+		}
+
+		$request->set_card( $args['card'] );
+	}
+
+	if ( ! empty( $args['token'] ) ) {
+		$token = $args['token'];
+
+		if ( is_int( $token ) ) {
+			$token = ITE_Payment_Token::get( $token );
+		}
+
+		if ( ! $token instanceof ITE_Payment_Token ) {
+			throw new InvalidArgumentException( 'Invalid `token` option.' );
+		}
+
+		$request->set_payment_token( $token );
+	}
+
+	if ( ! empty( $args['tokenize'] ) ) {
+
+		if ( ! is_object( $args['tokenize'] ) ) {
+			$tokenize = $factory->make( 'tokenize', array(
+				'source'   => $args['tokenize'],
+				'customer' => $subscription->get_customer()
+			) );
+		} else {
+			$tokenize = $args['tokenize'];
+		}
+
+		if ( ! $tokenize instanceof ITE_Gateway_Tokenize_Request ) {
+			throw new InvalidArgumentException( 'Invalid `tokenize` option.' );
+		}
+
+		$request->set_tokenize( $tokenize );
+	}
+
+	return $request;
+}
+
+add_filter(
+	'it_exchange_make_update-subscription-payment-method_gateway_request',
+	'it_exchange_recurring_payments_make_update_subscription_payment_method_request',
+	10,
+	4
+);
 
 /**
  * Decorate the purchase request to add prorate information.
