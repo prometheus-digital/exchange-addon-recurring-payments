@@ -131,3 +131,51 @@ function it_exchange_get_subscription_by_subscriber_id( $method, $subscriber_id 
 
 	return null;
 }
+
+/**
+ * Add a subscription renewal payment.
+ *
+ * @since 1.9.0
+ *
+ * @param IT_Exchange_Transaction $parent
+ * @param string                  $method_id
+ * @param string                  $status
+ * @param float                   $total
+ * @param array                   $args
+ *
+ * @return bool|IT_Exchange_Transaction|null
+ */
+function it_exchange_add_subscription_renewal_payment( IT_Exchange_Transaction $parent, $method_id, $status, $total, $args = array() ) {
+
+	$cart = ITE_Cart::create(
+		new ITE_Line_Item_Cached_Session_Repository(
+			new IT_Exchange_In_Memory_Session( null ),
+			$parent->get_customer(),
+			new ITE_Line_Item_Repository_Events()
+		),
+		$parent->get_customer()
+	);
+
+	foreach ( $parent->get_items() as $item ) {
+		$cart->add_item( $item->clone_with_new_id() );
+	}
+
+	$cart->get_items()->flatten()->with_only( 'fee' )
+	     ->having_param( 'is_prorate_days', 'is_free_trial' )
+	     ->delete();
+
+	$transaction_object        = it_exchange_generate_transaction_object( $cart );
+	$transaction_object->total = $total;
+
+	$txn_id = it_exchange_add_child_transaction(
+		$parent->get_method(),
+		$method_id,
+		$status,
+		$cart,
+		$parent->get_ID(),
+		$transaction_object,
+		$args
+	);
+
+	return $txn_id ? it_exchange_get_transaction( $txn_id ) : null;
+}
