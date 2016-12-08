@@ -684,6 +684,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 		$remaining -= 1;
 
 		if ( $remaining === 0 ) {
+			$this->set_expiry_date( null );
 			$this->cancel( null, __( 'Number of occurrences reached.', 'LION' ), false );
 		}
 
