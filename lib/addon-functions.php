@@ -213,6 +213,7 @@ function it_exchange_recurring_payments_add_free_days_fees( ITE_Cart_Product $it
 	$fee = ITE_Fee_Line_Item::create(
 		$request->get_prorate_type() === 'upgrade' ? __( 'Upgrade Trial', 'LION' ) : __( 'Downgrade Trial', 'LION' ),
 		$item->get_total() * -1,
+		true,
 		false
 	);
 
@@ -278,6 +279,7 @@ function it_exchange_recurring_payments_add_credit_fees( ITE_Cart_Product $item,
 	$fee = ITE_Fee_Line_Item::create(
 		$request->get_prorate_type() === 'upgrade' ? __( 'Upgrade Credit', 'LION' ) : __( 'Downgrade Credit', 'LION' ),
 		$credit * - 1,
+		true,
 		false
 	);
 	$fee->set_param( 'is_prorate_credit', true );

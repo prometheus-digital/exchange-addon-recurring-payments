@@ -686,6 +686,15 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 		if ( $remaining === 0 ) {
 			$this->set_expiry_date( null );
 			$this->cancel( null, __( 'Number of occurrences reached.', 'LION' ), false );
+
+			/**
+			 * Fires when a subscription's occurrences limit is reached.
+			 *
+			 * @since 1.9.0
+			 *
+			 * @param IT_Exchange_Subscription $this
+			 */
+			do_action( 'it_exchange_subscription_occurrences_limit_reached', $this );
 		}
 
 		return (bool) $this->update_meta( 'remaining_occurrences', $remaining );
@@ -887,7 +896,9 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 			$amount_paid = $transaction->get_total( false );
 
 			if ( $amount_paid <= 0 && $cart_product ) {
-				$amount_paid -= $cart_product->get_line_items()->with_only( 'fee' )->having_param( 'is_prorate_days', 'is_free_trial' )->total();
+				$amount_paid -= $cart_product->get_line_items()->with_only( 'fee' )
+				                                    ->filter( function ( ITE_Fee_Line_Item $fee ) { return ! $fee->is_recurring(); } )
+				                                    ->total();
 			}
 
 		} else {

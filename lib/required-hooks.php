@@ -253,6 +253,7 @@ function it_exchange_recurring_payments_on_add_product_to_cart( ITE_Cart_Product
 	$fee = ITE_Fee_Line_Item::create(
 		__( 'Free Trial', 'LION' ),
 		$item->get_total() * -1,
+		true,
 		false
 	);
 	$fee->set_param( 'is_free_trial', true );

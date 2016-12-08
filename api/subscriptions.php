@@ -161,7 +161,7 @@ function it_exchange_add_subscription_renewal_payment( IT_Exchange_Transaction $
 	}
 
 	$cart->get_items()->flatten()->with_only( 'fee' )
-	     ->having_param( 'is_prorate_days', 'is_free_trial' )
+	     ->filter( function ( ITE_Fee_Line_Item $fee ) { return ! $fee->is_recurring(); } )
 	     ->delete();
 
 	$transaction_object        = it_exchange_generate_transaction_object( $cart );
