@@ -179,3 +179,20 @@ function it_exchange_add_subscription_renewal_payment( IT_Exchange_Transaction $
 
 	return $txn_id ? it_exchange_get_transaction( $txn_id ) : null;
 }
+
+/**
+ * Get a subscription.
+ *
+ * @since 1.9.0
+ *
+ * @param string|IT_Exchange_Subscription $subscription
+ *
+ * @return IT_Exchange_Subscription|null
+ */
+function it_exchange_get_subscription( $subscription ) {
+	if ( $subscription instanceof IT_Exchange_Subscription ) {
+		return $subscription;
+	}
+
+	return IT_Exchange_Subscription::get( $subscription );
+}

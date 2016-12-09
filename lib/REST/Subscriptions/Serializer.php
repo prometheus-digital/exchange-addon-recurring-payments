@@ -74,6 +74,11 @@ class Serializer {
 				'slug'  => $subscription->get_status(),
 				'label' => $subscription->get_status( true ),
 			),
+			'can_be_paused'       => current_user_can( 'it_pause_subscription', $s ),
+			'can_be_resumed'      => current_user_can( 'it_resume_subscription', $s ),
+			'can_be_cancelled'    => current_user_can( 'it_cancel_subscription', $s ),
+			'paused_by'           => $s->is_status( $s::STATUS_PAUSED ) ? ( $s->get_paused_by() ? $s->get_paused_by()->id : 0 ) : 0,
+			'resumed_by'          => $s->is_status( $s::STATUS_ACTIVE ) ? ( $s->get_resumed_by() ? $s->get_resumed_by()->id : 0 ) : 0,
 			'cancellation_reason' => $is_cancelled ? $s->get_cancellation_reason() : '',
 			'cancelled_by'        => $is_cancelled ? ( $s->get_cancelled_by() ? $s->get_cancelled_by()->id : 0 ) : 0,
 			'payment_method'      => $payment_method,
@@ -283,6 +288,24 @@ class Serializer {
 						array( 'type' => 'string' )
 					),
 				),
+				'can_be_paused'       => array(
+					'description' => __( 'Can the subscription be paused.', 'LION' ),
+					'type'        => 'boolean',
+					'readonly'    => true,
+					'context'     => array( 'view', 'edit' )
+				),
+				'can_be_resumed'      => array(
+					'description' => __( 'Can the subscription be resumed.', 'LION' ),
+					'type'        => 'boolean',
+					'readonly'    => true,
+					'context'     => array( 'view', 'edit' )
+				),
+				'can_be_cancelled'    => array(
+					'description' => __( 'Can the subscription be cancelled.', 'LION' ),
+					'type'        => 'boolean',
+					'readonly'    => true,
+					'context'     => array( 'view', 'edit' )
+				),
 				'cancellation_reason' => array(
 					'description' => __( 'The reason the subscription was cancelled.', 'LION' ),
 					'type'        => 'string',
@@ -290,6 +313,16 @@ class Serializer {
 				),
 				'cancelled_by'        => array(
 					'description' => __( 'The customer who cancelled the subscription.', 'LION' ),
+					'type'        => 'integer',
+					'context'     => array( 'view', 'edit' )
+				),
+				'paused_by'           => array(
+					'description' => __( 'The customer who paused the subscription.', 'LION' ),
+					'type'        => 'integer',
+					'context'     => array( 'view', 'edit' )
+				),
+				'resumed_by'          => array(
+					'description' => __( 'The customer who resumed the subscription.', 'LION' ),
 					'type'        => 'integer',
 					'context'     => array( 'view', 'edit' )
 				),

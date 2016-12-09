@@ -65,9 +65,9 @@ class IT_Exchange_Recurring_Payments_Email {
 		$notification = null;
 
 		switch ( $new_status ) {
-			case IT_Exchange_Subscription::STATUS_SUSPENDED:
+			case IT_Exchange_Subscription::STATUS_PAYMENT_FAILED:
 				if ( $subscription->can_payment_source_be_updated() ) {
-					$notification = it_exchange_email_notifications()->get_notification( 'recurring-payment-suspended' );
+					$notification = it_exchange_email_notifications()->get_notification( 'recurring-payment-failed' );
 				}
 				break;
 			case IT_Exchange_Subscription::STATUS_DEACTIVATED:
@@ -109,11 +109,11 @@ class IT_Exchange_Recurring_Payments_Email {
 
 		$notifications
 			->register_notification( new IT_Exchange_Customer_Email_Notification(
-				__( 'Recurring Payment Suspended', 'LION' ), 'recurring-payment-suspended', null, array(
+				__( 'Recurring Payment Failed', 'LION' ), 'recurring-payment-failed', null, array(
 					'defaults'    => array(
-						'subject' => __( 'Subscription Suspended', 'LION' ),
+						'subject' => __( 'Subscription Payment Failed', 'LION' ),
 						'body'    => sprintf(
-							__( "Hello %s, \r\n\r\n Your subscription for %s has been suspended.", 'LION' ) . ' ' .
+							__( "Hello %s, \r\n\r\n The latest payment for your subscription for %s has failed", 'LION' ) . ' ' .
 							__( "To update your payment info, %svisit your account%s. \r\n\r\nThank you.\r\n\r\n%s", 'LION' ),
 							$r->format_tag( 'first_name' ), $r->format_tag( 'subscription_product' ),
 							'<a href="' . $r->format_tag( 'subscription_update_payment_link' ) . '">', '</a>', $r->format_tag( 'company_name' )
@@ -172,6 +172,12 @@ class IT_Exchange_Recurring_Payments_Email {
 			),
 		);
 
+		$notifications = array(
+			'recurring-payment-cancelled',
+			'recurring-payment-deactivated',
+			'recurring-payment-failed'
+		);
+
 		foreach ( $tags as $tag => $config ) {
 
 			$obj = new IT_Exchange_Email_Tag_Base( $tag, $config['name'], $config['desc'], array( $this, $tag ) );
@@ -180,13 +186,11 @@ class IT_Exchange_Recurring_Payments_Email {
 				$obj->add_required_context( $context );
 			}
 
-			foreach (
-				array(
-					'recurring-payment-cancelled',
-					'recurring-payment-deactivated',
-					'recurring-payment-suspended'
-				) as $notification
-			) {
+			foreach ( $notifications as $notification ) {
+				if ( $this === 'subscription_update_payment_link' && $notification !== 'recurring-payment-failed' ) {
+					continue;
+				}
+
 				$obj->add_available_for( $notification );
 			}
 

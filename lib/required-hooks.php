@@ -648,7 +648,7 @@ function it_exchange_recurring_payments_handle_expired() {
 
 			$status = $s->get_status();
 
-			if ( $status === IT_Exchange_Subscription::STATUS_ACTIVE || $status === IT_Exchange_Subscription::STATUS_SUSPENDED ) {
+			if ( $s->is_status( IT_Exchange_Subscription::STATUS_ACTIVE, IT_Exchange_Subscription::STATUS_PAYMENT_FAILED ) ) {
 				$s->set_status( IT_Exchange_Subscription::STATUS_DEACTIVATED );
 				$s->mark_expired();
 			} elseif ( $status === IT_Exchange_Subscription::STATUS_COMPLIMENTARY && $s->is_auto_renewing() ) {
@@ -1027,13 +1027,13 @@ function it_exchange_recurring_payments_after_payment_details_recurring_payments
 add_action( 'it_exchange_after_payment_details', 'it_exchange_recurring_payments_after_payment_details_recurring_payments_autorenewal_details' );
 
 /**
- * Render the cancel subscription button.
+ * Render the Pause, Resume, and Cancel subscription buttons.
  *
  * @since 1.9.0
  *
  * @param IT_Exchange_Transaction $transaction
  */
-function it_exchange_recurring_payments_render_admin_cancel_button( IT_Exchange_Transaction $transaction ) {
+function it_exchange_recurring_payments_render_admin_subscription_actions( IT_Exchange_Transaction $transaction ) {
 
 	try {
 		$subscription = it_exchange_get_subscription_by_transaction( $transaction );
@@ -1041,35 +1041,67 @@ function it_exchange_recurring_payments_render_admin_cancel_button( IT_Exchange_
 		return;
 	}
 
-	if ( ! $subscription->can_be_cancelled() ) {
-		return;
-	}
+	$sub_id = $subscription->get_id();
 
-	$sub_id = "{$subscription->get_transaction()->ID}:{$subscription->get_product()->ID}";
-	$url    = rest_url( "it_exchange/v1/subscriptions/{$sub_id}/cancel" );
-	$url    = add_query_arg( 'context', 'edit', $url );
-	$url    = wp_nonce_url( $url, 'wp_rest' );
-	?>
+	$pause  = wp_nonce_url( rest_url( "it_exchange/v1/subscriptions/{$sub_id}/pause" ), 'wp_rest' );
+	$resume = wp_nonce_url( rest_url( "it_exchange/v1/subscriptions/{$sub_id}/resume" ), 'wp_rest' );
+	$cancel = wp_nonce_url( rest_url( "it_exchange/v1/subscriptions/{$sub_id}/cancel" ), 'wp_rest' );
 
-	<button class="button button-secondary right" id="cancel-subscription" data-route="<?php echo esc_attr( $url ); ?>">
-		<?php _e( 'Cancel Subscription', 'LION' ); ?>
-	</button>
+	if ( $subscription->can_be_paused() ) : ?>
+		<button class="button button-secondary right" id="pause-subscription" data-route="<?php echo esc_attr( $pause ); ?>">
+			<?php _e( 'Pause', 'LION' ); ?>
+		</button>
+	<?php endif;
 
-	<?php
+	if ( $subscription->can_be_resumed() ) : ?>
+		<button class="button button-secondary right" id="resume-subscription" data-route="<?php echo esc_attr( $resume ); ?>">
+			<?php _e( 'Resume', 'LION' ); ?>
+		</button>
+	<?php endif;
+
+	if ( $subscription->can_be_cancelled() ) : ?>
+		<button class="button button-secondary right" id="cancel-subscription" data-route="<?php echo esc_attr( $cancel ); ?>">
+			<?php _e( 'Cancel', 'LION' ); ?>
+		</button>
+	<?php endif;
 }
 
-add_action( 'it_exchange_after_payment_refund', 'it_exchange_recurring_payments_render_admin_cancel_button' );
+add_action( 'it_exchange_after_payment_refund', 'it_exchange_recurring_payments_render_admin_subscription_actions' );
 
 /**
- * Render admin cancellation detail.
+ * Render admin subscription actions detail.
  *
  * @since 1.9.0
  *
  * @param IT_Exchange_Transaction $transaction
  */
-function it_exchange_recurring_payments_render_admin_cancellation_detail( IT_Exchange_Transaction $transaction ) {
+function it_exchange_recurring_payments_render_admin_subscription_actions_detail( IT_Exchange_Transaction $transaction ) {
 
 	?>
+	<div class="hidden spacing-wrapper bottom-border clearfix" id="subscription-pause-manager"
+	     style="background: #F5F5F5;">
+
+		<button class="button button-secondary left" id="cancel-pause-subscription">
+			<?php _e( 'Back', 'it-l10n-ithemes-exchange' ); ?>
+		</button>
+
+		<button class="button button-primary right" id="confirm-pause-subscription" style="margin-left: 10px;">
+			<?php _e( 'Pause Subscription', 'it-l10n' ) ?>
+		</button>
+	</div>
+
+	<div class="hidden spacing-wrapper bottom-border clearfix" id="subscription-resume-manager"
+	     style="background: #F5F5F5;">
+
+		<button class="button button-secondary left" id="cancel-resume-subscription">
+			<?php _e( 'Back', 'it-l10n-ithemes-exchange' ); ?>
+		</button>
+
+		<button class="button button-primary right" id="confirm-resume-subscription" style="margin-left: 10px;">
+			<?php _e( 'Resume Subscription', 'it-l10n' ) ?>
+		</button>
+	</div>
+
 	<div class="hidden spacing-wrapper bottom-border clearfix" id="subscription-cancellation-manager"
 	     style="background: #F5F5F5;">
 
@@ -1088,7 +1120,7 @@ function it_exchange_recurring_payments_render_admin_cancellation_detail( IT_Exc
 	<?php
 }
 
-add_action( 'it_exchange_after_payment_actions', 'it_exchange_recurring_payments_render_admin_cancellation_detail' );
+add_action( 'it_exchange_after_payment_actions', 'it_exchange_recurring_payments_render_admin_subscription_actions_detail' );
 
 /**
  * Save the subscription details.
@@ -1214,6 +1246,72 @@ function it_exchange_recurring_payments_addon_ajax_add_subscription_parent() {
 }
 
 add_action( 'wp_ajax_it-exchange-recurring-payments-addon-add-subscription-parent', 'it_exchange_recurring_payments_addon_ajax_add_subscription_parent' );
+
+/**
+ * Make a pause subscription request.
+ *
+ * @since 1.9.0
+ *
+ * @param null  $_
+ * @param array $args
+ *
+ * @return ITE_Gateway_Request
+ */
+function it_exchange_recurring_payments_make_pause_subscription_request( $_, array $args ) {
+
+	if ( empty( $args['subscription'] ) || ! $args['subscription'] instanceof IT_Exchange_Subscription ) {
+		throw new InvalidArgumentException( 'Invalid `subscription` option.' );
+	}
+
+	if ( empty( $args['paused_by'] ) ) {
+		$paused_by = it_exchange_get_current_customer() ?: null;
+	} else {
+		$paused_by = it_exchange_get_customer( $args['paused_by'] );
+
+		if ( ! $paused_by ) {
+			throw new InvalidArgumentException( 'Invalid `paused_by` option.' );
+		}
+	}
+
+	$request = new ITE_Pause_Subscription_Request( $args['subscription'], $paused_by );
+
+	return $request;
+}
+
+add_filter( 'it_exchange_make_pause-subscription_gateway_request', 'it_exchange_recurring_payments_make_pause_subscription_request', 10, 2 );
+
+/**
+ * Make a resume subscription request.
+ *
+ * @since 1.9.0
+ *
+ * @param null  $_
+ * @param array $args
+ *
+ * @return ITE_Gateway_Request
+ */
+function it_exchange_recurring_payments_make_resume_subscription_request( $_, array $args ) {
+
+	if ( empty( $args['subscription'] ) || ! $args['subscription'] instanceof IT_Exchange_Subscription ) {
+		throw new InvalidArgumentException( 'Invalid `subscription` option.' );
+	}
+
+	if ( empty( $args['resumed_by'] ) ) {
+		$resumed_by = it_exchange_get_current_customer() ?: null;
+	} else {
+		$resumed_by = it_exchange_get_customer( $args['resumed_by'] );
+
+		if ( ! $resumed_by ) {
+			throw new InvalidArgumentException( 'Invalid `resumed_by` option.' );
+		}
+	}
+
+	$request = new ITE_Resume_Subscription_Request( $args['subscription'], $resumed_by );
+
+	return $request;
+}
+
+add_filter( 'it_exchange_make_resume-subscription_gateway_request', 'it_exchange_recurring_payments_make_resume_subscription_request', 10, 2 );
 
 /**
  * Make a cancel subscription request.
@@ -1356,3 +1454,88 @@ function it_exchange_recurring_payments_decorate_purchase_request( ITE_Gateway_P
 }
 
 add_filter( 'it_exchange_make_purchase_gateway_request', 'it_exchange_recurring_payments_decorate_purchase_request' );
+
+/**
+ * Map meta capabilities.
+ *
+ * @since 2.0.0
+ *
+ * @param array  $caps    Primitive capabilities required.
+ * @param string $cap     Meta capability requested.
+ * @param int    $user_id User ID testing against.
+ * @param array  $args    Additional arguments. `$args[0]` typically contains the object ID.
+ *
+ * @return array
+ */
+function it_exchange_recurring_payments_map_meta_cap( $caps, $cap, $user_id, $args ) {
+
+	switch ( $cap ) {
+		case 'it_pause_subscription':
+
+			if ( empty( $args[0] ) ) {
+				return array( 'do_not_allow' );
+			}
+
+			$s = it_exchange_get_subscription( $args[0] );
+
+			if ( ! $s->can_be_paused() ) {
+				return array( 'do_not_allow' );
+			}
+
+			$txn_id = $s->get_transaction()->get_ID();
+
+			if ( it_exchange_allow_customers_to_pause_subscriptions() && user_can( $user_id, 'read_it_transaction', $txn_id ) ) {
+				return array();
+			} elseif ( user_can( $user_id, 'edit_it_transaction', $txn_id ) ) {
+				return array();
+			}
+
+			return array( 'do_not_allow' );
+
+		case 'it_resume_subscription':
+
+			if ( empty( $args[0] ) ) {
+				return array( 'do_not_allow' );
+			}
+
+			$s = it_exchange_get_subscription( $args[0] );
+
+			if ( ! $s->can_be_resumed() ) {
+				return array( 'do_not_allow' );
+			}
+
+			$txn_id = $s->get_transaction()->get_ID();
+
+			if ( it_exchange_allow_customers_to_pause_subscriptions() && user_can( $user_id, 'read_it_transaction', $txn_id ) ) {
+				return array();
+			} elseif ( user_can( $user_id, 'edit_it_transaction', $txn_id ) ) {
+				return array();
+			}
+
+			return array( 'do_not_allow' );
+
+		case 'it_cancel_subscription':
+
+			if ( empty( $args[0] ) ) {
+				return array( 'do_not_allow' );
+			}
+
+			$s = it_exchange_get_subscription( $args[0] );
+
+			if ( ! $s->can_be_cancelled() ) {
+				return array( 'do_not_allow' );
+			}
+
+			$txn_id = $s->get_transaction()->get_ID();
+
+			if ( user_can( $user_id, 'read_it_transaction', $txn_id ) ) {
+				return array();
+			}
+
+			return array( 'do_not_allow' );
+	}
+
+	return $caps;
+}
+
+add_filter( 'map_meta_cap', 'it_exchange_recurring_payments_map_meta_cap', 10, 4 );

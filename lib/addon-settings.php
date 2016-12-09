@@ -3,12 +3,12 @@
  * Exchange will build your add-on's settings page for you and link to it from our add-on
  * screen. You are free to link from it elsewhere as well if you'd like... or to not use our API
  * at all. This file has all the functions related to registering the page, printing the form, and saving
- * the options. This includes the wizard settings. Additionally, we use the Exchange storage API to 
+ * the options. This includes the wizard settings. Additionally, we use the Exchange storage API to
  * save / retreive options. Add-ons are not required to do this.
 */
 
 /**
- * This is the function registered in the options array when it_exchange_register_addon 
+ * This is the function registered in the options array when it_exchange_register_addon
  * was called for recurring payments
  *
  * It tells Exchange where to find the settings page
@@ -30,6 +30,7 @@ function it_exchange_recurring_payments_addon_settings_callback() {
 */
 function it_exchange_recurring_payments_addon_default_settings( $values ) {
     $defaults = array(
+    	'pause-subscription'                  => false,
         'recurring-payments-cancel-subject'   => __( 'Cancellation Notification', 'LION' ),
         'recurring-payments-cancel-body'      => __( 'Hello [it_exchange_email show=name],
 
@@ -45,8 +46,8 @@ Your recurring payment has expired.
 Thank you.
 [it_exchange_email show=sitename]', 'LION' ),
 	);
-    $values = ITUtility::merge_defaults( $values, $defaults );
-    return $values;
+
+    return ITUtility::merge_defaults( $values, $defaults );
 }
 add_filter( 'it_storage_get_defaults_exchange_addon_recurring_payments', 'it_exchange_recurring_payments_addon_default_settings' );
 
@@ -130,7 +131,7 @@ class IT_Exchange_Recurring_Payments_Add_On {
             'action'  => 'admin.php?page=it-exchange-addons&add-on-settings=recurring-payments',
         );
         $form         = new ITForm( $form_values, array( 'prefix' => 'it-exchange-add-on-recurring_payments' ) );
-		
+
         if ( ! empty ( $this->status_message ) )
             ITUtility::show_status_message( $this->status_message );
         if ( ! empty( $this->error_message ) )
@@ -157,11 +158,13 @@ class IT_Exchange_Recurring_Payments_Add_On {
         <?php
     }
 
+	/**
+	 * @param ITForm $form
+	 * @param array  $settings
+	 */
     function get_recurring_payments_form_table( $form, $settings = array() ) {
 
 		global $wp_version;
-
-        $general_settings = it_exchange_get_option( 'settings_general' );
 
         if ( !empty( $settings ) )
             foreach ( $settings as $key => $var )
@@ -171,6 +174,11 @@ class IT_Exchange_Recurring_Payments_Add_On {
             <h3><?php _e( 'Recurring Payments', 'LION' ); ?></h3>
         <?php endif; ?>
         <div class="it-exchange-addon-settings it-exchange-recurring-payments-addon-settings">
+
+	        <label for="pause-subscription"><?php _e( 'Allow Pausing', 'LION' ); ?></label>
+	        <p><?php _e( 'Allow customers to pause their subscription.', 'LION' ); ?></p>
+	        <?php $form->add_check_box( 'pause-subscription' ); ?>
+
             <h4><?php _e( 'Recurring Payment Cancelled Email', 'LION' ); ?></h4>
             <p>
                 <label for="recurring-payments-cancel-subject"><?php _e( 'Email Subject', 'LION' ); ?> <span class="tip" title="<?php _e( 'The subject you want users who have cancelled their subscriptions to receive.', 'LION' ); ?>">i</span></label>
@@ -179,17 +187,18 @@ class IT_Exchange_Recurring_Payments_Add_On {
             <p>
                 <label for="recurring-payments-cancel-body"><?php _e( 'Email Message', 'LION' ); ?> <span class="tip" title="<?php _e( 'The message you want users who have cancelled their subscriptions to receive.', 'LION' ); ?>">i</span></label>
                 <?php
-                if ( $wp_version >= 3.3 && function_exists( 'wp_editor' ) ) {
-                    echo wp_editor( $settings['recurring-payments-cancel-body'], 'recurring-payments-cancel-body', array( 'textarea_name' => 'it-exchange-add-on-recurring_payments-recurring-payments-cancel-body', 'textarea_rows' => 10, 'textarea_cols' => 30, 'editor_class' => 'large-text' ) );
-					
-					//We do this for some ITForm trickery... just to add recurring-payments-cancel-body to the used inputs field
-					$form->get_text_area( 'recurring-payments-cancel-body', array( 'rows' => 10, 'cols' => 30, 'class' => 'large-text' ) );
-                } else {
-                    $form->add_text_area( 'recurring-payments-cancel-body', array( 'rows' => 10, 'cols' => 30, 'class' => 'large-text' ) );
-				}
+                wp_editor( $settings['recurring-payments-cancel-body'], 'recurring-payments-cancel-body', array(
+                    'textarea_name' => 'it-exchange-add-on-recurring_payments-recurring-payments-cancel-body',
+                    'textarea_rows' => 10,
+                    'textarea_cols' => 30,
+                    'editor_class' => 'large-text'
+                ) );
+
+				//We do this for some ITForm trickery... just to add recurring-payments-cancel-body to the used inputs field
+				$form->get_text_area( 'recurring-payments-cancel-body', array( 'rows' => 10, 'cols' => 30, 'class' => 'large-text' ) );
 				?>
             </p>
-            
+
             <h4><?php _e( 'Recurring Payment Expired Email', 'LION' ); ?></h4>
             <p>
                 <label for="recurring-payments-deactivate-subject"><?php _e( 'Email Subject', 'LION' ); ?> <span class="tip" title="<?php _e( 'The subject you want users who have cancelled their subscriptions to receive.', 'LION' ); ?>">i</span></label>
@@ -200,7 +209,7 @@ class IT_Exchange_Recurring_Payments_Add_On {
                 <?php
                 if ( $wp_version >= 3.3 && function_exists( 'wp_editor' ) ) {
                     echo wp_editor( $settings['recurring-payments-deactivate-body'], 'recurring-payments-deactivate-body', array( 'textarea_name' => 'it-exchange-add-on-recurring_payments-recurring-payments-deactivate-body', 'textarea_rows' => 10, 'textarea_cols' => 30, 'editor_class' => 'large-text' ) );
-					
+
 					//We do this for some ITForm trickery... just to add recurring-payments-cancel-body to the used inputs field
 					$form->get_text_area( 'recurring-payments-deactivate-body', array( 'rows' => 10, 'cols' => 30, 'class' => 'large-text' ) );
                 } else {
@@ -208,12 +217,12 @@ class IT_Exchange_Recurring_Payments_Add_On {
 				}
 				?>
             </p>
-        
+
             <p class="description">
-            <?php 
-            _e( 'Enter the email that is sent to administrator after a customer completes a successful purchase. HTML is accepted. Available shortcode functions:', 'LION' ); 
+            <?php
+            _e( 'Enter the email that is sent to administrator after a customer completes a successful purchase. HTML is accepted. Available shortcode functions:', 'LION' );
             echo '<br />';
-            printf( __( 'You call these shortcode functions like this: %s', 'LION' ), '[it_exchange_email show=order_table option=purchase_message]' ); 
+            printf( __( 'You call these shortcode functions like this: %s', 'LION' ), '[it_exchange_email show=order_table option=purchase_message]' );
             echo '<ul>';
             echo '<li>name - ' . __( "The buyer's first name", 'LION' ) . '</li>';
             echo '<li>fullname - ' . __( "The buyer's full name, first and last", 'LION' ) . '</li>';

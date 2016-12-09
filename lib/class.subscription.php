@@ -16,6 +16,8 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 
 	const STATUS_ACTIVE = 'active';
 	const STATUS_SUSPENDED = 'suspended';
+	const STATUS_PAUSED = 'suspended';
+	const STATUS_PAYMENT_FAILED = 'payment-failed';
 	const STATUS_CANCELLED = 'cancelled';
 	const STATUS_DEACTIVATED = 'deactivated';
 	const STATUS_COMPLIMENTARY = 'complimentary';
@@ -897,8 +899,8 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 
 			if ( $amount_paid <= 0 && $cart_product ) {
 				$amount_paid -= $cart_product->get_line_items()->with_only( 'fee' )
-				                                    ->filter( function ( ITE_Fee_Line_Item $fee ) { return ! $fee->is_recurring(); } )
-				                                    ->total();
+				                             ->filter( function ( ITE_Fee_Line_Item $fee ) { return ! $fee->is_recurring(); } )
+				                             ->total();
 			}
 
 		} else {
@@ -918,6 +920,212 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	}
 
 	/**
+	 * Can the subscription be paused.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @return bool
+	 */
+	public function can_be_paused() {
+
+		if ( ! $this->get_subscriber_id() ) {
+			return false;
+		}
+
+		$gateway = $this->get_transaction()->get_gateway();
+
+		if ( ! $gateway || ! $gateway->can_handle( 'pause-subscription' ) ) {
+			return false;
+		}
+
+		$can = $this->is_status( self::STATUS_ACTIVE );
+
+		/**
+		 * Filter whether the subscription can be paused.
+		 *
+		 * @since 1.9.0
+		 *
+		 * @param bool                     $can
+		 * @param IT_Exchange_Subscription $this
+		 */
+		return apply_filters( 'it_exchange_subscription_can_be_paused', $can, $this );
+	}
+
+	/**
+	 * Pause the subscription.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @param IT_Exchange_Customer|null $paused_by
+	 *
+	 * @return bool
+	 */
+	public function pause( IT_Exchange_Customer $paused_by = null ) {
+
+		if ( ! $this->can_be_paused() ) {
+			return false;
+		}
+
+		$factory = new ITE_Gateway_Request_Factory();
+		$request = $factory->make( 'pause-subscription', array_filter( array(
+			'subscription' => $this,
+			'paused_by'    => $paused_by,
+		) ) );
+
+		$r = $this->get_transaction()->get_gateway()->get_handler_for( $request )->handle( $request );
+
+		if ( $r ) {
+			$this->set_status( self::STATUS_PAUSED );
+
+			/**
+			 * Fires when a subscription has been paused.
+			 *
+			 * @since 1.9.0
+			 *
+			 * @param \IT_Exchange_Subscription $this
+			 */
+			do_action( 'it_exchange_pause_subscription', $this );
+		}
+
+		return $r;
+	}
+
+	/**
+	 * Retrieve the user who paused the subscription.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @return IT_Exchange_Customer|null
+	 */
+	public function get_paused_by() {
+
+		$id = $this->get_meta( 'subscription_paused_by', true );
+
+		if ( ! $id ) {
+			return null;
+		}
+
+		return it_exchange_get_customer( $id ) ?: null;
+	}
+
+	/**
+	 * Set the person who paused the subscription.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @param IT_Exchange_Customer $customer
+	 *
+	 * @return bool
+	 */
+	public function set_paused_by( IT_Exchange_Customer $customer ) {
+		return (bool) $this->update_meta( 'subscription_paused_by', $customer->id );
+	}
+
+	/**
+	 * Can the subscription be resumed.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @return bool
+	 */
+	public function can_be_resumed() {
+
+		if ( ! $this->get_subscriber_id() ) {
+			return false;
+		}
+
+		$gateway = $this->get_transaction()->get_gateway();
+
+		if ( ! $gateway || ! $gateway->can_handle( 'resume-subscription' ) ) {
+			return false;
+		}
+
+		if ( ! $this->is_status( self::STATUS_PAUSED ) ) {
+			return false;
+		}
+
+		/**
+		 * Filter whether the subscription can be resumed.
+		 *
+		 * @since 1.9.0
+		 *
+		 * @param bool                     $can
+		 * @param IT_Exchange_Subscription $this
+		 */
+		return apply_filters( 'it_exchange_subscription_can_be_resumed', true, $this );
+	}
+
+	/**
+	 * Resume the subscription.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @param IT_Exchange_Customer|null $resumed_by
+	 *
+	 * @return bool
+	 */
+	public function resume( IT_Exchange_Customer $resumed_by = null ) {
+
+		if ( ! $this->can_be_resumed() ) {
+			return false;
+		}
+
+		$factory = new ITE_Gateway_Request_Factory();
+		$request = $factory->make( 'resume-subscription', array_filter( array(
+			'subscription' => $this,
+			'resumed_by'   => $resumed_by,
+		) ) );
+
+		$r = $this->get_transaction()->get_gateway()->get_handler_for( $request )->handle( $request );
+
+		if ( $r ) {
+			$this->set_status( self::STATUS_ACTIVE );
+
+			/**
+			 * Fires when a subscription has been resumed.
+			 *
+			 * @since 1.9.0
+			 *
+			 * @param \IT_Exchange_Subscription $this
+			 */
+			do_action( 'it_exchange_resume_subscription', $this );
+		}
+
+		return $r;
+	}
+
+	/**
+	 * Retrieve the user who resumed the subscription.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @return IT_Exchange_Customer|null
+	 */
+	public function get_resumed_by() {
+
+		$id = $this->get_meta( 'subscription_resumed_by', true );
+
+		if ( ! $id ) {
+			return null;
+		}
+
+		return it_exchange_get_customer( $id ) ?: null;
+	}
+
+	/**
+	 * Set the person who resumed the subscription.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @param IT_Exchange_Customer $customer
+	 *
+	 * @return bool
+	 */
+	public function set_resumed_by( IT_Exchange_Customer $customer ) {
+		return (bool) $this->update_meta( 'subscription_resumed_by', $customer->id );
+	}
+
+	/**
 	 * Can the subscription be cancelled.
 	 *
 	 * @since 1.9.0
@@ -930,11 +1138,11 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 			return false;
 		}
 
-		if ( $this->get_status() === self::STATUS_CANCELLED || $this->get_status() === self::STATUS_PENDING_CANCELLATION ) {
+		if ( ! $this->is_status( self::STATUS_ACTIVE, self::STATUS_PAUSED, self::STATUS_PAYMENT_FAILED ) ) {
 			return false;
 		}
 
-		$gateway = ITE_Gateways::get( $this->get_transaction()->get_method() );
+		$gateway = $this->get_transaction()->get_gateway();
 
 		if ( ! $gateway || ! $gateway->can_handle( 'cancel-subscription' ) ) {
 			return false;
@@ -1165,7 +1373,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 			return false;
 		}
 
-		$can = $this->is_status( self::STATUS_ACTIVE, self::STATUS_SUSPENDED );
+		$can = $this->is_status( self::STATUS_ACTIVE, self::STATUS_PAYMENT_FAILED );
 
 		/**
 		 * Can the subscription's payment source be updated.
@@ -1298,7 +1506,8 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 		return array(
 			self::STATUS_ACTIVE               => __( 'Active', 'LION' ),
 			self::STATUS_COMPLIMENTARY        => __( 'Complimentary', 'LION' ),
-			self::STATUS_SUSPENDED            => __( 'Suspended', 'LION' ),
+			self::STATUS_PAUSED               => __( 'Paused', 'LION' ),
+			self::STATUS_PAYMENT_FAILED       => __( 'Payment Failed', 'LION' ),
 			self::STATUS_DEACTIVATED          => __( 'Deactivated', 'LION' ),
 			self::STATUS_CANCELLED            => __( 'Cancelled', 'LION' ),
 			self::STATUS_PENDING_CANCELLATION => __( 'Pending Cancellation', 'LION' )

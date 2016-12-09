@@ -348,3 +348,17 @@ function it_exchange_recurring_payments_addon_display_subscription_hierarchy( $p
 		return $output;
 	}
 }
+
+/**
+ * Helper function to determine if customers are allowed to pause subscriptions.
+ *
+ * @since 1.9.0
+ *
+ * @return bool
+ */
+function it_exchange_allow_customers_to_pause_subscriptions() {
+
+	$settings = it_exchange_get_option( 'addon_recurring_payments', true );
+
+	return ! empty( $settings['pause-subscription'] );
+}
