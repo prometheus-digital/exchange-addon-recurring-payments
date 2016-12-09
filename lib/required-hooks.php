@@ -683,7 +683,6 @@ function it_exchange_recurring_payments_add_activity_on_pause( IT_Exchange_Subsc
 
 	$builder = new IT_Exchange_Txn_Activity_Builder( $subscription->get_transaction(), 'status' );
 	$builder->set_description( $message );
-	$builder->set_public();
 
 	if ( $actor ) {
 		$builder->set_actor( $actor );
@@ -715,7 +714,6 @@ function it_exchange_recurring_payments_add_activity_on_resume( IT_Exchange_Subs
 
 	$builder = new IT_Exchange_Txn_Activity_Builder( $subscription->get_transaction(), 'status' );
 	$builder->set_description( $message );
-	$builder->set_public();
 
 	if ( $actor ) {
 		$builder->set_actor( $actor );
