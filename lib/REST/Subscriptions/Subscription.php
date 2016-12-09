@@ -146,11 +146,7 @@ class Subscription extends Base implements Getable, Putable {
 			}
 
 			$new_expires = new \DateTime( $request['expiry_date'], new \DateTimeZone( 'UTC' ) );
-			$old_expires = $s->get_expiry_date();
-
-			if ( $new_expires && ( ! $old_expires || $new_expires->getTimestamp() !== $old_expires->getTimestamp() ) ) {
-				$s->set_expiry_date( $new_expires );
-			}
+			$this->handle_expiry_update( $s, $new_expires );
 
 			if ( $request['subscriber_id'] && $s->is_auto_renewing() && $request['subscriber_id'] !== $s->get_subscriber_id() ) {
 				$s->set_subscriber_id( $request['subscriber_id'] );
@@ -158,6 +154,43 @@ class Subscription extends Base implements Getable, Putable {
 		}
 
 		return new \WP_REST_Response( $this->serializer->serialize( $s ) );
+	}
+
+	/**
+	 * Handle updating the expiration date.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @param \IT_Exchange_Subscription $s
+	 * @param \DateTime                 $new
+	 *
+	 * @return null
+	 */
+	protected function handle_expiry_update( \IT_Exchange_Subscription $s, \DateTime $new ) {
+
+		$old = $s->get_expiry_date();
+
+		if ( ! $old ) {
+			return $s->set_expiry_date( $new );
+		}
+
+		$hours   = (int) $new->format( 'H' );
+		$minutes = (int) $new->format( 'i' );
+		$seconds = (int) $new->format( 's' );
+
+		if ( ! $hours && ! $minutes && ! $seconds ) {
+			$hours   = (int) $old->format( 'H' );
+			$minutes = (int) $old->format( 'i' );
+			$seconds = (int) $old->format( 's' );
+
+			$new = new \DateTime( "{$new->format( 'Y-m-d')} $hours:$minutes:$seconds", new \DateTimeZone( 'UTC' ) );
+		}
+
+		if ( $new->getTimestamp() !== $old->getTimestamp() ) {
+			return $s->set_expiry_date( $new );
+		}
+
+		return null;
 	}
 
 	/**

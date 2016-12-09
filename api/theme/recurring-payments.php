@@ -106,6 +106,10 @@ class IT_Theme_API_Recurring_Payments implements IT_Theme_API {
 
 		$s = reset( $subscriptions );
 
+		if ( ! $s->get_status() ) {
+			return '';
+		}
+
 		$output .= $options['before'];
 
 		if ( $s->is_status( IT_Exchange_Subscription::STATUS_ACTIVE ) ) {
