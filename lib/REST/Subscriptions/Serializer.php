@@ -261,20 +261,26 @@ class Serializer {
 				),
 				'status'              => array(
 					'description' => __( 'The subscription status.', 'LION' ),
-					'type'        => 'object',
 					'context'     => array( 'view', 'edit' ),
-					'properties'  => array(
-						'slug'  => array(
-							'description' => __( 'The subscription status slug.', 'LION' ),
-							'type'        => 'string',
-							'context'     => array( 'edit' ),
-							'enum'        => array_keys( \IT_Exchange_Subscription::get_statuses() )
+					'oneOf'       => array(
+						array(
+							'type'       => 'object',
+							'context'    => array( 'view', 'edit' ),
+							'properties' => array(
+								'slug'  => array(
+									'description' => __( 'The subscription status slug.', 'LION' ),
+									'type'        => 'string',
+									'context'     => array( 'edit' ),
+									'enum'        => array_keys( \IT_Exchange_Subscription::get_statuses() )
+								),
+								'label' => array(
+									'description' => __( 'The subscription status label.', 'LION' ),
+									'type'        => 'string',
+									'context'     => array( 'view', 'edit' )
+								),
+							),
 						),
-						'label' => array(
-							'description' => __( 'The subscription status label.', 'LION' ),
-							'type'        => 'string',
-							'context'     => array( 'view', 'edit' )
-						),
+						array( 'type' => 'string' )
 					),
 				),
 				'cancellation_reason' => array(
