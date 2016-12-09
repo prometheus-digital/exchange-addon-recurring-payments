@@ -8,20 +8,31 @@
 
 use iThemes\Exchange\RecurringPayments\REST\Subscriptions\Cancel;
 use iThemes\Exchange\RecurringPayments\REST\Subscriptions\Downgrades;
+use iThemes\Exchange\RecurringPayments\REST\Subscriptions\Pause;
 use iThemes\Exchange\RecurringPayments\REST\Subscriptions\ProrateSerializer;
+use iThemes\Exchange\RecurringPayments\REST\Subscriptions\Resume;
 use iThemes\Exchange\RecurringPayments\REST\Subscriptions\Serializer as SubscriptionSerializer;
 use iThemes\Exchange\RecurringPayments\REST\Subscriptions\Subscription;
 use iThemes\Exchange\RecurringPayments\REST\Subscriptions\Upgrades;
 
 add_action( 'it_exchange_register_rest_routes', function ( \iThemes\Exchange\REST\Manager $manager ) {
 
-	$subscription = new Subscription( new SubscriptionSerializer(), new ITE_Gateway_Request_Factory() );
+	$serializer = new SubscriptionSerializer();
+
+	$subscription = new Subscription( $serializer, new ITE_Gateway_Request_Factory() );
 	$manager->register_route( $subscription );
-	$cancel = new Cancel( new SubscriptionSerializer() );
+
+	$cancel = new Pause( $serializer );
+	$manager->register_route( $cancel->set_parent( $subscription ) );
+
+	$cancel = new Resume( $serializer );
+	$manager->register_route( $cancel->set_parent( $subscription ) );
+
+	$cancel = new Cancel( $serializer );
 	$manager->register_route( $cancel->set_parent( $subscription ) );
 
 	$prorate_serializer = new ProrateSerializer();
-	$requestor = new ITE_Prorate_Credit_Requestor( new ITE_Daily_Price_Calculator() );
+	$requestor          = new ITE_Prorate_Credit_Requestor( new ITE_Daily_Price_Calculator() );
 	$requestor->register_provider( 'IT_Exchange_Subscription' );
 	$requestor->register_provider( 'IT_Exchange_Transaction' );
 
