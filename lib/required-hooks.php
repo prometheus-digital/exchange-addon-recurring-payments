@@ -160,7 +160,7 @@ function it_exchange_recurring_payments_localize_purchases() {
 		try {
 			$s = it_exchange_get_subscription_by_transaction( $transaction );
 
-			if ( $s && $s->can_payment_source_be_updated() ) {
+			if ( $s ) {
 				$subscriptions[] = $serializer->serialize( $s );
 			}
 		} catch ( Exception $e ) {
@@ -173,6 +173,8 @@ function it_exchange_recurring_payments_localize_purchases() {
 			'updateSource' => __( 'Update Payment Method', 'LION' ),
 			'save'         => __( 'Save', 'LION' ),
 			'cancel'       => __( 'Cancel', 'LION' ),
+			'cancelling'   => __( 'Cancelling', 'LION' ),
+			'cannotCancel' => __( 'This subscription cannot be cancelled.', 'LION' ),
 		),
 		'subscriptions' => $subscriptions
 	) );

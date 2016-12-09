@@ -151,75 +151,16 @@ class IT_Theme_API_Recurring_Payments implements IT_Theme_API {
 		$label = $options['label'];
 		$class = $options['class'];
 
-		$sub_id  = "{$subscription->get_transaction()->ID}:{$subscription->get_product()->ID}";
-		$url     = rest_url( "it_exchange/v1/subscriptions/{$sub_id}/cancel" );
-		$url     = wp_nonce_url( $url, 'wp_rest' );
-
 		ob_start();
 		?>
 
 		<a href="javascript:"
 		   id="it-exchange-cancel-subscription-api-<?php echo $subscription->get_transaction()->ID ?>"
 		   class="it-exchange-cancel-subscription-api <?php echo esc_attr( $class ); ?>"
-		   data-subscription-endpoint="<?php echo $url; ?>"
+		   data-id="<?php echo $subscription->get_id(); ?>"
 		>
 			<?php echo $label; ?>
 		</a>
-
-		<script type="text/javascript">
-			jQuery( document ).ready( function( $ ) {
-
-				var cancelling = '<?php echo esc_js( __( 'Cancelling', 'LION' ) ); ?>';
-
-				$( '.it-exchange-cancel-subscription-api').click( function( e ) {
-					e.preventDefault();
-
-					var $this = $( this );
-
-					if ( $this.data( 'processing' ) ) {
-						return;
-					}
-
-					$this.attr( 'disabled', true );
-					$this.data( 'processing', true );
-
-					var original_text = $this.text();
-					$this.text( cancelling );
-
-					var i = 0;
-					setInterval( function() {
-						i = ++i % 4;
-						var arr = new Array( i + 1 );
-						$this.text( cancelling + arr.join( '.' ) );
-					}, 500 );
-
-					$.ajax({
-						type: 'POST',
-						url: $this.data( 'subscription-endpoint' ),
-						data: {
-							cancelled_by: <?php echo esc_js( get_current_user_id() ); ?>
-						},
-						success: function( data ) {
-							$this.replaceWith( $( '<span class="it-exchange-cancel-subscription-api-done"></span>' ).text( data.status.label ) );
-						},
-						error: function( xhr ) {
-
-							var data = $.parseJSON( xhr.responseText );
-
-							if ( data.message ) {
-								alert( data.message );
-							} else {
-								alert( 'Error' );
-							}
-
-							$this.removeAttr( 'disabled' );
-							$this.data(' processing', false );
-							$this.text( original_text );
-						}
-					});
-				} );
-			});
-		</script>
 
 		<?php
 
