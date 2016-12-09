@@ -1043,9 +1043,10 @@ function it_exchange_recurring_payments_render_admin_subscription_actions( IT_Ex
 
 	$sub_id = $subscription->get_id();
 
-	$pause  = wp_nonce_url( rest_url( "it_exchange/v1/subscriptions/{$sub_id}/pause" ), 'wp_rest' );
-	$resume = wp_nonce_url( rest_url( "it_exchange/v1/subscriptions/{$sub_id}/resume" ), 'wp_rest' );
-	$cancel = wp_nonce_url( rest_url( "it_exchange/v1/subscriptions/{$sub_id}/cancel" ), 'wp_rest' );
+	// Set context to 'edit' so raw subscription status is returned in response.
+	$pause  = add_query_arg( 'context', 'edit', wp_nonce_url( rest_url( "it_exchange/v1/subscriptions/{$sub_id}/pause" ), 'wp_rest' ) );
+	$resume = add_query_arg( 'context', 'edit', wp_nonce_url( rest_url( "it_exchange/v1/subscriptions/{$sub_id}/resume" ), 'wp_rest' ) );
+	$cancel = add_query_arg( 'context', 'edit', wp_nonce_url( rest_url( "it_exchange/v1/subscriptions/{$sub_id}/cancel" ), 'wp_rest' ) );
 
 	if ( $subscription->can_be_paused() ) : ?>
 		<button class="button button-secondary right" id="pause-subscription" data-route="<?php echo esc_attr( $pause ); ?>">
