@@ -30,21 +30,7 @@ function it_exchange_recurring_payments_addon_settings_callback() {
 */
 function it_exchange_recurring_payments_addon_default_settings( $values ) {
     $defaults = array(
-    	'pause-subscription'                  => false,
-        'recurring-payments-cancel-subject'   => __( 'Cancellation Notification', 'LION' ),
-        'recurring-payments-cancel-body'      => __( 'Hello [it_exchange_email show=name],
-
-Your recurring payment has been cancelled.
-
-Thank you.
-[it_exchange_email show=sitename]', 'LION' ),
-        'recurring-payments-deactivate-subject'   => __( 'Expiration Notification', 'LION' ),
-        'recurring-payments-deactivate-body'      => __( 'Hello [it_exchange_email show=name],
-
-Your recurring payment has expired.
-
-Thank you.
-[it_exchange_email show=sitename]', 'LION' ),
+    	'pause-subscription' => false,
 	);
 
     return ITUtility::merge_defaults( $values, $defaults );
@@ -141,6 +127,7 @@ class IT_Exchange_Recurring_Payments_Add_On {
         <div class="wrap">
             <?php screen_icon( 'it-exchange' ); ?>
             <h2><?php _e( 'Recurring Payments Settings', 'LION' ); ?></h2>
+	        <p><?php _e( 'Emails have been moved to the Settings -> Emails tab.', 'LION' ); ?></p>
 
             <?php do_action( 'it_exchange_recurring-payments_settings_page_top' ); ?>
             <?php do_action( 'it_exchange_addon_settings_page_top' ); ?>
@@ -164,8 +151,6 @@ class IT_Exchange_Recurring_Payments_Add_On {
 	 */
     function get_recurring_payments_form_table( $form, $settings = array() ) {
 
-		global $wp_version;
-
         if ( !empty( $settings ) )
             foreach ( $settings as $key => $var )
                 $form->set_option( $key, $var );
@@ -179,60 +164,7 @@ class IT_Exchange_Recurring_Payments_Add_On {
 	        <p><?php _e( 'Allow customers to pause their subscription.', 'LION' ); ?></p>
 	        <?php $form->add_check_box( 'pause-subscription' ); ?>
 
-            <h4><?php _e( 'Recurring Payment Cancelled Email', 'LION' ); ?></h4>
-            <p>
-                <label for="recurring-payments-cancel-subject"><?php _e( 'Email Subject', 'LION' ); ?> <span class="tip" title="<?php _e( 'The subject you want users who have cancelled their subscriptions to receive.', 'LION' ); ?>">i</span></label>
-                <?php $form->add_text_box( 'recurring-payments-cancel-subject' ); ?>
-            </p>
-            <p>
-                <label for="recurring-payments-cancel-body"><?php _e( 'Email Message', 'LION' ); ?> <span class="tip" title="<?php _e( 'The message you want users who have cancelled their subscriptions to receive.', 'LION' ); ?>">i</span></label>
-                <?php
-                wp_editor( $settings['recurring-payments-cancel-body'], 'recurring-payments-cancel-body', array(
-                    'textarea_name' => 'it-exchange-add-on-recurring_payments-recurring-payments-cancel-body',
-                    'textarea_rows' => 10,
-                    'textarea_cols' => 30,
-                    'editor_class' => 'large-text'
-                ) );
 
-				//We do this for some ITForm trickery... just to add recurring-payments-cancel-body to the used inputs field
-				$form->get_text_area( 'recurring-payments-cancel-body', array( 'rows' => 10, 'cols' => 30, 'class' => 'large-text' ) );
-				?>
-            </p>
-
-            <h4><?php _e( 'Recurring Payment Expired Email', 'LION' ); ?></h4>
-            <p>
-                <label for="recurring-payments-deactivate-subject"><?php _e( 'Email Subject', 'LION' ); ?> <span class="tip" title="<?php _e( 'The subject you want users who have cancelled their subscriptions to receive.', 'LION' ); ?>">i</span></label>
-                <?php $form->add_text_box( 'recurring-payments-deactivate-subject' ); ?>
-            </p>
-            <p>
-                <label for="recurring-payments-deactivate-body"><?php _e( 'Email Message', 'LION' ); ?> <span class="tip" title="<?php _e( 'The message you want users who have cancelled their subscriptions to receive.', 'LION' ); ?>">i</span></label>
-                <?php
-                if ( $wp_version >= 3.3 && function_exists( 'wp_editor' ) ) {
-                    echo wp_editor( $settings['recurring-payments-deactivate-body'], 'recurring-payments-deactivate-body', array( 'textarea_name' => 'it-exchange-add-on-recurring_payments-recurring-payments-deactivate-body', 'textarea_rows' => 10, 'textarea_cols' => 30, 'editor_class' => 'large-text' ) );
-
-					//We do this for some ITForm trickery... just to add recurring-payments-cancel-body to the used inputs field
-					$form->get_text_area( 'recurring-payments-deactivate-body', array( 'rows' => 10, 'cols' => 30, 'class' => 'large-text' ) );
-                } else {
-                    $form->add_text_area( 'recurring-payments-deactivate-body', array( 'rows' => 10, 'cols' => 30, 'class' => 'large-text' ) );
-				}
-				?>
-            </p>
-
-            <p class="description">
-            <?php
-            _e( 'Enter the email that is sent to administrator after a customer completes a successful purchase. HTML is accepted. Available shortcode functions:', 'LION' );
-            echo '<br />';
-            printf( __( 'You call these shortcode functions like this: %s', 'LION' ), '[it_exchange_email show=order_table option=purchase_message]' );
-            echo '<ul>';
-            echo '<li>name - ' . __( "The buyer's first name", 'LION' ) . '</li>';
-            echo '<li>fullname - ' . __( "The buyer's full name, first and last", 'LION' ) . '</li>';
-            echo '<li>username - ' . __( "The buyer's username on the site, if they registered an account", 'LION' ) . '</li>';
-            echo '<li>sitename - ' . __( 'Your site name', 'LION' ) . '</li>';
-            echo '<li>login_link - ' . __( 'Adds a link to the login page on your website.', 'LION' ) . '</li>';
-            do_action( 'it_exchange_email_template_tags_list' );
-            echo '</ul>';
-            ?>
-            </p>
         </div>
         <?php
     }
