@@ -663,6 +663,70 @@ function it_exchange_recurring_payments_handle_expired() {
 }
 
 /**
+ * Add an activity item when a subscription has been paused.
+ *
+ * @since 1.9.0
+ *
+ * @param IT_Exchange_Subscription $subscription
+ */
+function it_exchange_recurring_payments_add_activity_on_pause( IT_Exchange_Subscription $subscription ) {
+
+	$message = __( 'Subscription paused.', 'LION' );
+
+	if ( $subscription->get_paused_by() ) {
+		$actor = new IT_Exchange_Txn_Activity_User_Actor( $subscription->get_paused_by()->wp_user );
+	} elseif ( is_user_logged_in() ) {
+		$actor = new IT_Exchange_Txn_Activity_User_Actor( wp_get_current_user() );
+	} else {
+		$actor = null;
+	}
+
+	$builder = new IT_Exchange_Txn_Activity_Builder( $subscription->get_transaction(), 'status' );
+	$builder->set_description( $message );
+	$builder->set_public();
+
+	if ( $actor ) {
+		$builder->set_actor( $actor );
+	}
+
+	$builder->build( it_exchange_get_txn_activity_factory() );
+}
+
+add_action( 'it_exchange_pause_subscription', 'it_exchange_recurring_payments_add_activity_on_pause' );
+
+/**
+ * Add an activity item when a subscription has been resumed.
+ *
+ * @since 1.9.0
+ *
+ * @param IT_Exchange_Subscription $subscription
+ */
+function it_exchange_recurring_payments_add_activity_on_resume( IT_Exchange_Subscription $subscription ) {
+
+	$message = __( 'Subscription resumed.', 'LION' );
+
+	if ( $subscription->get_resumed_by() ) {
+		$actor = new IT_Exchange_Txn_Activity_User_Actor( $subscription->get_resumed_by()->wp_user );
+	} elseif ( is_user_logged_in() ) {
+		$actor = new IT_Exchange_Txn_Activity_User_Actor( wp_get_current_user() );
+	} else {
+		$actor = null;
+	}
+
+	$builder = new IT_Exchange_Txn_Activity_Builder( $subscription->get_transaction(), 'status' );
+	$builder->set_description( $message );
+	$builder->set_public();
+
+	if ( $actor ) {
+		$builder->set_actor( $actor );
+	}
+
+	$builder->build( it_exchange_get_txn_activity_factory() );
+}
+
+add_action( 'it_exchange_resume_subscription', 'it_exchange_recurring_payments_add_activity_on_resume' );
+
+/**
  * Add an activity item when a subscription has been cancelled.
  *
  * @since 1.9.0
@@ -714,7 +778,7 @@ function it_exchange_recurring_payments_add_activity_on_subscriber_status( $stat
 		return;
 	}
 
-	if ( $subscription->is_cancelling() ) {
+	if ( $subscription->is_cancelling() || $subscription->is_resuming() || $subscription->is_pausing() ) {
 		return;
 	}
 

@@ -44,6 +44,12 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	private $trial_profile;
 
 	/** @var bool */
+	private $is_pausing = false;
+
+	/** @var bool */
+	private $is_resuming = false;
+
+	/** @var bool */
 	private $is_cancelling = false;
 
 	/**
@@ -972,6 +978,8 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 			'paused_by'    => $paused_by,
 		) ) );
 
+		$this->is_pausing = true;
+
 		$r = $this->get_transaction()->get_gateway()->get_handler_for( $request )->handle( $request );
 
 		if ( $r ) {
@@ -986,6 +994,8 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 			 */
 			do_action( 'it_exchange_pause_subscription', $this );
 		}
+
+		$this->is_pausing = false;
 
 		return $r;
 	}
@@ -1013,13 +1023,22 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	 *
 	 * @since 1.9.0
 	 *
-	 * @param IT_Exchange_Customer $customer
+	 * @param IT_Exchange_Customer|null $customer
 	 *
 	 * @return bool
 	 */
-	public function set_paused_by( IT_Exchange_Customer $customer ) {
-		return (bool) $this->update_meta( 'subscription_paused_by', $customer->id );
+	public function set_paused_by( IT_Exchange_Customer $customer = null ) {
+		return (bool) $this->update_meta( 'subscription_paused_by', $customer ? $customer->id : null );
 	}
+
+	/**
+	 * Is the subscription currently being paused.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @return bool
+	 */
+	public function is_pausing() { return $this->is_pausing; }
 
 	/**
 	 * Can the subscription be resumed.
@@ -1076,6 +1095,8 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 			'resumed_by'   => $resumed_by,
 		) ) );
 
+		$this->is_resuming = true;
+
 		$r = $this->get_transaction()->get_gateway()->get_handler_for( $request )->handle( $request );
 
 		if ( $r ) {
@@ -1090,6 +1111,8 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 			 */
 			do_action( 'it_exchange_resume_subscription', $this );
 		}
+
+		$this->is_resuming = false;
 
 		return $r;
 	}
@@ -1117,13 +1140,22 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	 *
 	 * @since 1.9.0
 	 *
-	 * @param IT_Exchange_Customer $customer
+	 * @param IT_Exchange_Customer|null $customer
 	 *
 	 * @return bool
 	 */
-	public function set_resumed_by( IT_Exchange_Customer $customer ) {
-		return (bool) $this->update_meta( 'subscription_resumed_by', $customer->id );
+	public function set_resumed_by( IT_Exchange_Customer $customer = null ) {
+		return (bool) $this->update_meta( 'subscription_resumed_by', $customer ? $customer->id : null );
 	}
+
+	/**
+	 * Is the subscription currently being resumed.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @return bool
+	 */
+	public function is_resuming() { return $this->is_resuming; }
 
 	/**
 	 * Can the subscription be cancelled.
