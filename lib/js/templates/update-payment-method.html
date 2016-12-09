@@ -8,9 +8,11 @@
         {{ data.method.label }}
     </span>-->
 
-    <span class="it-exchange-current-subscription-payment-method-source">
-        {{ data.source.label }}
-    </span>
+    <# if ( data.source && data.source.label ) { #>
+        <span class="it-exchange-current-subscription-payment-method-source">
+            {{ data.source.label }}
+        </span>
+    <# } #>
 </script>
 
 <script type="text/template" id="tmpl-it-exchange-update-subscription-payment-method-source">
