@@ -175,6 +175,10 @@ function it_exchange_recurring_payments_localize_purchases() {
 			'cancel'       => __( 'Cancel', 'LION' ),
 			'cancelling'   => __( 'Cancelling', 'LION' ),
 			'cannotCancel' => __( 'This subscription cannot be cancelled.', 'LION' ),
+			'pausing'      => __( 'Pausing', 'LION' ),
+			'cannotPause'  => __( 'This subscription cannot be paused.', 'LION' ),
+			'resuming'     => __( 'Resuming', 'LION' ),
+			'cannotResume' => __( 'This subscription cannot be resumed.', 'LION' ),
 		),
 		'subscriptions' => $subscriptions
 	) );
@@ -194,6 +198,7 @@ add_action( 'wp_print_footer_scripts', 'it_exchange_recurring_payments_localize_
 function it_exchange_recurring_payments_addon_content_purchases_fields_elements( $elements ) {
 	$elements[] = 'payments';
 	$elements[] = 'update-payment';
+	$elements[] = 'pause-resume';
 	$elements[] = 'unsubscribe';
 	$elements[] = 'expiration';
 
