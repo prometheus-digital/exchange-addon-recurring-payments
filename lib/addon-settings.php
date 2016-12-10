@@ -31,6 +31,7 @@ function it_exchange_recurring_payments_addon_settings_callback() {
 function it_exchange_recurring_payments_addon_default_settings( $values ) {
     $defaults = array(
     	'pause-subscription' => false,
+        'limit-pauses'       => '',
 	);
 
     return ITUtility::merge_defaults( $values, $defaults );
@@ -161,9 +162,16 @@ class IT_Exchange_Recurring_Payments_Add_On {
         <div class="it-exchange-addon-settings it-exchange-recurring-payments-addon-settings">
 
 	        <label for="pause-subscription"><?php _e( 'Allow Pausing', 'LION' ); ?></label>
-	        <p><?php _e( 'Allow customers to pause their subscription.', 'LION' ); ?></p>
+	        <p>
+                <?php _e( 'Allow customers to pause their own subscription.', 'LION' ); ?>
+                <?php _e( 'Pausing a subscription will prevent any renewal payments from processing.', 'LION' ); ?>
+                <?php _e( "During this time, the customer will not receive access to the subscription's benefits.", 'LION' ); ?>
+            </p>
 	        <?php $form->add_check_box( 'pause-subscription' ); ?>
 
+            <label for="limit-pauses"><?php _e( 'Limit Pauses', 'LION' ); ?></label>
+            <p><?php _e( 'Limit the number of times a customer can pause their own subscription. Leave empty for unlimited.', 'LION' ); ?></p>
+            <?php echo $form->_get_simple_input( 'limit-pauses', array( 'type' => 'number' ), false ); ?>
 
         </div>
         <?php
@@ -205,18 +213,6 @@ class IT_Exchange_Recurring_Payments_Add_On {
      * @return void
     */
     public function get_form_errors( $values ) {
-
-        $errors = array();
-        if ( empty( $values['recurring-payments-cancel-subject'] ) )
-            $errors[] = __( 'Please include an email subject for cancellations', 'LION' );
-        if ( empty( $values['recurring-payments-cancel-body'] ) )
-            $errors[] = __( 'Please include an email body for cancellations', 'LION' );
-        if ( empty( $values['recurring-payments-deactivate-subject'] ) )
-            $errors[] = __( 'Please include an email subject for expirations', 'LION' );
-        if ( empty( $values['recurring-payments-deactivate-body'] ) )
-            $errors[] = __( 'Please include an email body for expirations', 'LION' );
-
-        return $errors;
+        return array();
     }
-
 }

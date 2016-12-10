@@ -362,3 +362,21 @@ function it_exchange_allow_customers_to_pause_subscriptions() {
 
 	return ! empty( $settings['pause-subscription'] );
 }
+
+/**
+ * Helper function to determine if customers are allowed to pause subscriptions.
+ *
+ * @since 1.9.0
+ *
+ * @return int|false
+ */
+function it_exchange_customer_pause_subscription_limit() {
+
+	$settings = it_exchange_get_option( 'addon_recurring_payments', true );
+
+	if ( empty( $settings['limit-pauses'] ) ) {
+		return false;
+	}
+
+	return (int) $settings['limit-pauses'];
+}

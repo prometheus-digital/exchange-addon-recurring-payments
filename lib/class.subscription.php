@@ -984,6 +984,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 
 		if ( $r ) {
 			$this->set_status( self::STATUS_PAUSED );
+			$this->update_meta( 'pause_number', $this->get_number_of_pauses() + 1 );
 
 			/**
 			 * Fires when a subscription has been paused.
@@ -1029,6 +1030,17 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	 */
 	public function set_paused_by( IT_Exchange_Customer $customer = null ) {
 		return (bool) $this->update_meta( 'subscription_paused_by', $customer ? $customer->id : null );
+	}
+
+	/**
+	 * Retrieve the number of times the subscription has been paused.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @return int
+	 */
+	public function get_number_of_pauses() {
+		return (int) $this->get_meta( 'pause_number', true );
 	}
 
 	/**

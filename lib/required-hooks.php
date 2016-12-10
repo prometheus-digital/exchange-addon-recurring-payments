@@ -653,12 +653,10 @@ function it_exchange_recurring_payments_handle_expired() {
 
 			$s = it_exchange_get_subscription_by_transaction( $transaction, it_exchange_get_product( $product_id ) );
 
-			$status = $s->get_status();
-
-			if ( $s->is_status( IT_Exchange_Subscription::STATUS_ACTIVE, IT_Exchange_Subscription::STATUS_PAYMENT_FAILED ) ) {
-				$s->set_status( IT_Exchange_Subscription::STATUS_DEACTIVATED );
+			if ( $s->is_status( $s::STATUS_ACTIVE, $s::STATUS_PAYMENT_FAILED ) ) {
+				$s->set_status( $s::STATUS_DEACTIVATED );
 				$s->mark_expired();
-			} elseif ( $status === IT_Exchange_Subscription::STATUS_COMPLIMENTARY && $s->is_auto_renewing() ) {
+			} elseif ( $s->is_status( $s::STATUS_COMPLIMENTARY, $s::STATUS_PAUSED ) && $s->is_auto_renewing() ) {
 				$s->bump_expiration_date();
 			} else {
 				$s->mark_expired();
@@ -1554,9 +1552,21 @@ function it_exchange_recurring_payments_map_meta_cap( $caps, $cap, $user_id, $ar
 
 			$txn_id = $s->get_transaction()->get_ID();
 
-			if ( it_exchange_allow_customers_to_pause_subscriptions() && user_can( $user_id, 'read_it_transaction', $txn_id ) ) {
+			if ( user_can( $user_id, 'read_it_transaction', $txn_id ) ) {
+				if ( ! it_exchange_allow_customers_to_pause_subscriptions() ) {
+					return array( 'do_not_allow' );
+				}
+
+				$limit = it_exchange_customer_pause_subscription_limit();
+
+				if ( $limit !== false && $limit <= $s->get_number_of_pauses() ) {
+					return array( 'do_not_allow' );
+				}
+
 				return array();
-			} elseif ( user_can( $user_id, 'edit_it_transaction', $txn_id ) ) {
+			}
+
+			if ( user_can( $user_id, 'edit_it_transaction', $txn_id ) ) {
 				return array();
 			}
 
