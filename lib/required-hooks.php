@@ -653,7 +653,7 @@ function it_exchange_recurring_payments_handle_expired() {
 
 			$s = it_exchange_get_subscription_by_transaction( $transaction, it_exchange_get_product( $product_id ) );
 
-			if ( $s->is_status( $s::STATUS_ACTIVE, $s::STATUS_PAYMENT_FAILED ) ) {
+			if ( $s->is_status( $s::STATUS_ACTIVE ) ) {
 				$s->set_status( $s::STATUS_DEACTIVATED );
 				$s->mark_expired();
 			} elseif ( $s->is_status( $s::STATUS_COMPLIMENTARY, $s::STATUS_PAUSED ) && $s->is_auto_renewing() ) {
