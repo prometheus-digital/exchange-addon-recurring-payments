@@ -374,7 +374,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	 *
 	 * @since 1.8
 	 *
-	 * @return DateTime
+	 * @return DateTime|null
 	 */
 	public function get_expiry_date() {
 
