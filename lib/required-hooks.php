@@ -745,7 +745,9 @@ function it_exchange_recurring_payments_add_activity_on_cancellation( IT_Exchang
 		$message .= ' ' . sprintf( __( 'Reason: %s', 'LION' ), $subscription->get_cancellation_reason() );
 	}
 
-	if ( $subscription->get_cancelled_by() ) {
+	if ( $subscription->is_pausing() ) {
+		$actor = new IT_Exchange_Txn_Activity_Gateway_Actor( $subscription->get_transaction()->get_gateway()->get_addon() );
+	} elseif ( $subscription->get_cancelled_by() ) {
 		$actor = new IT_Exchange_Txn_Activity_User_Actor( $subscription->get_cancelled_by()->wp_user );
 	} elseif ( is_user_logged_in() ) {
 		$actor = new IT_Exchange_Txn_Activity_User_Actor( wp_get_current_user() );
