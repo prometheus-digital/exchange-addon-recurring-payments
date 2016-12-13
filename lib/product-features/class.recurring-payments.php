@@ -6,7 +6,7 @@
  * @package exchange-addon-recurring-payments
  * @since   1.0.0
  */
-class IT_Exchange_Recurring_Payments extends IT_Exchange_Product_Feature_Abstract {
+class IT_Exchange_Recurring_Payments extends IT_Exchange_Product_Feature_Abstract implements ITE_Optionally_Supported_Product_Feature {
 
 	/**
 	 * Constructor. Registers hooks
@@ -24,7 +24,6 @@ class IT_Exchange_Recurring_Payments extends IT_Exchange_Product_Feature_Abstrac
 			'priority'                       => 'high',
 			'use_core_product_feature_hooks' => false,
 			'register_feature_on_init'       => false,
-
 		) );
 	}
 
@@ -37,6 +36,58 @@ class IT_Exchange_Recurring_Payments extends IT_Exchange_Product_Feature_Abstrac
 	 */
 	function IT_Exchange_Recurring_Payments() {
 		self::__construct();
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public function get_feature_slug() {
+		return $this->get_slug();
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public function get_feature_label() {
+		return __( 'Recurring Payments', 'LION' );
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public function get_allowed_details() {
+		return array( 'auto-renew', 'profile', 'trial', 'trial-profile' );
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public function get_details_for_product( IT_Exchange_Product $product ) {
+
+		if ( ! $product->has_feature( 'recurring-payments', array( 'setting' => 'recurring-enabled' ) ) ) {
+			return array();
+		}
+
+		if ( ! $product->get_feature( $this->get_slug(), array( 'setting' => 'auto-renew' ) ) ) {
+			return array();
+		}
+
+		$details = array( 'auto-renew' => true );
+
+		$profile = it_exchange_get_recurring_product_profile( $product );
+
+		if ( $profile ) {
+			$details['profile'] = $profile;
+		}
+
+		$trial_profile = it_exchange_get_recurring_product_trial_profile( $product );
+
+		if ( $trial_profile ) {
+			$details['trial']         = true;
+			$details['trial-profile'] = $trial_profile;
+		}
+
+		return $details;
 	}
 
 	/**
