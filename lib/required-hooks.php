@@ -154,6 +154,8 @@ function it_exchange_recurring_payments_localize_purchases() {
 
 	$subscriptions = array();
 	$serializer    = new \iThemes\Exchange\RecurringPayments\REST\Subscriptions\Serializer();
+	$filterer      = new \iThemes\Exchange\REST\Helpers\ContextFilterer();
+	$schema        = $serializer->get_schema();
 
 	foreach ( IT_Theme_API_Transactions::$transactions as $transaction ) {
 
@@ -161,7 +163,7 @@ function it_exchange_recurring_payments_localize_purchases() {
 			$s = it_exchange_get_subscription_by_transaction( $transaction );
 
 			if ( $s ) {
-				$subscriptions[] = $serializer->serialize( $s );
+				$subscriptions[] = $filterer->filter( $serializer->serialize( $s ), 'view', $schema );
 			}
 		} catch ( Exception $e ) {
 
