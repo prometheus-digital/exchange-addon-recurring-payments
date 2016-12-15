@@ -67,6 +67,11 @@ function it_exchange_recurring_payments_addon_update_expirations( $transaction, 
 	}
 
 	foreach ( it_exchange_get_transaction_subscriptions( $transaction ) as $subscription ) {
+
+		if ( func_num_args() === 1 && ! $subscription->is_auto_renewing() ) {
+			$from = $subscription->get_expiry_date();
+		}
+
 		$subscription->bump_expiration_date( $from );
 	}
 }

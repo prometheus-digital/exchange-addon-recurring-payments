@@ -10,6 +10,7 @@ use iThemes\Exchange\RecurringPayments\REST\Subscriptions\Cancel;
 use iThemes\Exchange\RecurringPayments\REST\Subscriptions\Downgrades;
 use iThemes\Exchange\RecurringPayments\REST\Subscriptions\Pause;
 use iThemes\Exchange\RecurringPayments\REST\Subscriptions\ProrateSerializer;
+use iThemes\Exchange\RecurringPayments\REST\Subscriptions\Renew;
 use iThemes\Exchange\RecurringPayments\REST\Subscriptions\Resume;
 use iThemes\Exchange\RecurringPayments\REST\Subscriptions\Serializer as SubscriptionSerializer;
 use iThemes\Exchange\RecurringPayments\REST\Subscriptions\Subscription;
@@ -30,6 +31,9 @@ add_action( 'it_exchange_register_rest_routes', function ( \iThemes\Exchange\RES
 
 	$cancel = new Cancel( $serializer );
 	$manager->register_route( $cancel->set_parent( $subscription ) );
+
+	$renew = new Renew();
+	$manager->register_route( $renew->set_parent( $subscription ) );
 
 	$prorate_serializer = new ProrateSerializer();
 	$requestor          = new ITE_Prorate_Credit_Requestor( new ITE_Daily_Price_Calculator() );
