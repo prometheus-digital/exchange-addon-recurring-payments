@@ -89,12 +89,16 @@ class Renew extends Base implements Postable {
 					'item_id' => $item->get_id()
 				) );
 				$response->header( 'Location', $url );
+				$response->header( 'X-Cart-ID', $cart->get_id() );
 
 				return $response;
 			}
 		}
 
-		return new \WP_REST_Response( null, \WP_Http::NO_CONTENT );
+		$response = new \WP_REST_Response( null, \WP_Http::NO_CONTENT );
+		$response->header( 'X-Cart-ID', $cart->get_id() );
+
+		return $response;
 	}
 
 	/**
