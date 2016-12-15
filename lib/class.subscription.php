@@ -843,6 +843,10 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 			);
 		}
 
+		if ( ! $sub->get_recurring_profile() ) {
+			return;
+		}
+
 		$amount_paid = $sub->calculate_recurring_amount_paid();
 		$daily_price = $calculator->calculate( $sub->get_recurring_profile(), $amount_paid );
 		$days_left   = $sub->get_days_left_in_period();
