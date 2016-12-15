@@ -68,7 +68,7 @@ class IT_Exchange_Recurring_Payments extends IT_Exchange_Product_Feature_Abstrac
 			return array();
 		}
 
-		if ( ! $product->get_feature( $this->get_slug(), array( 'setting' => 'auto-renew' ) ) ) {
+		if ( $product->get_feature( $this->get_slug(), array( 'setting' => 'auto-renew' ) ) !== 'on' ) {
 			return array();
 		}
 
