@@ -188,6 +188,8 @@ function it_exchange_recurring_payments_localize_purchases() {
 
 add_action( 'wp_print_footer_scripts', 'it_exchange_recurring_payments_localize_purchases', 1 );
 
+add_filter( 'it_exchange_using_child_transactions', '__return_true' );
+
 /**
  * Function to modify the default purchases fields elements
  *
