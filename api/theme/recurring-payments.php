@@ -52,6 +52,7 @@ class IT_Theme_API_Recurring_Payments implements IT_Theme_API {
 		'payments'      => 'payments',
 		'updatepayment' => 'update_payment',
 		'pauseresume'   => 'pause_resume',
+		'renew'         => 'renew',
 	);
 
 	/**
@@ -161,13 +162,13 @@ class IT_Theme_API_Recurring_Payments implements IT_Theme_API {
 		ob_start();
 		?>
 
-		<a href="javascript:"
+		<p><a href="javascript:"
 		   id="it-exchange-cancel-subscription-api-<?php echo $subscription->get_transaction()->ID ?>"
 		   class="it-exchange-cancel-subscription-api <?php echo esc_attr( $class ); ?>"
 		   data-id="<?php echo $subscription->get_id(); ?>"
 		>
 			<?php echo $label; ?>
-		</a>
+		</a></p>
 
 		<?php
 
@@ -248,6 +249,39 @@ class IT_Theme_API_Recurring_Payments implements IT_Theme_API {
 		}
 
 		return '';
+	}
+
+	/**
+	 * Output a renewal button.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @param array $options
+	 *
+	 * @return string
+	 */
+	public function renew( $options = array() ) {
+
+		if ( ! $this->_transaction instanceof IT_Exchange_Transaction ) {
+			return '';
+		}
+
+		try {
+			$s = it_exchange_get_subscription_by_transaction( $this->_transaction );
+		} catch ( Exception $e ) {
+			return '';
+		}
+
+		if ( $s->is_auto_renewing() ) {
+			return '';
+		}
+
+		$txn_id = $s->get_transaction()->get_ID();
+		$prod_id = $s->get_product()->get_ID();
+
+		$html = "<div class=\"it-exchange-renew-subscription-container\" id=\"it-exchange-renew-subscription-{$txn_id}-{$prod_id}\"></div>";
+
+		return $html;
 	}
 
 	/**

@@ -104,12 +104,19 @@ function it_exchange_recurring_payments_enqueue_purchases() {
 		return;
 	}
 
+	wp_enqueue_style( 'it-exchange-recurring-payments-purchases', plugin_dir_url( __FILE__ ) . '/styles/purchases.css' );
+
 	wp_enqueue_script(
 		'it-exchange-recurring-payments-purchases',
 		plugin_dir_url( __FILE__ ) . '/js/purchases.js',
 		array( 'it-exchange-rest', 'jquery.payment' ),
 		'1.9.0',
 		true
+	);
+
+	it_exchange_add_inline_script(
+		'it-exchange-rest',
+		include IT_Exchange::$dir . '/lib/assets/templates/checkout.html'
 	);
 
 	it_exchange_add_inline_script(
@@ -127,6 +134,11 @@ function it_exchange_recurring_payments_enqueue_purchases() {
 		include dirname( __FILE__ ) . '/js/templates/update-payment-method.html'
 	);
 
+	it_exchange_add_inline_script(
+		'it-exchange-recurring-payments-purchases',
+		include dirname( __FILE__ ) . '/js/templates/renew-subscription.html'
+	);
+
 	add_filter( 'it_exchange_preload_schemas', function( $schemas ) {
 
 		$schemas = is_array( $schemas ) ? $schemas : array();
@@ -135,6 +147,9 @@ function it_exchange_recurring_payments_enqueue_purchases() {
 			'subscription',
 			'payment-token',
 			'customer',
+			'cart',
+			'cart-item-product',
+			'cart-purchase',
 		) );
 	} );
 }
@@ -181,6 +196,9 @@ function it_exchange_recurring_payments_localize_purchases() {
 			'cannotPause'  => __( 'This subscription cannot be paused.', 'LION' ),
 			'resuming'     => __( 'Resuming', 'LION' ),
 			'cannotResume' => __( 'This subscription cannot be resumed.', 'LION' ),
+			'renew'        => __( 'Renew', 'LION' ),
+			'renewing'     => __( 'Renewing', 'LION' ),
+			'cannotRenew'  => __( 'This subscription cannot be renewed.', 'LION' ),
 		),
 		'subscriptions' => $subscriptions
 	) );
@@ -203,6 +221,7 @@ function it_exchange_recurring_payments_addon_content_purchases_fields_elements(
 	$elements[] = 'payments';
 	$elements[] = 'update-payment';
 	$elements[] = 'pause-resume';
+	$elements[] = 'renew';
 	$elements[] = 'unsubscribe';
 	$elements[] = 'expiration';
 
@@ -304,6 +323,42 @@ function it_exchange_recurring_payments_add_credit_fees_on_meta( $key, $value, I
 }
 
 add_action( 'it_exchange_set_cart_meta', 'it_exchange_recurring_payments_add_credit_fees_on_meta', 10, 3 );
+
+/**
+ * Set child of for renewals.
+ *
+ * @since 1.9.0
+ *
+ * @param ITE_Gateway_Purchase_Request $request
+ *
+ * @return ITE_Gateway_Purchase_Request
+ */
+function it_exchange_recurring_payments_set_child_of_for_renewal( ITE_Gateway_Purchase_Request $request ) {
+
+	$cart = $request->get_cart();
+
+	if ( $cart->get_items( 'product' )->count() > 1 ) {
+		return $request;
+	}
+
+	$item = $cart->get_items( 'product' )->having_param( 'is_manual_renewal' )->first();
+
+	if ( ! $item ) {
+		return $request;
+	}
+
+	$subscription_id = $item->get_param( 'is_manual_renewal' );
+
+	if ( ! $subscription_id || ! $subscription = IT_Exchange_Subscription::get( $subscription_id ) ) {
+		return $request;
+	}
+
+	$request->set_child_of( $subscription->get_transaction() );
+
+	return $request;
+}
+
+add_filter( 'it_exchange_make_purchase_gateway_request', 'it_exchange_recurring_payments_set_child_of_for_renewal' );
 
 /**
  * Disables multi item carts if viewing product with auto-renew enabled

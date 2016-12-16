@@ -21,7 +21,7 @@ class Renew extends Base implements Postable {
 
 		$subscription = \IT_Exchange_Subscription::get( rawurldecode( $request->get_param( 'subscription_id', 'URL' ) ) );
 
-		if ( ! $subscription->is_auto_renewing() ) {
+		if ( $subscription->is_auto_renewing() ) {
 			return new \WP_Error(
 				'it_exchange_rest_invalid_request',
 				__( 'Auto-renewing subscriptions cannot be manually renewed.', 'LION' ),
@@ -40,9 +40,10 @@ class Renew extends Base implements Postable {
 				);
 			}
 		} else {
+			$user    = it_exchange_get_current_customer();
 			$session = \ITE_Session_Model::create( array(
 				'ID'       => it_exchange_create_unique_hash(),
-				'customer' => get_current_user_id(),
+				'customer' => $user->get_ID(),
 				'is_main'  => false,
 			) );
 
@@ -56,6 +57,10 @@ class Renew extends Base implements Postable {
 					array( 'status' => \WP_Http::INTERNAL_SERVER_ERROR )
 				);
 			}
+
+			$session->cart_id = $cart->get_id();
+			$session->data    = array_merge( $session->data, array( 'cart_id' => $cart->get_id() ) );
+			$session->save();
 		}
 
 		$product = $subscription->get_product();
@@ -74,6 +79,7 @@ class Renew extends Base implements Postable {
 		}
 
 		$item = $original_item->clone_with_new_id( false );
+		$item->set_param( 'is_manual_renewal', $subscription->get_id() );
 
 		$cart->add_item( $item );
 
@@ -89,16 +95,12 @@ class Renew extends Base implements Postable {
 					'item_id' => $item->get_id()
 				) );
 				$response->header( 'Location', $url );
-				$response->header( 'X-Cart-ID', $cart->get_id() );
 
 				return $response;
 			}
 		}
 
-		$response = new \WP_REST_Response( null, \WP_Http::NO_CONTENT );
-		$response->header( 'X-Cart-ID', $cart->get_id() );
-
-		return $response;
+		return new \WP_REST_Response( null, \WP_Http::NO_CONTENT );
 	}
 
 	/**

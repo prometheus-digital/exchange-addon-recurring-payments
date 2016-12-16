@@ -1,0 +1,24 @@
+.it-exchange-renew-subscription-container {
+    position: relative;
+}
+
+.it-exchange-renew-subscription--cancel {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: none;
+    padding: 0;
+    margin: 0;
+    border: 0;
+    color: initial;
+    font-weight: initial;
+    font-size: 1.2em;
+    transition: .2s ease-in opacity;
+}
+.it-exchange-renew-subscription--cancel:hover {
+    opacity: .3;
+}
+
+.it-exchange-item-recurring-payments-unsubscribe {
+    display: block;
+}
