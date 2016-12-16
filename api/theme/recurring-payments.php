@@ -272,7 +272,7 @@ class IT_Theme_API_Recurring_Payments implements IT_Theme_API {
 			return '';
 		}
 
-		if ( $s->is_auto_renewing() ) {
+		if ( ! $s->can_be_manually_renewed()  ) {
 			return '';
 		}
 

@@ -21,10 +21,10 @@ class Renew extends Base implements Postable {
 
 		$subscription = \IT_Exchange_Subscription::get( rawurldecode( $request->get_param( 'subscription_id', 'URL' ) ) );
 
-		if ( $subscription->is_auto_renewing() ) {
+		if ( ! $subscription->can_be_manually_renewed() ) {
 			return new \WP_Error(
 				'it_exchange_rest_invalid_request',
-				__( 'Auto-renewing subscriptions cannot be manually renewed.', 'LION' ),
+				__( 'This subscription cannot be manually renewed.', 'LION' ),
 				array( 'status' => \WP_Http::BAD_REQUEST )
 			);
 		}

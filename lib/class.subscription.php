@@ -930,6 +930,48 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	}
 
 	/**
+	 * Can the subscription be manually renewed.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @return bool
+	 */
+	public function can_be_manually_renewed() {
+
+		if ( $this->is_auto_renewing() ) {
+			return false;
+		}
+
+		if ( $this->get_expiry_date() === null ) {
+			return false;
+		}
+
+		$expires  = $this->get_expiry_date()->getTimestamp();
+		$now      = time();
+		$interval = $this->get_recurring_profile()->get_interval_seconds();
+
+		// Can only update in the last third of the subscription
+		$update_period = $interval / 3;
+
+		// The update period should be no longer than a month and no less than a day
+		$update_period = max( min( $update_period, MONTH_IN_SECONDS ), DAY_IN_SECONDS );
+
+		$update_after = $expires - $update_period;
+
+		$can_be = $now > $update_after;
+
+		/**
+		 * Filter whether this subscription can be manually renwed.
+		 *
+		 * @since 1.9.0
+		 *
+		 * @param bool                     $can_be
+		 * @param IT_Exchange_Subscription $this
+		 */
+		return apply_filters( 'it_exchange_subscription_can_be_manually_renewed', $can_be, $this );
+	}
+
+	/**
 	 * Can the subscription be paused.
 	 *
 	 * @since 1.9.0
