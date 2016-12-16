@@ -163,12 +163,12 @@ class IT_Theme_API_Recurring_Payments implements IT_Theme_API {
 		?>
 
 		<p><a href="javascript:"
-		   id="it-exchange-cancel-subscription-api-<?php echo $subscription->get_transaction()->ID ?>"
-		   class="it-exchange-cancel-subscription-api <?php echo esc_attr( $class ); ?>"
-		   data-id="<?php echo $subscription->get_id(); ?>"
-		>
-			<?php echo $label; ?>
-		</a></p>
+		      id="it-exchange-cancel-subscription-api-<?php echo $subscription->get_transaction()->ID ?>"
+		      class="it-exchange-cancel-subscription-api <?php echo esc_attr( $class ); ?>"
+		      data-id="<?php echo $subscription->get_id(); ?>"
+			>
+				<?php echo $label; ?>
+			</a></p>
 
 		<?php
 
@@ -276,7 +276,7 @@ class IT_Theme_API_Recurring_Payments implements IT_Theme_API {
 			return '';
 		}
 
-		$txn_id = $s->get_transaction()->get_ID();
+		$txn_id  = $s->get_transaction()->get_ID();
 		$prod_id = $s->get_product()->get_ID();
 
 		$html = "<div class=\"it-exchange-renew-subscription-container\" id=\"it-exchange-renew-subscription-{$txn_id}-{$prod_id}\"></div>";
@@ -285,7 +285,12 @@ class IT_Theme_API_Recurring_Payments implements IT_Theme_API {
 	}
 
 	/**
+	 * Output the subscription's expiration date.
+	 *
 	 * @since 1.0.0
+	 *
+	 * @param array $options
+	 *
 	 * @return string
 	 */
 	function expiration( $options = array() ) {
@@ -294,18 +299,34 @@ class IT_Theme_API_Recurring_Payments implements IT_Theme_API {
 			'before'           => '',
 			'after'            => '',
 			'class'            => 'it-exchange-recurring-payments-expiration',
-			'label'            => apply_filters( 'it_exchange_recurring_payments_addon_expiration_label', __( 'Expires', 'LION' ) ),
+			'label'            => apply_filters( 'it_exchange_recurring_payments_addon_expiration_label', __( 'Expires: %s', 'LION' ) ),
+			'expired_label'    => apply_filters( 'it_exchange_recurring_payments_addon_expired_label', __( 'Expired: %s', 'LION' ) ),
 			'show_auto_renews' => false,
 		);
 		$options    = ITUtility::merge_defaults( $options, $defaults );
 		$output     = '';
 		$product_id = $this->_transaction_product['product_id'];
-		$expire     = $this->_transaction->get_transaction_meta( 'subscription_expires_' . $product_id, true );
-		$arenew     = $this->_transaction->get_transaction_meta( 'subscription_autorenew_' . $product_id, true );
-		if ( ! empty( $expire ) ) {
-			if ( $options['show_auto_renews'] || ! $arenew ) {
-				$output = $options['label'] . ': ' . date_i18n( $options['date_format'], $expire );
-			}
+
+		try {
+			$s = it_exchange_get_subscription_by_transaction( $this->_transaction, it_exchange_get_product( $product_id ) );
+		} catch ( Exception $e ) {
+			return '';
+		}
+
+		if ( ! $s ) {
+			return '';
+		}
+
+		$expire = $s->get_expiry_date()->getTimestamp();
+		$arenew = $s->is_auto_renewing();
+
+		if ( ! $expire ) {
+			return '';
+		}
+
+		if ( $options['show_auto_renews'] || ! $arenew ) {
+			$label  = $s->is_status( $s::STATUS_ACTIVE ) ? $options['label'] : $options['expired_label'];
+			$output = sprintf( $label, date_i18n( $options['date_format'], $expire ) );
 		}
 
 		return $output;
