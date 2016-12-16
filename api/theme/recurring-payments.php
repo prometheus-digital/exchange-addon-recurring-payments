@@ -267,7 +267,7 @@ class IT_Theme_API_Recurring_Payments implements IT_Theme_API {
 		}
 
 		try {
-			$s = it_exchange_get_subscription_by_transaction( $this->_transaction );
+			$s = it_exchange_get_subscription_by_transaction( $this->_transaction, it_exchange_get_product( $this->_transaction_product['product_id'] ) );
 		} catch ( Exception $e ) {
 			return '';
 		}
