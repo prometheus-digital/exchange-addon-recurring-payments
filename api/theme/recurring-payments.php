@@ -123,7 +123,7 @@ class IT_Theme_API_Recurring_Payments implements IT_Theme_API {
 		if ( $s->is_status( IT_Exchange_Subscription::STATUS_ACTIVE ) ) {
 			if ( $s->can_be_cancelled() ) {
 				$output .= $this->get_cancel_api_request_link( $options );
-			} else {
+			} elseif ( ! ( $g = $s->get_transaction()->get_gateway() ) && ! $g->can_handle( 'cancel-subscription' ) ) {
 				$output .= apply_filters( "it_exchange_{$s->get_transaction()->get_method()}_unsubscribe_action", '', $options, $this->_transaction );
 			}
 		} else {
