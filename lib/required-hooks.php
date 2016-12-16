@@ -93,6 +93,12 @@ function it_exchange_recurring_payments_addon_admin_wp_enqueue_scripts( $hook_su
 
 add_action( 'it_exchange_admin_wp_enqueue_scripts', 'it_exchange_recurring_payments_addon_admin_wp_enqueue_scripts', 10, 2 );
 
+add_action( 'init', function() {
+	if ( it_exchange_is_page( 'purchases' ) ) {
+		add_filter( 'it_exchange_preload_cart_item_types', '__return_true' );
+	}
+} );
+
 /**
  * Enqueue the purchases script.
  *
@@ -139,7 +145,7 @@ function it_exchange_recurring_payments_enqueue_purchases() {
 		include dirname( __FILE__ ) . '/js/templates/renew-subscription.html'
 	);
 
-	add_filter( 'it_exchange_preload_schemas', function( $schemas ) {
+	add_filter( 'it_exchange_preload_schemas', function ( $schemas ) {
 
 		$schemas = is_array( $schemas ) ? $schemas : array();
 
@@ -149,6 +155,7 @@ function it_exchange_recurring_payments_enqueue_purchases() {
 			'customer',
 			'cart',
 			'cart-item-product',
+			'cart-item-coupon',
 			'cart-purchase',
 		) );
 	} );
@@ -186,7 +193,7 @@ function it_exchange_recurring_payments_localize_purchases() {
 	}
 
 	wp_localize_script( 'it-exchange-recurring-payments-purchases', 'ITExchangeRecurringPayments', array(
-		'i18n' => array(
+		'i18n'          => array(
 			'updateSource' => __( 'Update Payment Method', 'LION' ),
 			'save'         => __( 'Save', 'LION' ),
 			'cancel'       => __( 'Cancel', 'LION' ),
@@ -282,7 +289,7 @@ function it_exchange_recurring_payments_on_add_product_to_cart( ITE_Cart_Product
 
 	$fee = ITE_Fee_Line_Item::create(
 		__( 'Free Trial', 'LION' ),
-		$item->get_total() * -1,
+		$item->get_total() * - 1,
 		true,
 		false
 	);
@@ -1177,19 +1184,22 @@ function it_exchange_recurring_payments_render_admin_subscription_actions( IT_Ex
 	$cancel = add_query_arg( 'context', 'edit', wp_nonce_url( rest_url( "it_exchange/v1/subscriptions/{$sub_id}/cancel" ), 'wp_rest' ) );
 
 	if ( $subscription->can_be_paused() ) : ?>
-		<button class="button button-secondary right" id="pause-subscription" data-route="<?php echo esc_attr( $pause ); ?>">
+		<button class="button button-secondary right" id="pause-subscription"
+		        data-route="<?php echo esc_attr( $pause ); ?>">
 			<?php _e( 'Pause', 'LION' ); ?>
 		</button>
 	<?php endif;
 
 	if ( $subscription->can_be_resumed() ) : ?>
-		<button class="button button-secondary right" id="resume-subscription" data-route="<?php echo esc_attr( $resume ); ?>">
+		<button class="button button-secondary right" id="resume-subscription"
+		        data-route="<?php echo esc_attr( $resume ); ?>">
 			<?php _e( 'Resume', 'LION' ); ?>
 		</button>
 	<?php endif;
 
 	if ( $subscription->can_be_cancelled() ) : ?>
-		<button class="button button-secondary right" id="cancel-subscription" data-route="<?php echo esc_attr( $cancel ); ?>">
+		<button class="button button-secondary right" id="cancel-subscription"
+		        data-route="<?php echo esc_attr( $cancel ); ?>">
 			<?php _e( 'Cancel', 'LION' ); ?>
 		</button>
 	<?php endif;
