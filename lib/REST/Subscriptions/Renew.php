@@ -40,27 +40,11 @@ class Renew extends Base implements Postable {
 				);
 			}
 		} else {
-			$user    = it_exchange_get_current_customer();
-			$session = \ITE_Session_Model::create( array(
-				'ID'       => it_exchange_create_unique_hash(),
-				'customer' => $user->get_ID(),
-				'is_main'  => false,
-			) );
-
-			$repo = \ITE_Line_Item_Cached_Session_Repository::from_session_id( $user, $session->ID );
-			$cart = \ITE_Cart::create( $repo, $user );
-
-			if ( ! $cart ) {
-				return new \WP_Error(
-					'it_exchange_rest_create_cart_failed',
-					__( 'Unable to create a cart.', 'LION' ),
-					array( 'status' => \WP_Http::INTERNAL_SERVER_ERROR )
-				);
-			}
-
-			$session->cart_id = $cart->get_id();
-			$session->data    = array_merge( $session->data, array( 'cart_id' => $cart->get_id() ) );
-			$session->save();
+			$cart = it_exchange_create_cart_and_session(
+				it_exchange_get_current_customer(),
+				false,
+				new \DateTime( '+ 1 hour', new \DateTimeZone( 'UTC' ) )
+			);
 		}
 
 		$product = $subscription->get_product();
