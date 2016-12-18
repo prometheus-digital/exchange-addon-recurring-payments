@@ -938,11 +938,17 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	 */
 	public function can_be_manually_renewed() {
 
-		if ( $this->is_auto_renewing() ) {
+		if ( $this->get_expiry_date() === null ) {
 			return false;
 		}
 
-		if ( $this->get_expiry_date() === null ) {
+		$status = array( self::STATUS_DEACTIVATED, self::STATUS_CANCELLED );
+
+		if ( ! $this->is_auto_renewing() ) {
+			$status[] = self::STATUS_ACTIVE;
+		}
+
+		if ( ! $this->is_status( $status ) ) {
 			return false;
 		}
 

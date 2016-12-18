@@ -63,11 +63,16 @@ class Renew extends Base implements Postable {
 		}
 
 		$item = $original_item->clone_with_new_id( false );
-		$item->set_param( 'is_manual_renewal', $subscription->get_id() );
+
+		if ( ! $subscription->is_auto_renewing() ) {
+			$item->set_param( 'is_manual_renewal', $subscription->get_id() );
+		}
 
 		$cart->add_item( $item );
 
-		it_exchange_recurring_payments_add_credit_fees( $item, $cart );
+		if ( ! $subscription->is_auto_renewing() ) {
+			it_exchange_recurring_payments_add_credit_fees( $item, $cart );
+		}
 
 		/** @var Item $route */
 		foreach ( $this->get_manager()->get_routes_by_class( 'iThemes\Exchange\REST\Route\Cart\Item' ) as $route ) {

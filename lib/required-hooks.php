@@ -204,6 +204,7 @@ function it_exchange_recurring_payments_localize_purchases() {
 			'resuming'     => __( 'Resuming', 'LION' ),
 			'cannotResume' => __( 'This subscription cannot be resumed.', 'LION' ),
 			'renew'        => __( 'Renew', 'LION' ),
+			'reactivate'   => __( 'Reactivate', 'LION' ),
 			'renewing'     => __( 'Renewing', 'LION' ),
 			'cannotRenew'  => __( 'This subscription cannot be renewed.', 'LION' ),
 		),
