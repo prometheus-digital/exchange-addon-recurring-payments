@@ -116,7 +116,7 @@ class IT_Exchange_Recurring_Payments_Email {
 							__( "Hello %s, \r\n\r\n The latest payment for your subscription for %s has failed", 'LION' ) . ' ' .
 							__( "To update your payment info, %svisit your account%s. \r\n\r\nThank you.\r\n\r\n%s", 'LION' ),
 							$r->format_tag( 'first_name' ), $r->format_tag( 'subscription_product' ),
-							'<a href="' . $r->format_tag( 'subscription_update_payment_link' ) . '">', '</a>', $r->format_tag( 'company_name' )
+							'<a href="' . $r->format_tag( 'subscription_manage_link' ) . '">', '</a>', $r->format_tag( 'company_name' )
 						)
 					),
 					'group'       => __( 'Recurring Payments', 'LION' ),
@@ -138,7 +138,7 @@ class IT_Exchange_Recurring_Payments_Email {
 					'defaults' => array(
 						'subject' => __( 'Subscription Expired', 'LION' ),
 						'body'    => sprintf( __( "Hello %s, \r\n\r\n Your subscription for %s has expired.\r\n\r\n You can renew your subscription here: %s \r\n\r\nThank you.\r\n\r\n%s", 'LION' ),
-							$r->format_tag( 'first_name' ), $r->format_tag( 'subscription_product' ), $r->format_tag( 'subscription_product_link' ), $r->format_tag( 'company_name' ) )
+							$r->format_tag( 'first_name' ), $r->format_tag( 'subscription_product' ), $r->format_tag( 'subscription_manage_link' ), $r->format_tag( 'company_name' ) )
 					),
 					'group'    => __( 'Recurring Payments', 'LION' )
 				)
@@ -155,19 +155,19 @@ class IT_Exchange_Recurring_Payments_Email {
 	public function register_tags( IT_Exchange_Email_Tag_Replacer $replacer ) {
 
 		$tags = array(
-			'subscription_product'             => array(
+			'subscription_product'      => array(
 				'name'    => __( 'Subscription Product', 'LION' ),
 				'desc'    => __( 'The name of the product subscribed to.', 'LION' ),
 				'context' => array( 'subscription' )
 			),
-			'subscription_product_link'        => array(
+			'subscription_product_link' => array(
 				'name'    => __( 'Subscription Product Link', 'LION' ),
 				'desc'    => __( 'A link to the subscription product page.', 'LION' ),
 				'context' => array( 'subscription' )
 			),
-			'subscription_update_payment_link' => array(
-				'name'    => __( 'Subscription Payment Info Update Link', 'LION' ),
-				'desc'    => __( "A link to update a subscription's payment info.", 'LION' ),
+			'subscription_manage_link'  => array(
+				'name'    => __( 'Subscription Management Link', 'LION' ),
+				'desc'    => __( "A link to cancel, renew, reactivate, or update a subscription's payment info.", 'LION' ),
 				'context' => array( 'subscription' )
 			),
 		);
@@ -187,10 +187,6 @@ class IT_Exchange_Recurring_Payments_Email {
 			}
 
 			foreach ( $notifications as $notification ) {
-				if ( $this === 'subscription_update_payment_link' && $notification !== 'recurring-payment-failed' ) {
-					continue;
-				}
-
 				$obj->add_available_for( $notification );
 			}
 
@@ -209,7 +205,9 @@ class IT_Exchange_Recurring_Payments_Email {
 			$tag = $replacer->get_tag( $tag );
 
 			if ( $tag ) {
-				$tag->add_available_for( 'recurring-payment-cancelled' )->add_available_for( 'recurring-payment-deactivated' );
+				$tag->add_available_for( 'recurring-payment-cancelled' )
+					->add_available_for( 'recurring-payment-deactivated' )
+					->add_available_for( 'recurring-payment-failed' );
 			}
 		}
 	}
