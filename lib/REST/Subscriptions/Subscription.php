@@ -45,6 +45,28 @@ class Subscription extends Base implements Getable, Putable {
 		$subscription = \IT_Exchange_Subscription::get( rawurldecode( $request->get_param( 'subscription_id', 'URL' ) ) );
 		$response     = new \WP_REST_Response( $this->serializer->serialize( $subscription ) );
 
+		if ( $subscription->get_customer() ) {
+			$response->add_link(
+				'customer',
+				\iThemes\Exchange\REST\get_rest_url(
+					$this->get_manager()->get_first_route( 'iThemes\Exchange\REST\Route\Customer\Customer' ),
+					array( 'customer_id' => $subscription->get_customer()->get_ID() )
+				),
+				array( 'embeddable' => true )
+			);
+		}
+
+		if ( $subscription->get_beneficiary() ) {
+			$response->add_link(
+				'beneficiary',
+				\iThemes\Exchange\REST\get_rest_url(
+					$this->get_manager()->get_first_route( 'iThemes\Exchange\REST\Route\Customer\Customer' ),
+					array( 'customer_id' => $subscription->get_beneficiary()->get_ID() )
+				),
+				array( 'embeddable' => true )
+			);
+		}
+
 		if ( $subscription->get_transaction() ) {
 			$route = $this->get_manager()->get_first_route( 'iThemes\Exchange\REST\Route\Transaction\Transaction' );
 			$link  = \iThemes\Exchange\REST\get_rest_url( $route, array(
