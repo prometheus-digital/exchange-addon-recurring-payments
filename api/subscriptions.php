@@ -69,6 +69,10 @@ function it_exchange_get_subscription_by_transaction( IT_Exchange_Transaction $t
  */
 function it_exchange_get_transaction_subscriptions( IT_Exchange_Transaction $transaction ) {
 
+	if ( $transaction->has_parent() ) {
+		return array();
+	}
+
 	$subs = array();
 
 	foreach ( $transaction->get_products() as $product ) {

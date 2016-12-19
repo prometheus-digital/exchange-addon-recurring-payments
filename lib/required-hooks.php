@@ -1063,6 +1063,10 @@ function it_exchange_recurring_payments_after_payment_details_recurring_payments
 
 	$transaction = it_exchange_get_transaction( $transaction->ID );
 
+	if ( ! $transaction || $transaction->has_parent() ) {
+		return;
+	}
+
 	$subs = it_exchange_get_transaction_subscriptions( $transaction );
 
 	if ( ! $subs ) {
