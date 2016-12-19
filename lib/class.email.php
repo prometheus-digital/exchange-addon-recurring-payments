@@ -247,7 +247,7 @@ class IT_Exchange_Recurring_Payments_Email {
 	 *
 	 * @return string
 	 */
-	public function subscription_update_payment_link( $context ) {
+	public function subscription_manage_link( $context ) {
 		return add_query_arg(
 			't',
 			$context['subscription']->get_transaction()->get_ID(),
