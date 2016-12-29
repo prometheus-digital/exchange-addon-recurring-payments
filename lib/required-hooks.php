@@ -478,7 +478,7 @@ function it_exchange_recurring_payments_addon_add_transaction( $transaction_id, 
 		}
 	}
 
-	$from = new DateTime( $transaction->post_date_gmt, new DateTimeZone( 'UTC' ) );
+	$from = $transaction->order_date;
 	it_exchange_recurring_payments_addon_update_expirations( $transaction, $from );
 
 	if ( $cart && $cart->has_meta( ITE_Prorate_Credit_Request::META ) ) {
@@ -503,7 +503,17 @@ add_action( 'it_exchange_add_transaction_success', 'it_exchange_recurring_paymen
  */
 function it_exchange_recurring_payments_bump_expiration_on_child_transaction( $transaction_id ) {
 
-	$parent = it_exchange_get_transaction( wp_get_post_parent_id( $transaction_id ) );
+	$transaction = it_exchange_get_transaction( $transaction_id );
+
+	if ( ! $transaction ) {
+		return;
+	}
+
+	$parent = $transaction->parent;
+
+	if ( ! $parent ) {
+		return;
+	}
 
 	it_exchange_recurring_payments_addon_update_expirations( $parent );
 
