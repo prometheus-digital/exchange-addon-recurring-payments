@@ -209,16 +209,13 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 		$trial_interval       = $product->get_feature( 'recurring-payments', array( 'setting' => 'trial-interval' ) );
 		$trial_interval_count = $product->get_feature( 'recurring-payments', array( 'setting' => 'trial-interval-count' ) );
 
-		if ( $trial_enabled && function_exists( 'it_exchange_is_customer_eligible_for_trial' ) ) {
-			$customer      = it_exchange_get_transaction_customer( $transaction );
-			$trial_enabled = it_exchange_is_customer_eligible_for_trial( $product, $customer );
-		}
-
 		$transaction->update_meta( 'has_trial_' . $product->ID, $trial_enabled );
 		$transaction->update_meta( 'is_auto_renewing_' . $product->ID, $auto_renew );
 		$transaction->update_meta( 'subscription_autorenew_' . $product->ID, $auto_renew === 'on' );
 		$transaction->update_meta( 'interval_' . $product->ID, $interval );
 		$transaction->update_meta( 'interval_count_' . $product->ID, $interval_count );
+		
+		$trial_enabled = $trial_enabled && $transaction->cart()->get_items()->flatten()->having_param( 'is_free_trial' )->count() > 0;
 
 		if ( $trial_enabled ) {
 			$transaction->update_meta( 'trial_interval_' . $product->ID, $trial_interval );
@@ -227,7 +224,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 
 		if ( $max = $product->get_feature( 'recurring-payments', array( 'setting' => 'max-occurrences' ) ) ) {
 
-			if ( $trial_enabled ) {
+			if ( ! $trial_enabled ) {
 				$max -= 1;
 			}
 
