@@ -225,16 +225,16 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 			$transaction->update_meta( 'trial_interval_count_' . $product->ID, $trial_interval_count );
 		}
 
-		$subscription = new self( $transaction, $product );
-
 		if ( $max = $product->get_feature( 'recurring-payments', array( 'setting' => 'max-occurrences' ) ) ) {
 
-			if ( ! $subscription->is_trial_period() ) {
+			if ( $trial_enabled ) {
 				$max -= 1;
 			}
 
-			$subscription->update_meta( 'remaining_occurrences', $max );
+			$transaction->update_meta( 'remaining_occurrences_' . $product->ID, $max );
 		}
+
+		$subscription = new self( $transaction, $product );
 
 		/**
 		 * Fires when a subscription is created.
