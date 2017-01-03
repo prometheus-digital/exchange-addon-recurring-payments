@@ -100,6 +100,24 @@ add_action( 'init', function() {
 } );
 
 /**
+ * Register backbone REST dependencies.
+ *
+ * @since 1.9.0
+ *
+ * @param array $dependencies
+ *
+ * @return array
+ */
+function it_exchange_recurring_payments_backbone_dependencies( $dependencies ) {
+
+	$dependencies['recurring-payments'] = plugin_dir_url( __FILE__ ) . 'js/rest.js';
+
+	return $dependencies;
+}
+
+add_filter( 'it_exchange_rest_backbone_addon_libs', 'it_exchange_recurring_payments_backbone_dependencies' );
+
+/**
  * Enqueue the purchases script.
  *
  * @since 1.9.0
@@ -145,20 +163,16 @@ function it_exchange_recurring_payments_enqueue_purchases() {
 		include dirname( __FILE__ ) . '/js/templates/renew-subscription.html'
 	);
 
-	add_filter( 'it_exchange_preload_schemas', function ( $schemas ) {
-
-		$schemas = is_array( $schemas ) ? $schemas : array();
-
-		return array_merge( $schemas, array(
-			'subscription',
-			'payment-token',
-			'customer',
-			'cart',
-			'cart-item-product',
-			'cart-item-coupon',
-			'cart-purchase',
-		) );
-	} );
+	it_exchange_preload_schemas( array(
+		'subscription',
+		'payment-token',
+		'customer',
+		'cart',
+		'cart-item-product',
+		'cart-item-coupon',
+		'cart-purchase',
+		'address',
+	) );
 }
 
 add_action( 'wp_enqueue_scripts', 'it_exchange_recurring_payments_enqueue_purchases' );

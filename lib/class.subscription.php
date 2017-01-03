@@ -214,7 +214,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 		$transaction->update_meta( 'subscription_autorenew_' . $product->ID, $auto_renew === 'on' );
 		$transaction->update_meta( 'interval_' . $product->ID, $interval );
 		$transaction->update_meta( 'interval_count_' . $product->ID, $interval_count );
-		
+
 		$trial_enabled = $trial_enabled && $transaction->cart()->get_items()->flatten()->having_param( 'is_free_trial' )->count() > 0;
 
 		if ( $trial_enabled ) {
@@ -533,7 +533,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 		$old_status = $this->get_status();
 
 		if ( $new_status === $old_status ) {
-			throw new InvalidArgumentException( '$new_status === $old_status' );
+			throw new InvalidArgumentException( "\$new_status === \$old_status ($old_status)" );
 		}
 
 		$this->update_meta( 'subscriber_status', $new_status );
