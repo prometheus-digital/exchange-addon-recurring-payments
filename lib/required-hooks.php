@@ -939,19 +939,27 @@ if ( has_action( 'it_exchange_recurring_payments_addon_update_transaction_subscr
  */
 function it_exchange_recurring_payments_add_activity_on_expiration_date( IT_Exchange_Subscription $subscription, DateTime $previous = null ) {
 
-	$format = get_option( 'date_format' );
+	$format  = get_option( 'date_format' );
+	$current = $subscription->get_expiry_date();
 
-	if ( $previous ) {
+	if ( $previous && $current ) {
 		$message = sprintf(
 			__( 'Subscription expiration date updated to %s from %s.', 'LION' ),
-			date_i18n( $format, $subscription->get_expiry_date()->format( 'U' ) ),
+			date_i18n( $format, $current->format( 'U' ) ),
 			date_i18n( $format, $previous->format( 'U' ) )
 		);
-	} else {
+	} elseif ( $previous )  {
+		$message = sprintf(
+			__( 'Subscription expiration date updated to never from %s.', 'LION' ),
+			date_i18n( $format, $previous->format( 'U' ) )
+		);
+	} elseif ( $current ) {
 		$message = sprintf(
 			__( 'Subscription expiration date updated to %s.', 'LION' ),
-			date_i18n( $format, $subscription->get_expiry_date()->format( 'U' ) )
+			date_i18n( $format, $current->format( 'U' ) )
 		);
+	} else {
+		return;
 	}
 
 	$builder = new IT_Exchange_Txn_Activity_Builder( $subscription->get_transaction(), 'subscription-expiry' );
