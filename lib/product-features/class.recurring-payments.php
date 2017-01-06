@@ -12,8 +12,6 @@ class IT_Exchange_Recurring_Payments extends IT_Exchange_Product_Feature_Abstrac
 	 * Constructor. Registers hooks
 	 *
 	 * @since 1.0.0
-	 *
-	 * @return void
 	 */
 	public function __construct() {
 		parent::__construct( array(

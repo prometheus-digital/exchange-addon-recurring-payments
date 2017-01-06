@@ -155,20 +155,26 @@ class IT_Exchange_Recurring_Payments_Email {
 	public function register_tags( IT_Exchange_Email_Tag_Replacer $replacer ) {
 
 		$tags = array(
-			'subscription_product'      => array(
+			'subscription_product'       => array(
 				'name'    => __( 'Subscription Product', 'LION' ),
 				'desc'    => __( 'The name of the product subscribed to.', 'LION' ),
 				'context' => array( 'subscription' )
 			),
-			'subscription_product_link' => array(
+			'subscription_product_link'  => array(
 				'name'    => __( 'Subscription Product Link', 'LION' ),
 				'desc'    => __( 'A link to the subscription product page.', 'LION' ),
 				'context' => array( 'subscription' )
 			),
-			'subscription_manage_link'  => array(
+			'subscription_manage_link'   => array(
 				'name'    => __( 'Subscription Management Link', 'LION' ),
 				'desc'    => __( "A link to cancel, renew, reactivate, or update a subscription's payment info.", 'LION' ),
 				'context' => array( 'subscription' )
+			),
+			'subscription_cancel_reason' => array(
+				'name'          => __( 'Subscription Cancellation Reason', 'LION' ),
+				'desc'          => __( 'The reason the subscription was cancelled.', 'LION' ),
+				'context'       => array( 'subscription' ),
+				'notifications' => array( 'recurring-payment-cancelled' )
 			),
 		);
 
@@ -180,13 +186,17 @@ class IT_Exchange_Recurring_Payments_Email {
 
 		foreach ( $tags as $tag => $config ) {
 
+			if ( ! isset( $config['notifications'] ) ) {
+				$config['notifications'] = $notifications;
+			}
+
 			$obj = new IT_Exchange_Email_Tag_Base( $tag, $config['name'], $config['desc'], array( $this, $tag ) );
 
 			foreach ( $config['context'] as $context ) {
 				$obj->add_required_context( $context );
 			}
 
-			foreach ( $notifications as $notification ) {
+			foreach ( $config['notifications'] as $notification ) {
 				$obj->add_available_for( $notification );
 			}
 
@@ -206,8 +216,8 @@ class IT_Exchange_Recurring_Payments_Email {
 
 			if ( $tag ) {
 				$tag->add_available_for( 'recurring-payment-cancelled' )
-					->add_available_for( 'recurring-payment-deactivated' )
-					->add_available_for( 'recurring-payment-failed' );
+				    ->add_available_for( 'recurring-payment-deactivated' )
+				    ->add_available_for( 'recurring-payment-failed' );
 			}
 		}
 	}
@@ -253,6 +263,23 @@ class IT_Exchange_Recurring_Payments_Email {
 			$context['subscription']->get_transaction()->get_ID(),
 			it_exchange_get_page_url( 'purchases' )
 		);
+	}
+
+	/**
+	 * Replace the subscription cancel reason tag.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @param array $context
+	 * @param array $options
+	 *
+	 * @return string
+	 */
+	public function subscription_cancel_reason( $context, $options ) {
+
+		$not_any = isset( $options[0] ) ? $options[0] : __( 'None given.', 'LION' );
+
+		return $context['subscription']->get_cancellation_reason() ?: $not_any;
 	}
 }
 
