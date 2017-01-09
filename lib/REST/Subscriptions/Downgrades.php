@@ -2,7 +2,7 @@
 /**
  * Prorate Downgrades.
  *
- * @since   1.9.0
+ * @since   2.0.0
  * @license GPLv2
  */
 

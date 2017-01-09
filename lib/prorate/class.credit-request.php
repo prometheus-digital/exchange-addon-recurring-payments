@@ -146,7 +146,7 @@ abstract class ITE_Prorate_Credit_Request implements ITE_Cart_Aware {
 	/**
 	 * Get the human readable label of this credit request.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @return string
 	 */
@@ -287,7 +287,7 @@ abstract class ITE_Prorate_Credit_Request implements ITE_Cart_Aware {
 	/**
 	 * Get the prorate type.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @return string Either 'upgrade' or 'downgrade'.
 	 */
@@ -298,7 +298,7 @@ abstract class ITE_Prorate_Credit_Request implements ITE_Cart_Aware {
 	/**
 	 * Set the prorate type.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param string $prorate_type
 	 *
@@ -313,7 +313,7 @@ abstract class ITE_Prorate_Credit_Request implements ITE_Cart_Aware {
 	/**
 	 * Cancel the provider of credit.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @return bool
 	 */
@@ -362,7 +362,7 @@ abstract class ITE_Prorate_Credit_Request implements ITE_Cart_Aware {
 	/**
 	 * Get the cart.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @return \ITE_Cart
 	 */

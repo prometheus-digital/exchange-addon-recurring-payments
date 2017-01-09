@@ -146,7 +146,7 @@ function it_exchange_recurring_payments_addon_recurring_label( $product_id, $sho
 /**
  * Get the recurring product profile.
  *
- * @since 1.9.0
+ * @since 2.0.0
  *
  * @param int|IT_Exchange_Product $product
  *
@@ -170,7 +170,7 @@ function it_exchange_get_recurring_product_profile( $product ) {
 /**
  * Get the recurring product trial profile.
  *
- * @since 1.9.0
+ * @since 2.0.0
  *
  * @param int|IT_Exchange_Product $product
  *
@@ -194,7 +194,7 @@ function it_exchange_get_recurring_product_trial_profile( $product ) {
 /**
  * Add fees for free days.
  *
- * @since 1.9.0
+ * @since 2.0.0
  *
  * @param ITE_Cart_Product $item
  * @param ITE_Cart         $cart
@@ -235,7 +235,7 @@ function it_exchange_recurring_payments_add_free_days_fees( ITE_Cart_Product $it
 /**
  * Add fees for prorate requests that use the 'credit' type.
  *
- * @since 1.9.0
+ * @since 2.0.0
  *
  * @param ITE_Cart_Product $item
  * @param ITE_Cart         $cart
@@ -304,7 +304,7 @@ function it_exchange_recurring_payments_add_credit_fees( ITE_Cart_Product $item,
  * For hierarchical subscriptions.
  * Prints or returns an HTML formatted list of subscriptions and their children
  *
- * @since 1.9.0
+ * @since 2.0.0
  *
  * @param array $product_ids Parent IDs of subscription products
  * @param array $args        array of arguments for the function
@@ -361,7 +361,7 @@ function it_exchange_recurring_payments_addon_display_subscription_hierarchy( $p
 /**
  * Helper function to determine if customers are allowed to pause subscriptions.
  *
- * @since 1.9.0
+ * @since 2.0.0
  *
  * @return bool
  */
@@ -375,7 +375,7 @@ function it_exchange_allow_customers_to_pause_subscriptions() {
 /**
  * Helper function to determine if customers are allowed to pause subscriptions.
  *
- * @since 1.9.0
+ * @since 2.0.0
  *
  * @return int|false
  */

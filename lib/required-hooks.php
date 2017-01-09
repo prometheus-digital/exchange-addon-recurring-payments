@@ -102,7 +102,7 @@ add_action( 'init', function() {
 /**
  * Register backbone REST dependencies.
  *
- * @since 1.9.0
+ * @since 2.0.0
  *
  * @param array $dependencies
  *
@@ -120,7 +120,7 @@ add_filter( 'it_exchange_rest_backbone_addon_libs', 'it_exchange_recurring_payme
 /**
  * Enqueue the purchases script.
  *
- * @since 1.9.0
+ * @since 2.0.0
  */
 function it_exchange_recurring_payments_enqueue_purchases() {
 
@@ -134,7 +134,7 @@ function it_exchange_recurring_payments_enqueue_purchases() {
 		'it-exchange-recurring-payments-purchases',
 		plugin_dir_url( __FILE__ ) . '/js/purchases.js',
 		array( 'it-exchange-rest', 'jquery.payment' ),
-		'1.9.0',
+		'2.0.0',
 		true
 	);
 
@@ -180,7 +180,7 @@ add_action( 'wp_enqueue_scripts', 'it_exchange_recurring_payments_enqueue_purcha
 /**
  * Localize the purchases.
  *
- * @since 1.9.0
+ * @since 2.0.0
  */
 function it_exchange_recurring_payments_localize_purchases() {
 
@@ -273,7 +273,7 @@ add_filter( 'it_exchange_possible_template_paths', 'it_exchange_recurring_paymen
 /**
  * Add fees when a product is added to the cart.
  *
- * @since 1.9.0
+ * @since 2.0.0
  *
  * @param ITE_Cart_Product $item
  * @param ITE_Cart         $cart
@@ -319,7 +319,7 @@ add_action( 'it_exchange_add_product_to_cart', 'it_exchange_recurring_payments_o
 /**
  * Add fees when the prorate meta has been updated.
  *
- * @since 1.9.0
+ * @since 2.0.0
  *
  * @param string   $key
  * @param array    $value
@@ -349,7 +349,7 @@ add_action( 'it_exchange_set_cart_meta', 'it_exchange_recurring_payments_add_cre
 /**
  * Set child of for renewals.
  *
- * @since 1.9.0
+ * @since 2.0.0
  *
  * @param ITE_Gateway_Purchase_Request $request
  *
@@ -761,7 +761,7 @@ function it_exchange_recurring_payments_handle_expired() {
 /**
  * Add an activity item when a subscription has been paused.
  *
- * @since 1.9.0
+ * @since 2.0.0
  *
  * @param IT_Exchange_Subscription $subscription
  */
@@ -792,7 +792,7 @@ add_action( 'it_exchange_pause_subscription', 'it_exchange_recurring_payments_ad
 /**
  * Add an activity item when a subscription has been resumed.
  *
- * @since 1.9.0
+ * @since 2.0.0
  *
  * @param IT_Exchange_Subscription $subscription
  */
@@ -823,7 +823,7 @@ add_action( 'it_exchange_resume_subscription', 'it_exchange_recurring_payments_a
 /**
  * Add an activity item when a subscription has been cancelled.
  *
- * @since 1.9.0
+ * @since 2.0.0
  *
  * @param IT_Exchange_Subscription $subscription
  */
@@ -1200,7 +1200,7 @@ add_action( 'it_exchange_after_payment_details', 'it_exchange_recurring_payments
 /**
  * Render the Pause, Resume, and Cancel subscription buttons.
  *
- * @since 1.9.0
+ * @since 2.0.0
  *
  * @param IT_Exchange_Transaction $transaction
  */
@@ -1246,7 +1246,7 @@ add_action( 'it_exchange_after_payment_refund', 'it_exchange_recurring_payments_
 /**
  * Render admin subscription actions detail.
  *
- * @since 1.9.0
+ * @since 2.0.0
  *
  * @param IT_Exchange_Transaction $transaction
  */
@@ -1355,7 +1355,7 @@ add_action( 'it_exchange_register_upgrades', 'it_exchange_recurring_payments_reg
 /**
  * AJAX to add new member relatives
  *
- * @since 1.9.0
+ * @since 2.0.0
  */
 function it_exchange_recurring_payments_addon_ajax_add_subscription_child() {
 
@@ -1387,7 +1387,7 @@ add_action( 'wp_ajax_it-exchange-recurring-payments-addon-add-subscription-child
 /**
  * AJAX to add new member relatives
  *
- * @since 1.9.0
+ * @since 2.0.0
  */
 function it_exchange_recurring_payments_addon_ajax_add_subscription_parent() {
 
@@ -1425,7 +1425,7 @@ add_action( 'wp_ajax_it-exchange-recurring-payments-addon-add-subscription-paren
 /**
  * Make a pause subscription request.
  *
- * @since 1.9.0
+ * @since 2.0.0
  *
  * @param null  $_
  * @param array $args
@@ -1458,7 +1458,7 @@ add_filter( 'it_exchange_make_pause-subscription_gateway_request', 'it_exchange_
 /**
  * Make a resume subscription request.
  *
- * @since 1.9.0
+ * @since 2.0.0
  *
  * @param null  $_
  * @param array $args
@@ -1491,7 +1491,7 @@ add_filter( 'it_exchange_make_resume-subscription_gateway_request', 'it_exchange
 /**
  * Make a cancel subscription request.
  *
- * @since 1.9.0
+ * @since 2.0.0
  *
  * @param null  $_
  * @param array $args
@@ -1534,7 +1534,7 @@ add_filter( 'it_exchange_make_cancel-subscription_gateway_request', 'it_exchange
 /**
  * Make an update subscription payment method request.
  *
- * @since 1.9.0
+ * @since 2.0.0
  *
  * @param null                        $_
  * @param array                       $args
@@ -1618,7 +1618,7 @@ add_filter(
 /**
  * Decorate the purchase request to add prorate information.
  *
- * @since 1.9.0
+ * @since 2.0.0
  *
  * @param \ITE_Gateway_Purchase_Request $request
  *

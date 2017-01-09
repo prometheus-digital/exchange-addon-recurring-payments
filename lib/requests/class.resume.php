@@ -2,7 +2,7 @@
 /**
  * Resume Subscription Request.
  *
- * @since   1.9.0
+ * @since   2.0.0
  * @license GPLv2
  */
 
@@ -31,7 +31,7 @@ class ITE_Resume_Subscription_Request implements ITE_Gateway_Request {
 	/**
 	 * Get the subscription to be resumed.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @return IT_Exchange_Subscription
 	 */
@@ -42,7 +42,7 @@ class ITE_Resume_Subscription_Request implements ITE_Gateway_Request {
 	/**
 	 * Get the person who resumed the subscription.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @return IT_Exchange_Customer|null
 	 */

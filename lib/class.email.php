@@ -2,7 +2,7 @@
 /**
  * Contains the email class.
  *
- * @since   1.9.0
+ * @since   2.0.0
  * @license GPLv2
  */
 
@@ -36,7 +36,7 @@ class IT_Exchange_Recurring_Payments_Email {
 	 * For use in CRON jobs or other similar applications
 	 * where multiple emails will be going out in one request.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param bool $batch
 	 */
@@ -54,7 +54,7 @@ class IT_Exchange_Recurring_Payments_Email {
 	/**
 	 * Send status notifications.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param string                   $new_status
 	 * @param string                   $old_status
@@ -99,7 +99,7 @@ class IT_Exchange_Recurring_Payments_Email {
 	/**
 	 * Register email notifications.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param IT_Exchange_Email_Notifications $notifications
 	 */
@@ -148,7 +148,7 @@ class IT_Exchange_Recurring_Payments_Email {
 	/**
 	 * Register custom email tags.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param IT_Exchange_Email_Tag_Replacer $replacer
 	 */
@@ -225,7 +225,7 @@ class IT_Exchange_Recurring_Payments_Email {
 	/**
 	 * Replace the subscription product tag.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param array $context
 	 *
@@ -238,7 +238,7 @@ class IT_Exchange_Recurring_Payments_Email {
 	/**
 	 * Replace the subscription product link.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param array $context
 	 *
@@ -251,7 +251,7 @@ class IT_Exchange_Recurring_Payments_Email {
 	/**
 	 * Replace the subscription update payment link.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param array $context
 	 *
@@ -268,7 +268,7 @@ class IT_Exchange_Recurring_Payments_Email {
 	/**
 	 * Replace the subscription cancel reason tag.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param array $context
 	 * @param array $options

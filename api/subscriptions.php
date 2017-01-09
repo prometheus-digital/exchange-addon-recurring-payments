@@ -100,7 +100,7 @@ function it_exchange_get_transaction_subscriptions( IT_Exchange_Transaction $tra
 /**
  * Get a subscription by the subscriber ID.
  *
- * @since 1.9.0
+ * @since 2.0.0
  *
  * @param string $method
  * @param string $subscriber_id
@@ -139,7 +139,7 @@ function it_exchange_get_subscription_by_subscriber_id( $method, $subscriber_id 
 /**
  * Add a subscription renewal payment.
  *
- * @since 1.9.0
+ * @since 2.0.0
  *
  * @param IT_Exchange_Transaction $parent
  * @param string                  $method_id
@@ -187,7 +187,7 @@ function it_exchange_add_subscription_renewal_payment( IT_Exchange_Transaction $
 /**
  * Get a subscription.
  *
- * @since 1.9.0
+ * @since 2.0.0
  *
  * @param string|IT_Exchange_Subscription $subscription
  *

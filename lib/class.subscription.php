@@ -125,7 +125,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	/**
 	 * Get a subscription by its ID.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param string $id
 	 *
@@ -248,7 +248,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	/**
 	 * Get the subscription ID.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @return string
 	 */
@@ -496,7 +496,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	/**
 	 * Is the subscription's status one of the following.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param string|array $status,...
 	 *
@@ -636,7 +636,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	/**
 	 * Are the occurrences of this subscription limited.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @return bool
 	 */
@@ -647,7 +647,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	/**
 	 * Get the remaining occurrences.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @return int|null
 	 *
@@ -667,7 +667,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	 *
 	 * If the decrement makes it 0, the subscription will be cancelled.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @return bool
 	 *
@@ -695,7 +695,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 			/**
 			 * Fires when a subscription's occurrences limit is reached.
 			 *
-			 * @since 1.9.0
+			 * @since 2.0.0
 			 *
 			 * @param IT_Exchange_Subscription $this
 			 */
@@ -740,7 +740,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	/**
 	 * Add meta.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param string $key
 	 * @param mixed  $value
@@ -755,7 +755,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	/**
 	 * Update metadata.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param string $key
 	 * @param mixed  $value
@@ -769,7 +769,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	/**
 	 * Get metadata.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param string $key
 	 * @param bool   $single
@@ -783,7 +783,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	/**
 	 * Delete a meta key.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param string $key
 	 * @param mixed  $value
@@ -797,7 +797,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	/**
 	 * Does meta with the given key exist.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param string $key
 	 *
@@ -810,7 +810,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	/**
 	 * Transform a meta key.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param string $key
 	 *
@@ -929,7 +929,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	/**
 	 * Can the subscription be manually renewed.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @return bool
 	 */
@@ -966,7 +966,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 		/**
 		 * Filter whether this subscription can be manually renwed.
 		 *
-		 * @since 1.9.0
+		 * @since 2.0.0
 		 *
 		 * @param bool                     $can_be
 		 * @param IT_Exchange_Subscription $this
@@ -977,7 +977,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	/**
 	 * Can the subscription be paused.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @return bool
 	 */
@@ -998,7 +998,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 		/**
 		 * Filter whether the subscription can be paused.
 		 *
-		 * @since 1.9.0
+		 * @since 2.0.0
 		 *
 		 * @param bool                     $can
 		 * @param IT_Exchange_Subscription $this
@@ -1009,7 +1009,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	/**
 	 * Pause the subscription.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param IT_Exchange_Customer|null $paused_by
 	 *
@@ -1038,7 +1038,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 			/**
 			 * Fires when a subscription has been paused.
 			 *
-			 * @since 1.9.0
+			 * @since 2.0.0
 			 *
 			 * @param \IT_Exchange_Subscription $this
 			 */
@@ -1053,7 +1053,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	/**
 	 * Retrieve the user who paused the subscription.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @return IT_Exchange_Customer|null
 	 */
@@ -1071,7 +1071,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	/**
 	 * Set the person who paused the subscription.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param IT_Exchange_Customer|null $customer
 	 *
@@ -1084,7 +1084,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	/**
 	 * Retrieve the number of times the subscription has been paused.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @return int
 	 */
@@ -1095,7 +1095,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	/**
 	 * Is the subscription currently being paused.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @return bool
 	 */
@@ -1104,7 +1104,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	/**
 	 * Can the subscription be resumed.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @return bool
 	 */
@@ -1127,7 +1127,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 		/**
 		 * Filter whether the subscription can be resumed.
 		 *
-		 * @since 1.9.0
+		 * @since 2.0.0
 		 *
 		 * @param bool                     $can
 		 * @param IT_Exchange_Subscription $this
@@ -1138,7 +1138,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	/**
 	 * Resume the subscription.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param IT_Exchange_Customer|null $resumed_by
 	 *
@@ -1166,7 +1166,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 			/**
 			 * Fires when a subscription has been resumed.
 			 *
-			 * @since 1.9.0
+			 * @since 2.0.0
 			 *
 			 * @param \IT_Exchange_Subscription $this
 			 */
@@ -1181,7 +1181,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	/**
 	 * Retrieve the user who resumed the subscription.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @return IT_Exchange_Customer|null
 	 */
@@ -1199,7 +1199,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	/**
 	 * Set the person who resumed the subscription.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param IT_Exchange_Customer|null $customer
 	 *
@@ -1212,7 +1212,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	/**
 	 * Is the subscription currently being resumed.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @return bool
 	 */
@@ -1221,7 +1221,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	/**
 	 * Can the subscription be cancelled.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @return bool
 	 */
@@ -1281,7 +1281,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 			 *
 			 * This is different from listening for when the status has been updated to cancelled.
 			 *
-			 * @since 1.9.0
+			 * @since 2.0.0
 			 *
 			 * @param \IT_Exchange_Subscription $this
 			 */
@@ -1307,7 +1307,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	/**
 	 * Is this subscription being cancelled.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @return boolean
 	 */
@@ -1318,7 +1318,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	/**
 	 * Retrieve the user who cancelled the subscription.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @return IT_Exchange_Customer|null
 	 */
@@ -1336,7 +1336,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	/**
 	 * Set the person who cancelled the subscription.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param IT_Exchange_Customer $customer
 	 *
@@ -1349,7 +1349,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	/**
 	 * Get the cancellation reason.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @return string
 	 */
@@ -1360,7 +1360,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	/**
 	 * Get the cancellation reason.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param string $reason
 	 *
@@ -1373,7 +1373,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	/**
 	 * Get all available upgrades for this subscription.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @return ITE_Prorate_Credit_Request[]
 	 */
@@ -1401,7 +1401,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	/**
 	 * Get all available downgrades for this subscription.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @return ITE_Prorate_Credit_Request[]
 	 */
@@ -1431,13 +1431,13 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	 *
 	 * @since      1.8.4
 	 *
-	 * @deprecated 1.9.0
+	 * @deprecated 2.0.0
 	 *
 	 * @param string $gateway
 	 */
 	public function record_gateway_cancellation_while_complimentary( $gateway ) {
 
-		_deprecated_function( __FUNCTION__, '1.9.0' );
+		_deprecated_function( __FUNCTION__, '2.0.0' );
 
 		$builder = new IT_Exchange_Txn_Activity_Builder( $this->get_transaction(), 'status' );
 		$builder->set_description( __( 'Original recurring payment has been cancelled.', 'LION' ) );
@@ -1448,7 +1448,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	/**
 	 * Can the payment source be updated.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @return bool
 	 */
@@ -1471,7 +1471,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 		/**
 		 * Can the subscription's payment source be updated.
 		 *
-		 * @since 1.9.0
+		 * @since 2.0.0
 		 *
 		 * @param bool                      $can
 		 * @param \IT_Exchange_Subscription $this
@@ -1482,7 +1482,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	/**
 	 * Get the payment source used for this subscription.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @return ITE_Gateway_Payment_Source|null
 	 */
@@ -1498,7 +1498,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	/**
 	 * Get the card used for payment.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @return ITE_Gateway_Card|null
 	 */
@@ -1521,7 +1521,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	/**
 	 * Get the card used for payment.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param ITE_Gateway_Card|null $card
 	 *
@@ -1543,7 +1543,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	/**
 	 * Get the payment token used for the subscription.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @return ITE_Payment_Token|null
 	 */
@@ -1566,7 +1566,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	/**
 	 * Set the payment token to use for this subscription.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param \ITE_Payment_Token|null $token
 	 *
@@ -1577,7 +1577,7 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 		/**
 		 * Fires when the payment token is updated for a subscription.
 		 *
-		 * @since 1.9.0
+		 * @since 2.0.0
 		 *
 		 * @param \ITE_Payment_Token|null   $new
 		 * @param \ITE_Payment_Token|null   $old

@@ -2,7 +2,7 @@
 /**
  * Update Payment Method Request.
  *
- * @since   1.9.0
+ * @since   2.0.0
  * @license GPLv2
  */
 
@@ -33,7 +33,7 @@ class ITE_Update_Subscription_Payment_Method_Request implements ITE_Gateway_Requ
 	/**
 	 * Get the subscription that should have its payment method updated.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @return IT_Exchange_Subscription
 	 */
@@ -49,7 +49,7 @@ class ITE_Update_Subscription_Payment_Method_Request implements ITE_Gateway_Requ
 	/**
 	 * Get the new payment token to use.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @return ITE_Payment_Token|null
 	 */
@@ -60,7 +60,7 @@ class ITE_Update_Subscription_Payment_Method_Request implements ITE_Gateway_Requ
 	/**
 	 * Set the payment token to use.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param ITE_Payment_Token $payment_token
 	 */
@@ -71,7 +71,7 @@ class ITE_Update_Subscription_Payment_Method_Request implements ITE_Gateway_Requ
 	/**
 	 * Get the new card to use.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @return ITE_Gateway_Card|null
 	 */
@@ -82,7 +82,7 @@ class ITE_Update_Subscription_Payment_Method_Request implements ITE_Gateway_Requ
 	/**
 	 * Set the card to use.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param ITE_Gateway_Card $card
 	 */
@@ -95,7 +95,7 @@ class ITE_Update_Subscription_Payment_Method_Request implements ITE_Gateway_Requ
 	 *
 	 * The resulting token should be used as the new payment method.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @return ITE_Gateway_Tokenize_Request|null
 	 */
@@ -106,7 +106,7 @@ class ITE_Update_Subscription_Payment_Method_Request implements ITE_Gateway_Requ
 	/**
 	 * Set the tokenize request.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param ITE_Gateway_Tokenize_Request $tokenize
 	 */

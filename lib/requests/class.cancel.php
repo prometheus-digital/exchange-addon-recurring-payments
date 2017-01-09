@@ -2,7 +2,7 @@
 /**
  * Cancel Subscription Request.
  *
- * @since   1.9.0
+ * @since   2.0.0
  * @license GPLv2
  */
 
@@ -64,7 +64,7 @@ class ITE_Cancel_Subscription_Request implements ITE_Gateway_Request {
 	/**
 	 * Get the person who initiated the cancellation request.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @return IT_Exchange_Customer|null
 	 */
@@ -75,7 +75,7 @@ class ITE_Cancel_Subscription_Request implements ITE_Gateway_Request {
 	/**
 	 * Should the subscription be cancelled at the end of the current period, or immediately.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @return boolean
 	 */
@@ -86,7 +86,7 @@ class ITE_Cancel_Subscription_Request implements ITE_Gateway_Request {
 	/**
 	 * Set whether the subscription should be cancelled at the period end.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param boolean $at_period_end
 	 *
@@ -101,7 +101,7 @@ class ITE_Cancel_Subscription_Request implements ITE_Gateway_Request {
 	/**
 	 * Should this cancellation set the subscription status.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @return bool
 	 */
@@ -112,7 +112,7 @@ class ITE_Cancel_Subscription_Request implements ITE_Gateway_Request {
 	/**
 	 * Set whether or not the subscription status should be set.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param bool $set
 	 */

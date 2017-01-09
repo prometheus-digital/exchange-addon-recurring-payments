@@ -138,7 +138,7 @@ class IT_Theme_API_Recurring_Payments implements IT_Theme_API {
 	/**
 	 * Get the cancel API link.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param array $options
 	 *
@@ -178,7 +178,7 @@ class IT_Theme_API_Recurring_Payments implements IT_Theme_API {
 	/**
 	 * Display the update payment method form if necessary.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param array $options
 	 *
@@ -208,7 +208,7 @@ class IT_Theme_API_Recurring_Payments implements IT_Theme_API {
 	/**
 	 * Output a Pause or Resume button.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param array $options
 	 *
@@ -254,7 +254,7 @@ class IT_Theme_API_Recurring_Payments implements IT_Theme_API {
 	/**
 	 * Output a renewal button.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param array $options
 	 *
@@ -366,7 +366,7 @@ class IT_Theme_API_Recurring_Payments implements IT_Theme_API {
 			_doing_it_wrong(
 				"it_exchange( 'recurring-payments', 'payments' )",
 				'`label` option should use sprintf placeholders for transalation.',
-				'1.9.0'
+				'2.0.0'
 			);
 		} else {
 			$sprintf = true;

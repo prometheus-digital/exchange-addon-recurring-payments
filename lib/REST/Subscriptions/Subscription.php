@@ -181,7 +181,7 @@ class Subscription extends Base implements Getable, Putable {
 	/**
 	 * Handle updating the expiration date.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param \IT_Exchange_Subscription $s
 	 * @param \DateTime                 $new
@@ -278,7 +278,7 @@ class Subscription extends Base implements Getable, Putable {
 	/**
 	 * Are we updating the payment source for the subscription.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param Request                   $request
 	 * @param \IT_Exchange_Subscription $s

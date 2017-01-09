@@ -2,7 +2,7 @@
 /**
  * Recurring Payments Hierarchy Product Feature.
  *
- * @since   1.9.0
+ * @since   2.0.0
  * @license GPLv2
  */
 
@@ -35,7 +35,7 @@ class IT_Exchange_Subscription_Hierarchy_Product_Feature extends IT_Exchange_Pro
 	/**
 	 * This echos the feature metabox.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param WP_Post $post
 	 *
@@ -108,7 +108,7 @@ class IT_Exchange_Subscription_Hierarchy_Product_Feature extends IT_Exchange_Pro
 	/**
 	 * This saves the value
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param object $post wp post object
 	 *
@@ -141,7 +141,7 @@ class IT_Exchange_Subscription_Hierarchy_Product_Feature extends IT_Exchange_Pro
 	/**
 	 * Return the product's features
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param mixed $existing the values passed in by the WP Filter API. Ignored here.
 	 * @param       integer   product_id the WordPress post ID
@@ -221,7 +221,7 @@ class IT_Exchange_Subscription_Hierarchy_Product_Feature extends IT_Exchange_Pro
 	/**
 	 * Return the product's features
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param mixed $existing the values passed in by the WP Filter API. Ignored here.
 	 * @param       integer   product_id the WordPress post ID
@@ -251,7 +251,7 @@ class IT_Exchange_Subscription_Hierarchy_Product_Feature extends IT_Exchange_Pro
 	/**
 	 * Does the product have the feature?
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param mixed   $result Not used by core
 	 * @param integer $product_id
@@ -274,7 +274,7 @@ class IT_Exchange_Subscription_Hierarchy_Product_Feature extends IT_Exchange_Pro
 	 * This is different than if it has the feature, a product can
 	 * support a feature but might not have the feature set.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param mixed   $result Not used by core
 	 * @param integer $product_id

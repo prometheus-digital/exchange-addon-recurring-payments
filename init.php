@@ -69,9 +69,10 @@ $current_version = get_option( 'exchange_recurring_payments_version' );
 
 if ( $current_version != ITE_RECURRING_PAYMENTS_VERSION ) {
 
+	$upgrader = it_exchange_make_upgrader();
+
 	if ( ! $current_version ) {
 		$current_version = '1.8.3';
-		$upgrader = it_exchange_make_upgrader();
 		$upgrader->complete( $upgrader->get_upgrade( 'zero-sum-checkout-complimentary' ) );
 		$upgrader->complete( $upgrader->get_upgrade( 'non-auto-renewing-subscriptions' ) );
 	}
@@ -88,7 +89,7 @@ if ( $current_version != ITE_RECURRING_PAYMENTS_VERSION ) {
 
 	update_option( 'exchange_recurring_payments_version', ITE_RECURRING_PAYMENTS_VERSION );
 
-	if ( it_exchange_make_upgrader()->get_available_upgrades() ) {
+	if ( $upgrader->get_available_upgrades() ) {
 		update_option( 'it_exchange_show_upgrades_nag', true );
 	}
 }

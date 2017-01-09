@@ -2,7 +2,7 @@
 /**
  * Prorate Gateway Purchase Request.
  *
- * @since   1.9.0
+ * @since   2.0.0
  * @license GPLv2
  */
 
@@ -27,7 +27,7 @@ class ITE_Gateway_Prorate_Purchase_Request extends ITE_Gateway_Purchase_Request 
 	/**
 	 * Get prorate requests being used.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @return ITE_Prorate_Credit_Request[]
 	 */
