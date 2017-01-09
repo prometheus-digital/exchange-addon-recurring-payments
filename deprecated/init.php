@@ -1,33 +1,15 @@
 <?php
 /**
  * iThemes Exchange Recurring Payments Add-on
- *
  * @package exchange-addon-recurring-payments
  * @since   1.0.0
  */
 
-require_once dirname( __FILE__ ) . '/vendor/autoload.php';
 require_once( dirname( __FILE__ ) . '/lib/class.recurring-profile.php' );
 require_once( dirname( __FILE__ ) . '/lib/class.subscription.php' );
-require_once( dirname( __FILE__ ) . '/lib/class.daily-price-calculator.php' );
 require_once( dirname( __FILE__ ) . '/lib/class.expiry-date-activity.php' );
-
-require_once( dirname( __FILE__ ) . '/lib/prorate/class.credit-request.php' );
-require_once( dirname( __FILE__ ) . '/lib/prorate/class.forever-credit-request.php' );
-require_once( dirname( __FILE__ ) . '/lib/prorate/class.subscription-credit-request.php' );
-require_once( dirname( __FILE__ ) . '/lib/prorate/class.purchase-request.php' );
-
-require_once( dirname( __FILE__ ) . '/lib/prorate/class.credit-requestor.php' );
-
-require_once( dirname( __FILE__ ) . '/lib/requests/class.pause.php' );
-require_once( dirname( __FILE__ ) . '/lib/requests/class.resume.php' );
-require_once( dirname( __FILE__ ) . '/lib/requests/class.cancel.php' );
-require_once( dirname( __FILE__ ) . '/lib/requests/class.update-payment-method.php' );
-
 require_once( dirname( __FILE__ ) . '/lib/upgrades/class.zero-sum-checkout.php' );
 require_once( dirname( __FILE__ ) . '/lib/upgrades/class.non-auto-renewing.php' );
-
-require_once( dirname( __FILE__ ) . '/lib/REST/load.php' );
 
 require_once ( dirname( __FILE__ ) ) . '/lib/deprecated.php';
 
@@ -63,18 +45,9 @@ require_once( dirname( __FILE__ ) . '/lib/addon-settings.php' );
  */
 require_once( dirname( __FILE__ ) . '/lib/addon-functions.php' );
 
-require_once( dirname( __FILE__ ) . '/lib/class.email.php' );
-
-$current_version = get_option( 'exchange_recurring_payments_version' );
+$current_version = get_option( 'exchange_recurring_payments_version', '1.8.3' );
 
 if ( $current_version != ITE_RECURRING_PAYMENTS_VERSION ) {
-
-	if ( ! $current_version ) {
-		$current_version = '1.8.3';
-		$upgrader = it_exchange_make_upgrader();
-		$upgrader->complete( $upgrader->get_upgrade( 'zero-sum-checkout-complimentary' ) );
-		$upgrader->complete( $upgrader->get_upgrade( 'non-auto-renewing-subscriptions' ) );
-	}
 
 	/**
 	 * Runs when the version upgrades.
