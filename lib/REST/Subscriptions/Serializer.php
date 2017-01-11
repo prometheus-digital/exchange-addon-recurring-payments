@@ -348,7 +348,7 @@ class Serializer {
 									'description' => __( 'The payment method slug.', 'LION' ),
 									'type'        => 'string',
 									'readonly'    => true,
-									'context'     => array( 'edit' ),
+									'context'     => array( 'view', 'edit' ),
 								),
 								'label' => array(
 									'description' => __( 'The payment method label.', 'LION' ),
