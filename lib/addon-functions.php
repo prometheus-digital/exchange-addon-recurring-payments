@@ -68,7 +68,7 @@ function it_exchange_recurring_payments_addon_update_expirations( $transaction, 
 
 	foreach ( it_exchange_get_transaction_subscriptions( $transaction ) as $subscription ) {
 
-		if ( ! $subscription->is_status( $subscription::STATUS_ACTIVE ) ) {
+		if ( ! $subscription->is_status( $subscription::STATUS_ACTIVE ) && $subscription->get_transaction()->is_cleared_for_delivery() ) {
 			$subscription->set_status( $subscription::STATUS_ACTIVE );
 		}
 
