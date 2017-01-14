@@ -563,6 +563,36 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	}
 
 	/**
+	 * Set the subscription status as it arrives from the Gateway.
+	 *
+	 * This accounts for complimentary and limited occurrences subscriptions.
+	 *
+	 * @since 2.0.0
+	 *
+	 * @param string $new_status
+	 *
+	 * @return bool True if status updated, false if not.
+	 */
+	public function set_status_from_gateway_update( $new_status ) {
+
+		if ( $this->is_status( $new_status ) ) {
+			return false;
+		}
+
+		if ( $this->is_status( self::STATUS_COMPLIMENTARY ) ) {
+			return false;
+		}
+
+		if ( $this->are_occurrences_limited() && $this->get_remaining_occurrences() === 0 ) {
+			return false;
+		}
+
+		$this->set_status( $new_status );
+
+		return true;
+	}
+
+	/**
 	 * Bump the expiration date.
 	 *
 	 * @since 1.8
