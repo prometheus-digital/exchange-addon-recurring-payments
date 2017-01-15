@@ -529,7 +529,9 @@ function it_exchange_recurring_payments_bump_expiration_on_child_transaction( $t
 		return;
 	}
 
-	it_exchange_recurring_payments_addon_update_expirations( $parent );
+	if ( $transaction->is_cleared_for_delivery() ) {
+		it_exchange_recurring_payments_addon_update_expirations( $parent );
+	}
 
 	try {
 		$subscription = it_exchange_get_subscription_by_transaction( $parent );
