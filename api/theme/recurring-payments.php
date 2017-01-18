@@ -317,7 +317,7 @@ class IT_Theme_API_Recurring_Payments implements IT_Theme_API {
 			return '';
 		}
 
-		$expire = $s->get_expiry_date()->getTimestamp();
+		$expire = $s->get_expiry_date();
 		$arenew = $s->is_auto_renewing();
 
 		if ( ! $expire ) {
@@ -326,7 +326,7 @@ class IT_Theme_API_Recurring_Payments implements IT_Theme_API {
 
 		if ( $options['show_auto_renews'] || ! $arenew ) {
 			$label  = $s->is_status( $s::STATUS_ACTIVE ) ? $options['label'] : $options['expired_label'];
-			$output = sprintf( $label, date_i18n( $options['date_format'], $expire ) );
+			$output = sprintf( $label, date_i18n( $options['date_format'], $expire->getTimestamp() ) );
 		}
 
 		return $output;
