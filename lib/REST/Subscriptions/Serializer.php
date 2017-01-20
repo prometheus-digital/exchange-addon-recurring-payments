@@ -56,7 +56,7 @@ class Serializer {
 		}
 
 		return array(
-			'id'                      => $s->get_id(),
+			'id'                      => $s->get_ID(),
 			'product'                 => $s->get_product()->ID,
 			'auto_renewing'           => $s->is_auto_renewing(),
 			'transaction'             => $s->get_transaction()->get_ID(),

@@ -165,7 +165,7 @@ class IT_Theme_API_Recurring_Payments implements IT_Theme_API {
 		<p><a href="javascript:"
 		      id="it-exchange-cancel-subscription-api-<?php echo $subscription->get_transaction()->ID ?>"
 		      class="it-exchange-cancel-subscription-api <?php echo esc_attr( $class ); ?>"
-		      data-id="<?php echo $subscription->get_id(); ?>"
+		      data-id="<?php echo $subscription->get_ID(); ?>"
 			>
 				<?php echo $label; ?>
 			</a></p>
@@ -201,7 +201,7 @@ class IT_Theme_API_Recurring_Payments implements IT_Theme_API {
 		}
 
 		return "<div class='it-exchange-update-subscription-payment-method-container'" .
-		       " id='it-exchange-update-subscription-payment-method-container-{$s->get_transaction()->ID}' data-ID='{$s->get_id()}'>" .
+		       " id='it-exchange-update-subscription-payment-method-container-{$s->get_transaction()->ID}' data-ID='{$s->get_ID()}'>" .
 		       "</div>";
 	}
 
@@ -238,14 +238,14 @@ class IT_Theme_API_Recurring_Payments implements IT_Theme_API {
 
 			$label = $options['pause_label'];
 
-			return "<button class='it-exchange-pause-subscription-payment' data-id='{$s->get_id()}'>{$label}</button>";
+			return "<button class='it-exchange-pause-subscription-payment' data-id='{$s->get_ID()}'>{$label}</button>";
 		}
 
 		if ( $s->can_be_resumed() ) {
 
 			$label = $options['resume_label'];
 
-			return "<button class='it-exchange-resume-subscription-payment' data-id='{$s->get_id()}'>{$label}</button>";
+			return "<button class='it-exchange-resume-subscription-payment' data-id='{$s->get_ID()}'>{$label}</button>";
 		}
 
 		return '';

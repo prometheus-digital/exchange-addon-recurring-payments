@@ -40,9 +40,17 @@ add_action( 'it_exchange_register_rest_routes', function ( \iThemes\Exchange\RES
 	$requestor->register_provider( 'IT_Exchange_Subscription' );
 	$requestor->register_provider( 'IT_Exchange_Transaction' );
 
-	$upgrades   = new Upgrades( $prorate_serializer, $requestor );
-	$downgrades = new Downgrades( $prorate_serializer, $requestor );
+	$helper = new ITE_Prorate_REST_Helper(
+		it_exchange_object_type_registry()->get( 'membership' ),
+		$requestor,
+		$manager,
+		$prorate_serializer,
+		'membership_id'
+	);
 
+	$upgrades = new Upgrades( $prorate_serializer, $helper );
 	$manager->register_route( $upgrades->set_parent( $subscription ) );
+
+	$downgrades = new Downgrades( $prorate_serializer, $helper );
 	$manager->register_route( $downgrades->set_parent( $subscription ) );
 } );

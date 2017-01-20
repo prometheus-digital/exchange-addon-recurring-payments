@@ -6,4 +6,20 @@ $vendorDir = dirname(dirname(__FILE__));
 $baseDir = dirname($vendorDir);
 
 return array(
+    'ITE_Gateway_Prorate_Purchase_Request' => $baseDir . '/lib/prorate/class.purchase-request.php',
+    'ITE_Proratable' => $baseDir . '/lib/prorate/interface.proratable.php',
+    'ITE_Prorate_Credit_Request' => $baseDir . '/lib/prorate/class.credit-request.php',
+    'ITE_Prorate_Credit_Requestor' => $baseDir . '/lib/prorate/class.credit-requestor.php',
+    'ITE_Prorate_Forever_Credit_Request' => $baseDir . '/lib/prorate/class.forever-credit-request.php',
+    'ITE_Prorate_REST_Helper' => $baseDir . '/lib/prorate/class.rest-helper.php',
+    'ITE_Prorate_Subscription_Credit_Request' => $baseDir . '/lib/prorate/class.subscription-credit-request.php',
+    'iThemes\\Exchange\\RecurringPayments\\REST\\Subscriptions\\Cancel' => $baseDir . '/lib/REST/Subscriptions/Cancel.php',
+    'iThemes\\Exchange\\RecurringPayments\\REST\\Subscriptions\\Downgrades' => $baseDir . '/lib/REST/Subscriptions/Downgrades.php',
+    'iThemes\\Exchange\\RecurringPayments\\REST\\Subscriptions\\Pause' => $baseDir . '/lib/REST/Subscriptions/Pause.php',
+    'iThemes\\Exchange\\RecurringPayments\\REST\\Subscriptions\\ProrateSerializer' => $baseDir . '/lib/REST/Subscriptions/ProrateSerializer.php',
+    'iThemes\\Exchange\\RecurringPayments\\REST\\Subscriptions\\Renew' => $baseDir . '/lib/REST/Subscriptions/Renew.php',
+    'iThemes\\Exchange\\RecurringPayments\\REST\\Subscriptions\\Resume' => $baseDir . '/lib/REST/Subscriptions/Resume.php',
+    'iThemes\\Exchange\\RecurringPayments\\REST\\Subscriptions\\Serializer' => $baseDir . '/lib/REST/Subscriptions/Serializer.php',
+    'iThemes\\Exchange\\RecurringPayments\\REST\\Subscriptions\\Subscription' => $baseDir . '/lib/REST/Subscriptions/Subscription.php',
+    'iThemes\\Exchange\\RecurringPayments\\REST\\Subscriptions\\Upgrades' => $baseDir . '/lib/REST/Subscriptions/Upgrades.php',
 );

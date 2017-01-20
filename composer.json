@@ -22,6 +22,7 @@
   "autoload": {
     "psr-4": {
       "iThemes\\Exchange\\RecurringPayments\\REST\\": "lib/REST/"
-    }
+    },
+    "classmap": [ "lib/prorate" ]
   }
 }

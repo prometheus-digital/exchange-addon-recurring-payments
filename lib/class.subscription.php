@@ -9,7 +9,7 @@
 /**
  * Class IT_Exchange_Subscription
  */
-class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
+class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider, ITE_Proratable, ITE_Object {
 
 	const E_NO_PROD = 1;
 	const E_NOT_RECURRING = 2;
@@ -252,8 +252,22 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider {
 	 *
 	 * @return string
 	 */
-	public function get_id() {
+	public function get_ID() {
 		return "{$this->get_transaction()->get_ID()}:{$this->get_product()->ID}";
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public function __toString() {
+		return sprintf( __( 'Subscription to %s', 'LION' ), $this->get_product()->post_title );
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public static function get_object_type() {
+		return it_exchange_object_type_registry()->get( 'subscription' );
 	}
 
 	/**

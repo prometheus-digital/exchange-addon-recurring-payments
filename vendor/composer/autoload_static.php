@@ -20,11 +20,31 @@ class ComposerStaticInit0bc17dcce4deab0ed3d0d16888b2f8a4
         ),
     );
 
+    public static $classMap = array (
+        'ITE_Gateway_Prorate_Purchase_Request' => __DIR__ . '/../..' . '/lib/prorate/class.purchase-request.php',
+        'ITE_Proratable' => __DIR__ . '/../..' . '/lib/prorate/interface.proratable.php',
+        'ITE_Prorate_Credit_Request' => __DIR__ . '/../..' . '/lib/prorate/class.credit-request.php',
+        'ITE_Prorate_Credit_Requestor' => __DIR__ . '/../..' . '/lib/prorate/class.credit-requestor.php',
+        'ITE_Prorate_Forever_Credit_Request' => __DIR__ . '/../..' . '/lib/prorate/class.forever-credit-request.php',
+        'ITE_Prorate_REST_Helper' => __DIR__ . '/../..' . '/lib/prorate/class.rest-helper.php',
+        'ITE_Prorate_Subscription_Credit_Request' => __DIR__ . '/../..' . '/lib/prorate/class.subscription-credit-request.php',
+        'iThemes\\Exchange\\RecurringPayments\\REST\\Subscriptions\\Cancel' => __DIR__ . '/../..' . '/lib/REST/Subscriptions/Cancel.php',
+        'iThemes\\Exchange\\RecurringPayments\\REST\\Subscriptions\\Downgrades' => __DIR__ . '/../..' . '/lib/REST/Subscriptions/Downgrades.php',
+        'iThemes\\Exchange\\RecurringPayments\\REST\\Subscriptions\\Pause' => __DIR__ . '/../..' . '/lib/REST/Subscriptions/Pause.php',
+        'iThemes\\Exchange\\RecurringPayments\\REST\\Subscriptions\\ProrateSerializer' => __DIR__ . '/../..' . '/lib/REST/Subscriptions/ProrateSerializer.php',
+        'iThemes\\Exchange\\RecurringPayments\\REST\\Subscriptions\\Renew' => __DIR__ . '/../..' . '/lib/REST/Subscriptions/Renew.php',
+        'iThemes\\Exchange\\RecurringPayments\\REST\\Subscriptions\\Resume' => __DIR__ . '/../..' . '/lib/REST/Subscriptions/Resume.php',
+        'iThemes\\Exchange\\RecurringPayments\\REST\\Subscriptions\\Serializer' => __DIR__ . '/../..' . '/lib/REST/Subscriptions/Serializer.php',
+        'iThemes\\Exchange\\RecurringPayments\\REST\\Subscriptions\\Subscription' => __DIR__ . '/../..' . '/lib/REST/Subscriptions/Subscription.php',
+        'iThemes\\Exchange\\RecurringPayments\\REST\\Subscriptions\\Upgrades' => __DIR__ . '/../..' . '/lib/REST/Subscriptions/Upgrades.php',
+    );
+
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
             $loader->prefixLengthsPsr4 = ComposerStaticInit0bc17dcce4deab0ed3d0d16888b2f8a4::$prefixLengthsPsr4;
             $loader->prefixDirsPsr4 = ComposerStaticInit0bc17dcce4deab0ed3d0d16888b2f8a4::$prefixDirsPsr4;
+            $loader->classMap = ComposerStaticInit0bc17dcce4deab0ed3d0d16888b2f8a4::$classMap;
 
         }, null, ClassLoader::class);
     }

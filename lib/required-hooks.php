@@ -7,6 +7,10 @@
  * @since   1.0.0
  */
 
+add_action( 'it_exchange_register_object_types', function ( ITE_Object_Type_Registry $registry ) {
+	$registry->register( new ITE_Subscription_Object_Type() );
+} );
+
 /**
  * Shows the nag when needed.
  *
@@ -1214,7 +1218,7 @@ function it_exchange_recurring_payments_render_admin_subscription_actions( IT_Ex
 		return;
 	}
 
-	$sub_id = $subscription->get_id();
+	$sub_id = $subscription->get_ID();
 
 	// Set context to 'edit' so raw subscription status is returned in response.
 	$pause  = add_query_arg( 'context', 'edit', wp_nonce_url( rest_url( "it_exchange/v1/subscriptions/{$sub_id}/pause" ), 'wp_rest' ) );

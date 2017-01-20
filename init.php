@@ -6,18 +6,11 @@
  * @since   1.0.0
  */
 
-require_once dirname( __FILE__ ) . '/vendor/autoload.php';
 require_once( dirname( __FILE__ ) . '/lib/class.recurring-profile.php' );
 require_once( dirname( __FILE__ ) . '/lib/class.subscription.php' );
+require_once( dirname( __FILE__ ) . '/lib/class.object-type.php' );
 require_once( dirname( __FILE__ ) . '/lib/class.daily-price-calculator.php' );
 require_once( dirname( __FILE__ ) . '/lib/class.expiry-date-activity.php' );
-
-require_once( dirname( __FILE__ ) . '/lib/prorate/class.credit-request.php' );
-require_once( dirname( __FILE__ ) . '/lib/prorate/class.forever-credit-request.php' );
-require_once( dirname( __FILE__ ) . '/lib/prorate/class.subscription-credit-request.php' );
-require_once( dirname( __FILE__ ) . '/lib/prorate/class.purchase-request.php' );
-
-require_once( dirname( __FILE__ ) . '/lib/prorate/class.credit-requestor.php' );
 
 require_once( dirname( __FILE__ ) . '/lib/requests/class.pause.php' );
 require_once( dirname( __FILE__ ) . '/lib/requests/class.resume.php' );

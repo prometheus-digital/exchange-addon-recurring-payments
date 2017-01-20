@@ -12,6 +12,7 @@ use iThemes\Exchange\REST\Postable;
 use iThemes\Exchange\REST\Request;
 use iThemes\Exchange\REST\Route\Base;
 use iThemes\Exchange\REST\Route\Cart\Item;
+use iThemes\Exchange\REST\Route\Cart\Serializer;
 
 class Renew extends Base implements Postable {
 	/**
@@ -65,7 +66,7 @@ class Renew extends Base implements Postable {
 		$item = $original_item->clone_with_new_id( false );
 
 		if ( ! $subscription->is_auto_renewing() ) {
-			$item->set_param( 'is_manual_renewal', $subscription->get_id() );
+			$item->set_param( 'is_manual_renewal', $subscription->get_ID() );
 		}
 
 		$cart->add_item( $item );
@@ -74,22 +75,20 @@ class Renew extends Base implements Postable {
 			it_exchange_recurring_payments_add_credit_fees( $item, $cart );
 		}
 
-		/** @var Item $route */
-		foreach ( $this->get_manager()->get_routes_by_class( 'iThemes\Exchange\REST\Route\Cart\Item' ) as $route ) {
-			if ( $route->get_type()->get_type() === 'product' ) {
+		$cart_route = $this->get_manager()->get_first_route( 'iThemes\Exchange\REST\Route\Cart\Cart' );
+		$url        = \iThemes\Exchange\REST\get_rest_url( $cart_route, array(
+			'cart_id' => $cart->get_id()
+		) );
 
-				$response = new \WP_REST_Response( null, \WP_Http::SEE_OTHER );
-				$url      = \iThemes\Exchange\REST\get_rest_url( $route, array(
-					'cart_id' => $cart->get_id(),
-					'item_id' => $item->get_id()
-				) );
-				$response->header( 'Location', $url );
-
-				return $response;
-			}
+		if ( $request['_embed'] ) {
+			$url = add_query_arg( '_embed', '1', $url );
 		}
 
-		return new \WP_REST_Response( null, \WP_Http::NO_CONTENT );
+		$response = new \WP_REST_Response( null, \WP_Http::SEE_OTHER );
+		$response->header( 'Location', $url );
+		$response->header( 'X-Item-Id', $item->get_id() );
+
+		return $response;
 	}
 
 	/**
