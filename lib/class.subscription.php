@@ -1604,7 +1604,21 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider, 
 			return ITE_Payment_Token::get( $token_id );
 		}
 
-		return $this->get_transaction()->payment_token;
+		$transaction = $this->get_transaction();
+
+		if ( ! $transaction->has_children() ) {
+			return $this->get_transaction()->payment_token;
+		}
+
+		$children = $transaction->get_children( array( 'numberposts' => 1 ), true );
+
+		if ( ! $children ) {
+			return null;
+		}
+
+		$child = reset( $children );
+
+		return $child->payment_token;
 	}
 
 	/**
