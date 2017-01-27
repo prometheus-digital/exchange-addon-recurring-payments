@@ -62,11 +62,9 @@ function it_exchange_recurring_payments_customer_notification( $customer, $statu
  */
 function it_exchange_recurring_payments_addon_update_expirations( $transaction, DateTime $from = null ) {
 
-	if ( ! empty( $transaction->post_parent ) ) {
-		$transaction = it_exchange_get_transaction( $transaction->post_parent );
-	}
+	$parent = $transaction->parent ?: $transaction;
 
-	foreach ( it_exchange_get_transaction_subscriptions( $transaction ) as $subscription ) {
+	foreach ( it_exchange_get_transaction_subscriptions( $parent ) as $subscription ) {
 
 		if ( ! $subscription->is_status( $subscription::STATUS_ACTIVE ) && $subscription->get_transaction()->is_cleared_for_delivery() ) {
 			$subscription->set_status( $subscription::STATUS_ACTIVE );
@@ -79,6 +77,8 @@ function it_exchange_recurring_payments_addon_update_expirations( $transaction, 
 			if ( $from < $now ) {
 				$from = $now;
 			}
+		} elseif ( func_num_args() === 1 ) {
+			$from = $transaction->order_date;
 		}
 
 		$subscription->bump_expiration_date( $from );
