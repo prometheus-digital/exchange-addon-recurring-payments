@@ -97,11 +97,11 @@ function it_exchange_recurring_payments_addon_admin_wp_enqueue_scripts( $hook_su
 
 add_action( 'it_exchange_admin_wp_enqueue_scripts', 'it_exchange_recurring_payments_addon_admin_wp_enqueue_scripts', 10, 2 );
 
-add_action( 'init', function() {
+add_action( 'wp_enqueue_scripts', function() {
 	if ( it_exchange_is_page( 'purchases' ) ) {
 		add_filter( 'it_exchange_preload_cart_item_types', '__return_true' );
 	}
-} );
+}, 0 );
 
 /**
  * Register backbone REST dependencies.
@@ -167,6 +167,11 @@ function it_exchange_recurring_payments_enqueue_purchases() {
 		include dirname( __FILE__ ) . '/js/templates/renew-subscription.html'
 	);
 
+	it_exchange_add_inline_script(
+		'it-exchange-recurring-payments-purchases',
+		include dirname( __FILE__ ) . '/js/templates/change-my-subscription.html'
+	);
+
 	it_exchange_preload_schemas( array(
 		'subscription',
 		'payment-token',
@@ -192,10 +197,12 @@ function it_exchange_recurring_payments_localize_purchases() {
 		return;
 	}
 
-	$subscriptions = array();
-	$serializer    = new \iThemes\Exchange\RecurringPayments\REST\Subscriptions\Serializer();
-	$filterer      = new \iThemes\Exchange\REST\Helpers\ContextFilterer();
-	$schema        = $serializer->get_schema();
+	$subscriptions  = $upgrades = $downgrades = array();
+	$serializer     = new \iThemes\Exchange\RecurringPayments\REST\Subscriptions\Serializer();
+	$prorate        = new \iThemes\Exchange\RecurringPayments\REST\Subscriptions\ProrateSerializer();
+	$prorate_schema = $prorate->get_schema();
+	$filterer       = new \iThemes\Exchange\REST\Helpers\ContextFilterer();
+	$schema         = $serializer->get_schema();
 
 	foreach ( IT_Theme_API_Transactions::$transactions as $transaction ) {
 
@@ -204,6 +211,17 @@ function it_exchange_recurring_payments_localize_purchases() {
 
 			if ( $s ) {
 				$subscriptions[] = $filterer->filter( $serializer->serialize( $s ), 'view', $schema );
+
+				$upgrades[ $s->get_ID() ]   = array();
+				$downgrades[ $s->get_ID() ] = array();
+
+				foreach ( $s->get_available_upgrades() as $offer ) {
+				    $upgrades[ $s->get_ID() ][] = $filterer->filter( $prorate->serialize( $offer ), 'view', $prorate_schema );
+                }
+
+				foreach ( $s->get_available_downgrades() as $offer ) {
+					$downgrades[ $s->get_ID() ][] = $filterer->filter( $prorate->serialize( $offer ), 'view', $prorate_schema );
+				}
 			}
 		} catch ( Exception $e ) {
 
@@ -225,8 +243,14 @@ function it_exchange_recurring_payments_localize_purchases() {
 			'reactivate'   => __( 'Reactivate', 'LION' ),
 			'renewing'     => __( 'Renewing', 'LION' ),
 			'cannotRenew'  => __( 'This subscription cannot be renewed.', 'LION' ),
+            'changeMySubscription' => __( 'Change My Subscription', 'LION' ),
+            'upgrade'      => __( 'Upgrade', 'LION' ),
+            'downgrade'    => __( 'Downgrade', 'LION' ),
+            'prorate'      => __( 'Prorate', 'LION' ),
 		),
-		'subscriptions' => $subscriptions
+		'subscriptions' => $subscriptions,
+        'upgrades'      => $upgrades,
+        'downgrades'    => $downgrades,
 	) );
 }
 
@@ -248,6 +272,7 @@ function it_exchange_recurring_payments_addon_content_purchases_fields_elements(
 	$elements[] = 'update-payment';
 	$elements[] = 'pause-resume';
 	$elements[] = 'renew';
+	$elements[] = 'change-subscription';
 	$elements[] = 'unsubscribe';
 	$elements[] = 'expiration';
 

@@ -47,12 +47,13 @@ class IT_Theme_API_Recurring_Payments implements IT_Theme_API {
 	 * @since 1.0.0
 	 */
 	public $_tag_map = array(
-		'unsubscribe'   => 'unsubscribe',
-		'expiration'    => 'expiration',
-		'payments'      => 'payments',
-		'updatepayment' => 'update_payment',
-		'pauseresume'   => 'pause_resume',
-		'renew'         => 'renew',
+		'unsubscribe'        => 'unsubscribe',
+		'expiration'         => 'expiration',
+		'payments'           => 'payments',
+		'updatepayment'      => 'update_payment',
+		'pauseresume'        => 'pause_resume',
+		'renew'              => 'renew',
+		'changesubscription' => 'change_subscription'
 	);
 
 	/**
@@ -162,13 +163,13 @@ class IT_Theme_API_Recurring_Payments implements IT_Theme_API {
 		ob_start();
 		?>
 
-		<p><a href="javascript:"
-		      id="it-exchange-cancel-subscription-api-<?php echo $subscription->get_transaction()->ID ?>"
-		      class="it-exchange-cancel-subscription-api <?php echo esc_attr( $class ); ?>"
-		      data-id="<?php echo $subscription->get_ID(); ?>"
-			>
+        <p><a href="javascript:"
+              id="it-exchange-cancel-subscription-api-<?php echo $subscription->get_transaction()->ID ?>"
+              class="it-exchange-cancel-subscription-api <?php echo esc_attr( $class ); ?>"
+              data-id="<?php echo $subscription->get_ID(); ?>"
+            >
 				<?php echo $label; ?>
-			</a></p>
+            </a></p>
 
 		<?php
 
@@ -272,7 +273,7 @@ class IT_Theme_API_Recurring_Payments implements IT_Theme_API {
 			return '';
 		}
 
-		if ( ! $s->can_be_manually_renewed()  ) {
+		if ( ! $s->can_be_manually_renewed() ) {
 			return '';
 		}
 
@@ -280,6 +281,39 @@ class IT_Theme_API_Recurring_Payments implements IT_Theme_API {
 		$prod_id = $s->get_product()->get_ID();
 
 		$html = "<div class=\"it-exchange-renew-subscription-container\" id=\"it-exchange-renew-subscription-{$txn_id}-{$prod_id}\"></div>";
+
+		return $html;
+	}
+
+	/**
+	 * Output a change my subscription button.
+	 *
+	 * @since 2.0.0
+	 *
+	 * @param array $options
+	 *
+	 * @return string
+	 */
+	public function change_subscription( $options = array() ) {
+
+		if ( ! $this->_transaction instanceof IT_Exchange_Transaction ) {
+			return '';
+		}
+
+		try {
+			$s = it_exchange_get_subscription_by_transaction( $this->_transaction, it_exchange_get_product( $this->_transaction_product['product_id'] ) );
+		} catch ( Exception $e ) {
+			return '';
+		}
+
+		if ( ! $s->get_available_upgrades() || ! $s->get_available_downgrades() ) {
+			return '';
+		}
+
+		$txn_id  = $s->get_transaction()->get_ID();
+		$prod_id = $s->get_product()->get_ID();
+
+		$html = "<div class=\"it-exchange-change-subscription-container\" id=\"it-exchange-change-subscription-{$txn_id}-{$prod_id}\"></div>";
 
 		return $html;
 	}

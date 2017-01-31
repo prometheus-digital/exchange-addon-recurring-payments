@@ -1,6 +1,21 @@
+.it-exchange-item-recurring-payments-update-payment,
+.it-exchange-item-recurring-payments-renew,
+.it-exchange-item-recurring-payments-change-subscription,
+.it-exchange-item-recurring-payments-unsubscribe,
+.it-exchange-item-recurring-payments-expiration {
+    padding: 10px 0;
+}
+
+.it-exchange-item-recurring-payments-update-payment:empty,
+.it-exchange-item-recurring-payments-renew:empty,
+.it-exchange-item-recurring-payments-change-subscription:empty,
+.it-exchange-item-recurring-payments-unsubscribe:empty,
+.it-exchange-item-recurring-payments-expiration:empty {
+    display: none;
+}
+
 .it-exchange-renew-subscription-container {
     position: relative;
-    padding-bottom: 20px;
 }
 
 .it-exchange-renew-subscription--cancel {
@@ -16,10 +31,57 @@
     font-size: 1.2em;
     transition: .2s ease-in opacity;
 }
+
 .it-exchange-renew-subscription--cancel:hover {
     opacity: .3;
 }
 
 .it-exchange-item-recurring-payments-unsubscribe {
     display: block;
+}
+
+.it-exchange-subscription-updowngrade-options {
+    margin: 0;
+    padding: 0;
+}
+
+.it-exchange-subscription-updowngrade-item {
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 2em;
+    margin-bottom: 2em;
+    position: relative;
+    transition: .2s ease-in opacity;
+    list-style-type: none;
+}
+
+.it-exchange-subscription-updowngrade-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.it-exchange-subscription-updowngrade-item.faded {
+    opacity: .5;
+}
+
+.it-exchange-subscription-updowngrade-item .it-exchange-change-my-subscription-offer--cancel {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: none;
+    padding: 0;
+    margin: 0;
+    border: 0;
+    color: initial;
+    font-weight: initial;
+    font-size: 1.2em;
+    transition: .2s ease-in opacity;
+}
+
+.it-exchange-subscription-updowngrade-item .it-exchange-change-my-subscription-offer--cancel:hover {
+    opacity: .3;
+}
+
+.it-exchange-change-my-subscription-offer--checkout-container {
+    margin-top: 20px;
 }

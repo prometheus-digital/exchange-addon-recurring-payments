@@ -1,0 +1,30 @@
+<script type="text/template" id="tmpl-it-exchange-change-my-subscription">
+
+    <button class="it-exchange-change-my-subscription--trigger">{{ data.i18n.changeMySubscription }}</button>
+
+    <ul class="it-exchange-subscription-updowngrade-options"></ul>
+</script>
+
+<script type="text/template" id="tmpl-it-exchange-change-my-subscription-offer">
+
+    <h3>{{ data.title }}</h3>
+    <p class="it-exchange-change-my-subscription-offer--description">{{ data.description }}</p>
+    <p class="it-exchange-change-my-subscription-offer--pricing">{{ data.amount_label }} {{ data.prorate_label }}</p>
+
+    <button class="it-exchange-change-my-subscription-offer--trigger button btn" disabled>
+        <# if ( data.prorateType === 'upgrade' ) { #>
+            {{ data.i18n.upgrade }}
+        <# } else if ( data.prorateType === 'downgrade' ) { #>
+            {{ data.i18n.downgrade }}
+        <# } else { #>
+            {{ data.i18n.prorate }}
+        <# } #>
+    </button>
+
+    <button class="it-exchange-change-my-subscription-offer--cancel">
+        &times;
+        <span class="screen-reader-text"> {{ data.i18n.cancel }} </span>
+    </button>
+
+    <div class="it-exchange-change-my-subscription-offer--checkout-container"></div>
+</script>

@@ -26,17 +26,22 @@ class ProrateSerializer {
 	 */
 	public function serialize( \ITE_Prorate_Credit_Request $request ) {
 
-		$r = $request;
-		$base_price = $r->get_product_receiving_credit()->get_feature( 'base-price' );
+		$r            = $request;
+		$base_price   = $r->get_product_receiving_credit()->get_feature( 'base-price' );
+		$amount_label = it_exchange_recurring_payments_addon_recurring_label(
+			$r->get_product_receiving_credit()->ID, false, it_exchange_format_price( $base_price )
+		);
+
+		if ( ! $amount_label ) {
+			$amount_label = sprintf( __( '%s forever', 'LION' ), it_exchange_format_price( $base_price ) );
+		}
 
 		return array(
 			'product'       => $r->get_product_receiving_credit()->ID,
 			'title'         => $r->get_product_receiving_credit()->post_title,
 			'description'   => $r->get_product_receiving_credit()->get_feature( 'description' ),
 			'amount'        => $base_price,
-			'amount_label'  => it_exchange_recurring_payments_addon_recurring_label(
-				$r->get_product_receiving_credit()->ID, false, it_exchange_format_price( $base_price )
-			),
+			'amount_label'  => $amount_label,
 			'prorate'       => array(
 				'type'   => $r->get_credit_type(),
 				'amount' => $r->get_credit_type() === 'days' ? $r->get_free_days() : $r->get_credit()
