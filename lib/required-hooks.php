@@ -890,6 +890,42 @@ function it_exchange_recurring_payments_add_activity_on_cancellation( IT_Exchang
 add_action( 'it_exchange_cancel_subscription', 'it_exchange_recurring_payments_add_activity_on_cancellation' );
 
 /**
+ * Add an activity item when a subscription has been compled.
+ *
+ * @since 2.0.0
+ *
+ * @param IT_Exchange_Subscription $subscription
+ */
+function it_exchange_recurring_payments_add_activity_on_comp( IT_Exchange_Subscription $subscription ) {
+
+	$message = __( 'Subscription comped.', 'LION' );
+
+	if ( $subscription->get_comp_reason() ) {
+		/* translators: %s user-provided comp reason */
+		$message .= ' ' . sprintf( __( 'Reason: %s', 'LION' ), $subscription->get_comp_reason() );
+	}
+
+	if ( $subscription->get_comped_by() ) {
+		$actor = new IT_Exchange_Txn_Activity_User_Actor( $subscription->get_comped_by()->wp_user );
+	} elseif ( is_user_logged_in() ) {
+		$actor = new IT_Exchange_Txn_Activity_User_Actor( wp_get_current_user() );
+	} else {
+		$actor = null;
+	}
+
+	$builder = new IT_Exchange_Txn_Activity_Builder( $subscription->get_transaction(), 'status' );
+	$builder->set_description( $message );
+
+	if ( $actor ) {
+		$builder->set_actor( $actor );
+	}
+
+	$builder->build( it_exchange_get_txn_activity_factory() );
+}
+
+add_action( 'it_exchange_comp_subscription', 'it_exchange_recurring_payments_add_activity_on_comp' );
+
+/**
  * Add an activity item when the subscriber status changes.
  *
  * @since 1.8.0
@@ -904,7 +940,7 @@ function it_exchange_recurring_payments_add_activity_on_subscriber_status( $stat
 		return;
 	}
 
-	if ( $subscription->is_cancelling() || $subscription->is_resuming() || $subscription->is_pausing() ) {
+	if ( $subscription->is_cancelling() || $subscription->is_resuming() || $subscription->is_pausing() || $subscription->is_comping() ) {
 		return;
 	}
 
@@ -1163,7 +1199,7 @@ function it_exchange_recurring_payments_after_payment_details_recurring_payments
 					<h4><?php echo $subscription->get_product()->post_title; ?></h4>
 				<?php endif; ?>
 
-				<?php if ( $subscription->is_auto_renewing() ): ?>
+				<?php if ( $subscription->requires_subscriber_id() ): ?>
 					<p>
 						<label for="rp-sub-id-<?php echo $pid; ?>">
 							<?php _e( 'Subscription ID', 'LION' ); ?>
@@ -1194,7 +1230,7 @@ function it_exchange_recurring_payments_after_payment_details_recurring_payments
 						<option value=""></option>
 
 						<?php foreach ( IT_Exchange_Subscription::get_statuses() as $slug => $label ): ?>
-							<option value="<?php echo $slug; ?>" <?php selected( $slug, $status ); ?>>
+							<option value="<?php echo $slug; ?>" <?php selected( $slug, $status ); ?> <?php disabled( $subscription->can_status_be_manually_toggled_to( $slug ), false ); ?>>
 								<?php echo $label; ?>
 							</option>
 						<?php endforeach; ?>
@@ -1249,6 +1285,7 @@ function it_exchange_recurring_payments_render_admin_subscription_actions( IT_Ex
 	$pause  = add_query_arg( 'context', 'edit', wp_nonce_url( rest_url( "it_exchange/v1/subscriptions/{$sub_id}/pause" ), 'wp_rest' ) );
 	$resume = add_query_arg( 'context', 'edit', wp_nonce_url( rest_url( "it_exchange/v1/subscriptions/{$sub_id}/resume" ), 'wp_rest' ) );
 	$cancel = add_query_arg( 'context', 'edit', wp_nonce_url( rest_url( "it_exchange/v1/subscriptions/{$sub_id}/cancel" ), 'wp_rest' ) );
+	$comp   = add_query_arg( 'context', 'edit', wp_nonce_url( rest_url( "it_exchange/v1/subscriptions/{$sub_id}/comp" ), 'wp_rest' ) );
 
 	if ( $subscription->can_be_paused() ) : ?>
 		<button class="button button-secondary right" id="pause-subscription"
@@ -1269,6 +1306,13 @@ function it_exchange_recurring_payments_render_admin_subscription_actions( IT_Ex
 		        data-route="<?php echo esc_attr( $cancel ); ?>">
 			<?php _e( 'Cancel', 'LION' ); ?>
 		</button>
+	<?php endif;
+
+	if ( $subscription->can_be_comped() ) : ?>
+        <button class="button button-secondary right" id="comp-subscription"
+                data-route="<?php echo esc_attr( $comp ); ?>">
+			<?php _e( 'Comp', 'LION' ); ?>
+        </button>
 	<?php endif;
 }
 
@@ -1323,6 +1367,22 @@ function it_exchange_recurring_payments_render_admin_subscription_actions_detail
 		       id="cancel-subscription-reason"
 		       class="right" style="text-align: left"/>
 	</div>
+
+    <div class="hidden spacing-wrapper bottom-border clearfix" id="subscription-comp-manager"
+         style="background: #F5F5F5;">
+
+        <button class="button button-secondary left" id="cancel-comp-subscription">
+			<?php _e( 'Back', 'it-l10n-ithemes-exchange' ); ?>
+        </button>
+
+        <button class="button button-primary right" id="confirm-comp-subscription" style="margin-left: 10px;">
+			<?php _e( 'Comp Subscription', 'it-l10n' ) ?>
+        </button>
+
+        <input type="text" placeholder="<?php esc_attr_e( 'Reason (Optional)', 'LION' ); ?>"
+               id="comp-subscription-reason"
+               class="right" style="text-align: left"/>
+    </div>
 	<?php
 }
 
@@ -1747,6 +1807,24 @@ function it_exchange_recurring_payments_map_meta_cap( $caps, $cap, $user_id, $ar
 			$txn_id = $s->get_transaction()->get_ID();
 
 			if ( user_can( $user_id, 'read_it_transaction', $txn_id ) ) {
+				return array();
+			}
+
+			return array( 'do_not_allow' );
+
+		case 'it_comp_subscription':
+
+			if ( empty( $args[0] ) ) {
+				return array( 'do_not_allow' );
+			}
+
+			$s = it_exchange_get_subscription( $args[0] );
+
+			if ( ! $s->can_be_comped() ) {
+				return array( 'do_not_allow' );
+			}
+
+			if ( user_can( $user_id, 'edit_it_transaction', $s->get_transaction() ) ) {
 				return array();
 			}
 

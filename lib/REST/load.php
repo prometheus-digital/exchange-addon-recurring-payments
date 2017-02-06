@@ -7,6 +7,7 @@
  */
 
 use iThemes\Exchange\RecurringPayments\REST\Subscriptions\Cancel;
+use iThemes\Exchange\RecurringPayments\REST\Subscriptions\Comp;
 use iThemes\Exchange\RecurringPayments\REST\Subscriptions\Downgrades;
 use iThemes\Exchange\RecurringPayments\REST\Subscriptions\Pause;
 use iThemes\Exchange\RecurringPayments\REST\Subscriptions\ProrateSerializer;
@@ -31,6 +32,9 @@ add_action( 'it_exchange_register_rest_routes', function ( \iThemes\Exchange\RES
 
 	$cancel = new Cancel( $serializer );
 	$manager->register_route( $cancel->set_parent( $subscription ) );
+
+	$comp = new Comp( $serializer );
+	$manager->register_route( $comp->set_parent( $subscription ) );
 
 	$renew = new Renew();
 	$manager->register_route( $renew->set_parent( $subscription ) );

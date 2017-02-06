@@ -52,6 +52,9 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider, 
 	/** @var bool */
 	private $is_cancelling = false;
 
+	/** @var bool */
+	private $is_comping = false;
+
 	/**
 	 * IT_Exchange_Subscription constructor.
 	 *
@@ -478,6 +481,44 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider, 
 	}
 
 	/**
+	 * Does this subscription require a subscriber ID.
+	 *
+	 * @since 2.0.0
+	 *
+	 * @return bool
+	 */
+	public function requires_subscriber_id() {
+
+		$requires = $this->is_auto_renewing();
+		$method   = $this->get_transaction()->get_method();
+
+		/**
+		 * Filter whether the subscription requires a subscriber ID to connect it to a gateway.
+		 *
+		 * @since 2.0.0
+		 *
+		 * @param bool                     $requires
+		 * @param IT_Exchange_Subscription $this
+		 */
+		$requires = apply_filters( 'it_exchange_subscription_requires_subscriber_id', $requires, $this );
+
+		/**
+		 * Filter whether the subscription requires a subscriber ID to connect it to a gateway.
+		 *
+		 * The dynamic portion of this hook, $method, refers to the gateway method slug used to purchase the
+		 * subscription.
+		 *
+		 * @since 2.0.0
+		 *
+		 * @param bool                     $requires
+		 * @param IT_Exchange_Subscription $this
+		 */
+		$requires = apply_filters( "it_exchange_{$method}_subscription_requires_subscriber_id", $requires, $this );
+
+		return (bool) $requires;
+	}
+
+	/**
 	 * Get the subscription status.
 	 *
 	 * @since 1.8
@@ -568,10 +609,6 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider, 
 		 * @param IT_Exchange_Subscription $this
 		 */
 		do_action( 'it_exchange_transition_subscription_status', $new_status, $old_status, $this );
-
-		if ( $new_status === self::STATUS_COMPLIMENTARY && $old_status === self::STATUS_ACTIVE && $this->is_auto_renewing() ) {
-			$this->cancel( null, __( 'Original subscription cancelled during complimentary transition.', 'LION' ), false );
-		}
 
 		return $old_status;
 	}
@@ -1271,7 +1308,11 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider, 
 	 */
 	public function can_be_cancelled() {
 
-		if ( ! $this->get_subscriber_id() ) {
+		if ( ! $this->is_auto_renewing() ) {
+			return false;
+		}
+
+		if ( $this->requires_subscriber_id() && ! $this->get_subscriber_id() ) {
 			return false;
 		}
 
@@ -1412,6 +1453,127 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider, 
 	 */
 	public function set_cancellation_reason( $reason ) {
 		return (bool) $this->update_meta( 'subscription_cancellation_reason', $reason );
+	}
+
+	/**
+	 * Can this subscription be comped.
+	 *
+	 * @since 2.0.0
+	 *
+	 * @return bool
+	 */
+	public function can_be_comped() {
+
+		if ( ! $this->is_auto_renewing() ) {
+			return false;
+		}
+
+		if ( ! $this->is_status( self::STATUS_ACTIVE, self::STATUS_DEACTIVATED, self::STATUS_CANCELLED ) ) {
+			return false;
+		}
+
+		return true;
+	}
+
+	/**
+	 * Comp the subscription.
+	 *
+	 * This will cancel the gateway plan but continue to grant the customer access.
+	 *
+	 * @since 2.0.0
+	 *
+	 * @param IT_Exchange_Customer $comped_by
+	 * @param string               $reason
+	 */
+	public function comp( IT_Exchange_Customer $comped_by = null, $reason = '' ) {
+
+		$this->is_comping = true;
+
+		$this->cancel( null, __( 'Original subscription cancelled during complimentary transition.', 'LION' ), false );
+		$this->set_status( self::STATUS_COMPLIMENTARY );
+
+		if ( $comped_by ) {
+			$this->set_comped_by( $comped_by );
+		}
+
+		if ( $reason ) {
+			$this->set_comp_reason( $reason );
+		}
+
+		/**
+		 * Fires when a subscription has been comped.
+		 *
+		 * @since 2.0.0
+		 *
+		 * @param IT_Exchange_Subscription $this
+		 */
+		do_action( 'it_exchange_comp_subscription', $this );
+
+		$this->is_comping = false;
+	}
+
+	/**
+	 * Is the subscription currently being comped.
+	 *
+	 * @since 2.0.0
+	 *
+	 * @return bool
+	 */
+	public function is_comping() { return $this->is_comping; }
+
+	/**
+	 * Retrieve the user who comped the subscription.
+	 *
+	 * @since 2.0.0
+	 *
+	 * @return IT_Exchange_Customer|null
+	 */
+	public function get_comped_by() {
+
+		$id = $this->get_meta( 'subscription_comped_by', true );
+
+		if ( ! $id ) {
+			return null;
+		}
+
+		return it_exchange_get_customer( $id ) ?: null;
+	}
+
+	/**
+	 * Set the person who comped the subscription.
+	 *
+	 * @since 2.0.0
+	 *
+	 * @param IT_Exchange_Customer $customer
+	 *
+	 * @return bool
+	 */
+	public function set_comped_by( IT_Exchange_Customer $customer ) {
+		return (bool) $this->update_meta( 'subscription_comped_by', $customer->id );
+	}
+
+	/**
+	 * Get the comp reason.
+	 *
+	 * @since 2.0.0
+	 *
+	 * @return string
+	 */
+	public function get_comp_reason() {
+		return $this->get_meta( 'subscription_comp_reason', true );
+	}
+
+	/**
+	 * Get the comp reason.
+	 *
+	 * @since 2.0.0
+	 *
+	 * @param string $reason
+	 *
+	 * @return bool
+	 */
+	public function set_comp_reason( $reason ) {
+		return (bool) $this->update_meta( 'subscription_comp_reason', $reason );
 	}
 
 	/**
@@ -1644,6 +1806,40 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider, 
 		do_action( 'it_exchange_update_subscription_payment_token', $token, $this->get_payment_token(), $this );
 
 		return (bool) $this->update_meta( 'subscription_payment_token', $token ? $token->ID : 0 );
+	}
+
+	/**
+	 * Can a given status be manually toggled to.
+	 *
+	 * @since 2.0.0
+	 *
+	 * @param string $status
+	 *
+	 * @return bool
+	 */
+	public function can_status_be_manually_toggled_to( $status ) {
+
+		if ( $this->is_status( self::STATUS_COMPLIMENTARY ) ) {
+			return $status === self::STATUS_DEACTIVATED;
+		}
+
+		switch ( $status ) {
+			case self::STATUS_PAUSED:
+			case self::STATUS_PAYMENT_FAILED:
+			case self::STATUS_COMPLIMENTARY:
+			case self::STATUS_PENDING_CANCELLATION:
+				$can = false;
+				break;
+
+			case self::STATUS_CANCELLED:
+				$can = ! $this->can_be_cancelled();
+				break;
+			default:
+				$can = true;
+				break;
+		}
+
+		return $can;
 	}
 
 	/**

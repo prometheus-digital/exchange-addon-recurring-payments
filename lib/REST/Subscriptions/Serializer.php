@@ -77,6 +77,7 @@ class Serializer {
 			'can_be_paused'           => current_user_can( 'it_pause_subscription', $s ),
 			'can_be_resumed'          => current_user_can( 'it_resume_subscription', $s ),
 			'can_be_cancelled'        => current_user_can( 'it_cancel_subscription', $s ),
+			'can_be_comped'           => current_user_can( 'it_comp_subscription', $s ),
 			'can_be_manually_renewed' => $s->can_be_manually_renewed(),
 			'paused_by'               => $s->is_status( $s::STATUS_PAUSED ) ? ( $s->get_paused_by() ? $s->get_paused_by()->id : 0 ) : 0,
 			'resumed_by'              => $s->is_status( $s::STATUS_ACTIVE ) ? ( $s->get_resumed_by() ? $s->get_resumed_by()->id : 0 ) : 0,
@@ -309,6 +310,12 @@ class Serializer {
 				),
 				'can_be_cancelled'        => array(
 					'description' => __( 'Can the subscription be cancelled.', 'LION' ),
+					'type'        => 'boolean',
+					'readonly'    => true,
+					'context'     => array( 'view', 'edit' )
+				),
+				'can_be_comped'        => array(
+					'description' => __( 'Can the subscription be comped.', 'LION' ),
 					'type'        => 'boolean',
 					'readonly'    => true,
 					'context'     => array( 'view', 'edit' )
