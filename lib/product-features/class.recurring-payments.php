@@ -85,6 +85,12 @@ class IT_Exchange_Recurring_Payments extends IT_Exchange_Product_Feature_Abstrac
 			$details['trial-profile'] = $trial_profile;
 		}
 
+		$occurrences = $product->get_feature( 'recurring-payments', array( 'setting' => 'max-occurrences' ) );
+
+		if ( $occurrences ) {
+		    $details['max-occurrences'] = $occurrences;
+        }
+
 		return $details;
 	}
 
