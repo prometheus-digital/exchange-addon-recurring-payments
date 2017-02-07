@@ -1,23 +1,23 @@
 <?php
 /**
- * Subscription Resume Endpoint.
+ * Subscription Cancel Endpoint.
  *
  * @since   1.36.0
  * @license GPLv2
  */
 
-namespace iThemes\Exchange\RecurringPayments\REST\Subscriptions;
+namespace iThemes\Exchange\RecurringPayments\REST\v1\Subscriptions;
 
 use iThemes\Exchange\REST\Postable;
 use iThemes\Exchange\REST\Request;
 use iThemes\Exchange\REST\Route\Base;
 
 /**
- * Class Resume
+ * Class Cancel
  *
- * @package iThemes\Exchange\RecurringPayments\REST\Subscriptions
+ * @package iThemes\Exchange\RecurringPayments\REST\v1\Subscriptions
  */
-class Resume extends Base implements Postable {
+class Cancel extends Base implements Postable {
 
 	/** @var Serializer */
 	private $serializer;
@@ -35,21 +35,22 @@ class Resume extends Base implements Postable {
 	public function handle_post( Request $request ) {
 
 		$subscription = \IT_Exchange_Subscription::get( rawurldecode( $request->get_param( 'subscription_id', 'URL' ) ) );
+		$reason       = $request['reason'];
 
-		if ( it_exchange_get_customer( $request['resumed_by'] ) ) {
-			$resumed_by = it_exchange_get_customer( $request['resumed_by'] );
+		if ( it_exchange_get_customer( $request['cancelled_by'] ) ) {
+			$cancelled_by = it_exchange_get_customer( $request['cancelled_by'] );
 		} elseif ( current_user_can( 'edit_it_transaction', $subscription->get_transaction()->ID ) ) {
-			$resumed_by = null;
+			$cancelled_by = null;
 		} else {
-			$resumed_by = it_exchange_get_current_customer();
+			$cancelled_by = it_exchange_get_current_customer();
 		}
 
 		try {
-			$subscription->resume( $resumed_by );
+			$subscription->cancel( $cancelled_by, $reason );
 		} catch ( \Exception $e ) {
 			return new \WP_Error(
-				'it_exchange_rest_unable_to_resume_subscription',
-				__( 'Unable to resume subscription.', 'LION' ),
+				'it_exchange_rest_unable_to_cancel_subscription',
+				__( 'Unable to cancel subscription.', 'LION' ),
 				array( 'status' => \WP_Http::INTERNAL_SERVER_ERROR )
 			);
 		}
@@ -64,10 +65,10 @@ class Resume extends Base implements Postable {
 
 		$subscription = \IT_Exchange_Subscription::get( rawurldecode( $request->get_param( 'subscription_id', 'URL' ) ) );
 
-		if ( ! $user || ! user_can( $user->wp_user, 'it_resume_subscription', $subscription ) ) {
+		if ( ! $user || ! user_can( $user->wp_user, 'it_cancel_subscription', $subscription ) ) {
 			return new \WP_Error(
 				'it_exchange_rest_forbidden',
-				__( 'You are not allowed to resume this subscription.', 'LION' ),
+				__( 'You are not allowed to cancel this subscription.', 'LION' ),
 				array( 'status' => rest_authorization_required_code() )
 			);
 		}
@@ -82,11 +83,11 @@ class Resume extends Base implements Postable {
 			$associated[] = $subscription->get_beneficiary()->id;
 		}
 
-		if ( $request['resumed_by'] && $request['resumed_by'] != $user->id ) {
+		if ( $request['cancelled_by'] && $request['cancelled_by'] != $user->id ) {
 			if ( ! user_can( $user->wp_user, 'edit_it_transaction', $subscription->get_transaction()->ID ) ) {
 				return new \WP_Error(
 					'it_exchange_rest_forbidden_context',
-					__( 'You are not allowed to specify a resumer besides yourself.', 'LION' ),
+					__( 'You are not allowed to specify a canceller besides yourself.', 'LION' ),
 					array( 'status' => 403 )
 				);
 			}
@@ -103,7 +104,7 @@ class Resume extends Base implements Postable {
 	/**
 	 * @inheritDoc
 	 */
-	public function get_path() { return 'resume/'; }
+	public function get_path() { return 'cancel/'; }
 
 	/**
 	 * @inheritDoc

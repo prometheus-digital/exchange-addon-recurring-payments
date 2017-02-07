@@ -6,13 +6,11 @@
  * @license GPLv2
  */
 
-namespace iThemes\Exchange\RecurringPayments\REST\Subscriptions;
+namespace iThemes\Exchange\RecurringPayments\REST\v1\Subscriptions;
 
 use iThemes\Exchange\REST\Postable;
 use iThemes\Exchange\REST\Request;
 use iThemes\Exchange\REST\Route\Base;
-use iThemes\Exchange\REST\Route\Cart\Item;
-use iThemes\Exchange\REST\Route\Cart\Serializer;
 
 class Renew extends Base implements Postable {
 	/**
@@ -75,7 +73,7 @@ class Renew extends Base implements Postable {
 			it_exchange_recurring_payments_add_credit_fees( $item, $cart );
 		}
 
-		$cart_route = $this->get_manager()->get_first_route( 'iThemes\Exchange\REST\Route\Cart\Cart' );
+		$cart_route = $this->get_manager()->get_first_route( 'iThemes\Exchange\REST\Route\v1\Cart\Cart' );
 		$url        = \iThemes\Exchange\REST\get_rest_url( $cart_route, array(
 			'cart_id' => $cart->get_id()
 		) );

@@ -6,7 +6,7 @@
  * @license GPLv2
  */
 
-use iThemes\Exchange\RecurringPayments\REST\Subscriptions\ProrateSerializer;
+use iThemes\Exchange\RecurringPayments\REST\v1\Subscriptions\ProrateSerializer;
 use iThemes\Exchange\REST\Manager;
 use iThemes\Exchange\REST\Request;
 
@@ -197,7 +197,7 @@ class ITE_Prorate_REST_Helper {
 			);
 		}
 
-		$cart_route = $this->manager->get_first_route( 'iThemes\Exchange\REST\Route\Cart\Cart' );
+		$cart_route = $this->manager->get_first_route( 'iThemes\Exchange\REST\Route\v1\Cart\Cart' );
 		$url        = \iThemes\Exchange\REST\get_rest_url( $cart_route, array(
 			'cart_id' => $cart->get_id()
 		) );

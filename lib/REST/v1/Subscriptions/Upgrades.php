@@ -6,13 +6,13 @@
  * @license GPLv2
  */
 
-namespace iThemes\Exchange\RecurringPayments\REST\Subscriptions;
+namespace iThemes\Exchange\RecurringPayments\REST\v1\Subscriptions;
 
 use iThemes\Exchange\REST\Getable;
 use iThemes\Exchange\REST\Postable;
 use iThemes\Exchange\REST\Request;
 use iThemes\Exchange\REST\Route\Base;
-use iThemes\Exchange\REST\Route\Cart\Item;
+use iThemes\Exchange\REST\Route\v1\Cart\Item;
 
 class Upgrades extends Base implements Getable, Postable {
 

@@ -6,16 +6,16 @@
  * @license GPLv2
  */
 
-use iThemes\Exchange\RecurringPayments\REST\Subscriptions\Cancel;
-use iThemes\Exchange\RecurringPayments\REST\Subscriptions\Comp;
-use iThemes\Exchange\RecurringPayments\REST\Subscriptions\Downgrades;
-use iThemes\Exchange\RecurringPayments\REST\Subscriptions\Pause;
-use iThemes\Exchange\RecurringPayments\REST\Subscriptions\ProrateSerializer;
-use iThemes\Exchange\RecurringPayments\REST\Subscriptions\Renew;
-use iThemes\Exchange\RecurringPayments\REST\Subscriptions\Resume;
-use iThemes\Exchange\RecurringPayments\REST\Subscriptions\Serializer as SubscriptionSerializer;
-use iThemes\Exchange\RecurringPayments\REST\Subscriptions\Subscription;
-use iThemes\Exchange\RecurringPayments\REST\Subscriptions\Upgrades;
+use iThemes\Exchange\RecurringPayments\REST\v1\Subscriptions\Cancel;
+use iThemes\Exchange\RecurringPayments\REST\v1\Subscriptions\Comp;
+use iThemes\Exchange\RecurringPayments\REST\v1\Subscriptions\Downgrades;
+use iThemes\Exchange\RecurringPayments\REST\v1\Subscriptions\Pause;
+use iThemes\Exchange\RecurringPayments\REST\v1\Subscriptions\ProrateSerializer;
+use iThemes\Exchange\RecurringPayments\REST\v1\Subscriptions\Renew;
+use iThemes\Exchange\RecurringPayments\REST\v1\Subscriptions\Resume;
+use iThemes\Exchange\RecurringPayments\REST\v1\Subscriptions\Serializer as SubscriptionSerializer;
+use iThemes\Exchange\RecurringPayments\REST\v1\Subscriptions\Subscription;
+use iThemes\Exchange\RecurringPayments\REST\v1\Subscriptions\Upgrades;
 
 add_action( 'it_exchange_register_rest_routes', function ( \iThemes\Exchange\REST\Manager $manager ) {
 

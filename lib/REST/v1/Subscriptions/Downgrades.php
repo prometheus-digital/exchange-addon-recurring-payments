@@ -6,7 +6,7 @@
  * @license GPLv2
  */
 
-namespace iThemes\Exchange\RecurringPayments\REST\Subscriptions;
+namespace iThemes\Exchange\RecurringPayments\REST\v1\Subscriptions;
 
 use iThemes\Exchange\REST\Getable;
 use iThemes\Exchange\REST\Postable;

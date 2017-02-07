@@ -198,8 +198,8 @@ function it_exchange_recurring_payments_localize_purchases() {
 	}
 
 	$subscriptions  = $upgrades = $downgrades = array();
-	$serializer     = new \iThemes\Exchange\RecurringPayments\REST\Subscriptions\Serializer();
-	$prorate        = new \iThemes\Exchange\RecurringPayments\REST\Subscriptions\ProrateSerializer();
+	$serializer     = new \iThemes\Exchange\RecurringPayments\REST\v1\Subscriptions\Serializer();
+	$prorate        = new \iThemes\Exchange\RecurringPayments\REST\v1\Subscriptions\ProrateSerializer();
 	$prorate_schema = $prorate->get_schema();
 	$filterer       = new \iThemes\Exchange\REST\Helpers\ContextFilterer();
 	$schema         = $serializer->get_schema();

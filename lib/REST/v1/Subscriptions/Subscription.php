@@ -6,7 +6,7 @@
  * @license GPLv2
  */
 
-namespace iThemes\Exchange\RecurringPayments\REST\Subscriptions;
+namespace iThemes\Exchange\RecurringPayments\REST\v1\Subscriptions;
 
 use iThemes\Exchange\REST\Getable;
 use iThemes\Exchange\REST\Putable;
@@ -16,7 +16,7 @@ use iThemes\Exchange\REST\Route\Base;
 /**
  * Class Subscription
  *
- * @package iThemes\Exchange\RecurringPayments\REST\Subscriptions
+ * @package iThemes\Exchange\RecurringPayments\REST\v1\Subscriptions
  */
 class Subscription extends Base implements Getable, Putable {
 
@@ -49,7 +49,7 @@ class Subscription extends Base implements Getable, Putable {
 			$response->add_link(
 				'customer',
 				\iThemes\Exchange\REST\get_rest_url(
-					$this->get_manager()->get_first_route( 'iThemes\Exchange\REST\Route\Customer\Customer' ),
+					$this->get_manager()->get_first_route( 'iThemes\Exchange\REST\Route\v1\Customer\Customer' ),
 					array( 'customer_id' => $subscription->get_customer()->get_ID() )
 				),
 				array( 'embeddable' => true )
@@ -60,7 +60,7 @@ class Subscription extends Base implements Getable, Putable {
 			$response->add_link(
 				'beneficiary',
 				\iThemes\Exchange\REST\get_rest_url(
-					$this->get_manager()->get_first_route( 'iThemes\Exchange\REST\Route\Customer\Customer' ),
+					$this->get_manager()->get_first_route( 'iThemes\Exchange\REST\Route\v1\Customer\Customer' ),
 					array( 'customer_id' => $subscription->get_beneficiary()->get_ID() )
 				),
 				array( 'embeddable' => true )
@@ -68,7 +68,7 @@ class Subscription extends Base implements Getable, Putable {
 		}
 
 		if ( $subscription->get_transaction() ) {
-			$route = $this->get_manager()->get_first_route( 'iThemes\Exchange\REST\Route\Transaction\Transaction' );
+			$route = $this->get_manager()->get_first_route( 'iThemes\Exchange\REST\Route\v1\Transaction\Transaction' );
 			$link  = \iThemes\Exchange\REST\get_rest_url( $route, array(
 				'transaction_id' => $subscription->get_transaction()->ID,
 			) );
@@ -77,7 +77,7 @@ class Subscription extends Base implements Getable, Putable {
 
 
 		if ( $subscription->get_payment_token() ) {
-			$route = $this->get_manager()->get_first_route( 'iThemes\Exchange\REST\Route\Customer\Token\Token' );
+			$route = $this->get_manager()->get_first_route( 'iThemes\Exchange\REST\Route\v1\Customer\Token\Token' );
 			$link  = \iThemes\Exchange\REST\get_rest_url( $route, array(
 				'customer_id' => $subscription->get_payment_token()->customer->ID,
 				'token_id'    => $subscription->get_payment_token()->ID

@@ -1,23 +1,23 @@
 <?php
 /**
- * Subscription Pause Endpoint.
+ * Subscription Resume Endpoint.
  *
  * @since   1.36.0
  * @license GPLv2
  */
 
-namespace iThemes\Exchange\RecurringPayments\REST\Subscriptions;
+namespace iThemes\Exchange\RecurringPayments\REST\v1\Subscriptions;
 
 use iThemes\Exchange\REST\Postable;
 use iThemes\Exchange\REST\Request;
 use iThemes\Exchange\REST\Route\Base;
 
 /**
- * Class Pause
+ * Class Resume
  *
- * @package iThemes\Exchange\RecurringPayments\REST\Subscriptions
+ * @package iThemes\Exchange\RecurringPayments\REST\v1\Subscriptions
  */
-class Pause extends Base implements Postable {
+class Resume extends Base implements Postable {
 
 	/** @var Serializer */
 	private $serializer;
@@ -36,20 +36,20 @@ class Pause extends Base implements Postable {
 
 		$subscription = \IT_Exchange_Subscription::get( rawurldecode( $request->get_param( 'subscription_id', 'URL' ) ) );
 
-		if ( it_exchange_get_customer( $request['paused_by'] ) ) {
-			$paused_by = it_exchange_get_customer( $request['paused_by'] );
+		if ( it_exchange_get_customer( $request['resumed_by'] ) ) {
+			$resumed_by = it_exchange_get_customer( $request['resumed_by'] );
 		} elseif ( current_user_can( 'edit_it_transaction', $subscription->get_transaction()->ID ) ) {
-			$paused_by = null;
+			$resumed_by = null;
 		} else {
-			$paused_by = it_exchange_get_current_customer();
+			$resumed_by = it_exchange_get_current_customer();
 		}
 
 		try {
-			$subscription->pause( $paused_by );
+			$subscription->resume( $resumed_by );
 		} catch ( \Exception $e ) {
 			return new \WP_Error(
-				'it_exchange_rest_unable_to_pause_subscription',
-				__( 'Unable to pause subscription.', 'LION' ),
+				'it_exchange_rest_unable_to_resume_subscription',
+				__( 'Unable to resume subscription.', 'LION' ),
 				array( 'status' => \WP_Http::INTERNAL_SERVER_ERROR )
 			);
 		}
@@ -64,10 +64,10 @@ class Pause extends Base implements Postable {
 
 		$subscription = \IT_Exchange_Subscription::get( rawurldecode( $request->get_param( 'subscription_id', 'URL' ) ) );
 
-		if ( ! $user || ! user_can( $user->wp_user, 'it_pause_subscription', $subscription ) ) {
+		if ( ! $user || ! user_can( $user->wp_user, 'it_resume_subscription', $subscription ) ) {
 			return new \WP_Error(
 				'it_exchange_rest_forbidden',
-				__( 'You are not allowed to pause this subscription.', 'LION' ),
+				__( 'You are not allowed to resume this subscription.', 'LION' ),
 				array( 'status' => rest_authorization_required_code() )
 			);
 		}
@@ -82,11 +82,11 @@ class Pause extends Base implements Postable {
 			$associated[] = $subscription->get_beneficiary()->id;
 		}
 
-		if ( $request['paused_by'] && $request['paused_by'] != $user->id ) {
+		if ( $request['resumed_by'] && $request['resumed_by'] != $user->id ) {
 			if ( ! user_can( $user->wp_user, 'edit_it_transaction', $subscription->get_transaction()->ID ) ) {
 				return new \WP_Error(
 					'it_exchange_rest_forbidden_context',
-					__( 'You are not allowed to specify a pauser besides yourself.', 'LION' ),
+					__( 'You are not allowed to specify a resumer besides yourself.', 'LION' ),
 					array( 'status' => 403 )
 				);
 			}
@@ -103,7 +103,7 @@ class Pause extends Base implements Postable {
 	/**
 	 * @inheritDoc
 	 */
-	public function get_path() { return 'pause/'; }
+	public function get_path() { return 'resume/'; }
 
 	/**
 	 * @inheritDoc
