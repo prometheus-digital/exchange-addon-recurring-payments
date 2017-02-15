@@ -42,6 +42,7 @@ add_action( 'it_exchange_register_addons', 'it_exchange_register_recurring_payme
 function it_exchange_recurring_payments_set_textdomain() {
 	load_plugin_textdomain( 'LION', false, dirname( plugin_basename( __FILE__  ) ) . '/lang/' );
 }
-add_action( 'plugins_loaded', 'it_exchange_recurring_payments_set_textdomain' );
+
+it_exchange_recurring_payments_set_textdomain();
 
 require_once dirname( __FILE__ ) . '/vendor/autoload.php';
