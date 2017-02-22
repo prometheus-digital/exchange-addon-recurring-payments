@@ -117,6 +117,7 @@ class IT_Exchange_Recurring_Payments extends IT_Exchange_Product_Feature_Abstrac
 		$interval             = $product->get_feature( 'recurring-payments', array( 'setting' => 'interval' ) );
 		$interval_count       = $product->get_feature( 'recurring-payments', array( 'setting' => 'interval-count' ) );
 		$max                  = $product->get_feature( 'recurring-payments', array( 'setting' => 'max-occurrences' ) );
+		$sign_up_fee          = $product->get_feature( 'recurring-payments', array( 'setting' => 'sign-up-fee' ) );
 
 		if ( ! $enabled ) {
 			$hidden     = 'hidden';
@@ -142,7 +143,7 @@ class IT_Exchange_Recurring_Payments extends IT_Exchange_Product_Feature_Abstrac
 		// Echo the form field
 		?>
 		<div id="it-exchange-recurring-payment-settings">
-			<label for="it-exchange-recurring-payments-enabled"><?php _e( "Enable Recurring Payments?", 'LION' ); ?>
+			<label for="it-exchange-recurring-payments-enabled"><?php _e( 'Enable Recurring Payments?', 'LION' ); ?>
 				<input id="it-exchange-recurring-payments-enabled" type="checkbox"
 				       name="it_exchange_recurring_payments_enabled" <?php checked( $enabled ); ?> />
 			</label>
@@ -163,7 +164,7 @@ class IT_Exchange_Recurring_Payments extends IT_Exchange_Product_Feature_Abstrac
 						?>
 					</select>
 				</p>
-				<label for="it-exchange-recurring-payments-auto-renew"><?php _e( "Enable Auto-Renewing?", 'LION' ); ?>
+				<label for="it-exchange-recurring-payments-auto-renew"><?php _e( 'Enable Auto-Renewing?', 'LION' ); ?>
 					<input id="it-exchange-recurring-payments-auto-renew" type="checkbox"
 					       name="it_exchange_recurring_payments_auto_renew" <?php checked( $auto_renew, 'on' ); ?> />
 				</label>
@@ -177,7 +178,20 @@ class IT_Exchange_Recurring_Payments extends IT_Exchange_Product_Feature_Abstrac
 				} else {
 					$trial_hidden = '';
 				}
+
+				$min = $trial_enabled ? 0 : ( $product->get_feature( 'base-price' ) * -1 );
 				?>
+                <div id="sign-up-fee-settings" class="<?php echo $max_hidden; ?>">
+                    <label for="it-exchange-recurring-payments-sign-up-fee">
+						<?php _e( 'Sign Up Fee', 'LION' ); ?>
+                    </label>
+                    <input type="text" data-min="-<?php echo esc_attr( $min ); ?>" name="it_exchange_recurring_payments_sign_up_fee"
+                           id="it-exchange-recurring-payments-sign-up-fee" value="<?php echo esc_attr( $sign_up_fee ? it_exchange_format_price( $sign_up_fee ) : '' ); ?>">
+                    <p class="description">
+						<?php _e( 'Charge a sign up fee to the customer.', 'LION' ); ?>
+                        <?php _e( 'A negative amount will discount the initial payment. A discount is only supported when trial mode is disabled.', 'LION' ); ?>
+                    </p>
+                </div>
 				<div id="max-occurrences-settings" class="<?php echo $max_hidden; ?>">
 					<label for="it-exchange-recurring-payments-max-occurrences">
 						<?php _e( 'Max Occurrences', 'LION' ); ?>
@@ -280,6 +294,9 @@ class IT_Exchange_Recurring_Payments extends IT_Exchange_Product_Feature_Abstrac
 		}
 
 		it_exchange_update_product_feature( $product_id, 'recurring-payments', $max, array( 'setting' => 'max-occurrences' ) );
+
+		$sign_up_fee = it_exchange_convert_from_database_number( it_exchange_convert_to_database_number( $_POST['it_exchange_recurring_payments_sign_up_fee'] ) );
+		it_exchange_update_product_feature( $product_id, 'recurring-payments', $sign_up_fee, array( 'setting' => 'sign-up-fee' ) );
 	}
 
 	/**
@@ -344,6 +361,16 @@ class IT_Exchange_Recurring_Payments extends IT_Exchange_Product_Feature_Abstrac
 			case 'max-occurrences':
 				update_post_meta( $product_id, '_it-exchange-product-recurring-max-occurrences', $new_value );
 				break;
+            case 'sign-up-fee':
+
+                if ( it_exchange_get_product_feature( $product_id, 'recurring-payments', array( 'setting' => 'trial-enabled' ) ) ) {
+                    $new_value = max( $new_value, 0 );
+                } else {
+                    $new_value = max( it_exchange_get_product_feature( $product_id, 'base-price' ) * -1, $new_value );
+                }
+
+                update_post_meta( $product_id, '_it-exchange-product-recurring-sign-up-fee', $new_value );
+                break;
 
 		}
 
@@ -463,6 +490,8 @@ class IT_Exchange_Recurring_Payments extends IT_Exchange_Product_Feature_Abstrac
 
 			case 'max-occurrences':
 				return get_post_meta( $product_id, '_it-exchange-product-recurring-max-occurrences', true );
+			case 'sign-up-fee':
+				return (float) get_post_meta( $product_id, '_it-exchange-product-recurring-sign-up-fee', true );
 
 		}
 

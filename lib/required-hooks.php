@@ -22,16 +22,16 @@ function it_exchange_recurring_payments_addon_show_membership_version_nag() {
 	if ( is_plugin_active( 'exchange-addon-membership/exchange-addon-membership.php' ) ) {
 		if ( ! function_exists( 'it_exchange_membership_addon_get_all_the_children' ) ) {
 			?>
-			<div id="it-exchange-add-on-min-version-nag" class="it-exchange-nag">
+            <div id="it-exchange-add-on-min-version-nag" class="it-exchange-nag">
 				<?php printf( __( 'Your version of the Membership add-on is not compatible with your Recurring Payments add-on. Please update to version 1.2.16 or greater. %sClick here to upgrade the Membership add-on%s.', 'LION' ), '<a href="' . admin_url( 'update-core.php' ) . '">', '</a>' ); ?>
-			</div>
-			<script type="text/javascript">
+            </div>
+            <script type="text/javascript">
 				jQuery( document ).ready( function () {
 					if ( jQuery( '.wrap > h2' ).length == '1' ) {
 						jQuery( "#it-exchange-add-on-min-version-nag" ).insertAfter( '.wrap > h2' ).addClass( 'after-h2' );
 					}
 				} );
-			</script>
+            </script>
 			<?php
 		}
 	}
@@ -97,7 +97,7 @@ function it_exchange_recurring_payments_addon_admin_wp_enqueue_scripts( $hook_su
 
 add_action( 'it_exchange_admin_wp_enqueue_scripts', 'it_exchange_recurring_payments_addon_admin_wp_enqueue_scripts', 10, 2 );
 
-add_action( 'wp_enqueue_scripts', function() {
+add_action( 'wp_enqueue_scripts', function () {
 	if ( it_exchange_is_page( 'purchases' ) ) {
 		add_filter( 'it_exchange_preload_cart_item_types', '__return_true' );
 	}
@@ -216,8 +216,8 @@ function it_exchange_recurring_payments_localize_purchases() {
 				$downgrades[ $s->get_ID() ] = array();
 
 				foreach ( $s->get_available_upgrades() as $offer ) {
-				    $upgrades[ $s->get_ID() ][] = $filterer->filter( $prorate->serialize( $offer ), 'view', $prorate_schema );
-                }
+					$upgrades[ $s->get_ID() ][] = $filterer->filter( $prorate->serialize( $offer ), 'view', $prorate_schema );
+				}
 
 				foreach ( $s->get_available_downgrades() as $offer ) {
 					$downgrades[ $s->get_ID() ][] = $filterer->filter( $prorate->serialize( $offer ), 'view', $prorate_schema );
@@ -230,27 +230,27 @@ function it_exchange_recurring_payments_localize_purchases() {
 
 	wp_localize_script( 'it-exchange-recurring-payments-purchases', 'ITExchangeRecurringPayments', array(
 		'i18n'          => array(
-			'updateSource' => __( 'Update Payment Method', 'LION' ),
-			'save'         => __( 'Save', 'LION' ),
-			'cancel'       => __( 'Cancel', 'LION' ),
-			'cancelling'   => __( 'Cancelling', 'LION' ),
-			'cannotCancel' => __( 'This subscription cannot be cancelled.', 'LION' ),
-			'pausing'      => __( 'Pausing', 'LION' ),
-			'cannotPause'  => __( 'This subscription cannot be paused.', 'LION' ),
-			'resuming'     => __( 'Resuming', 'LION' ),
-			'cannotResume' => __( 'This subscription cannot be resumed.', 'LION' ),
-			'renew'        => __( 'Renew', 'LION' ),
-			'reactivate'   => __( 'Reactivate', 'LION' ),
-			'renewing'     => __( 'Renewing', 'LION' ),
-			'cannotRenew'  => __( 'This subscription cannot be renewed.', 'LION' ),
-            'changeMySubscription' => __( 'Change My Subscription', 'LION' ),
-            'upgrade'      => __( 'Upgrade', 'LION' ),
-            'downgrade'    => __( 'Downgrade', 'LION' ),
-            'prorate'      => __( 'Prorate', 'LION' ),
+			'updateSource'         => __( 'Update Payment Method', 'LION' ),
+			'save'                 => __( 'Save', 'LION' ),
+			'cancel'               => __( 'Cancel', 'LION' ),
+			'cancelling'           => __( 'Cancelling', 'LION' ),
+			'cannotCancel'         => __( 'This subscription cannot be cancelled.', 'LION' ),
+			'pausing'              => __( 'Pausing', 'LION' ),
+			'cannotPause'          => __( 'This subscription cannot be paused.', 'LION' ),
+			'resuming'             => __( 'Resuming', 'LION' ),
+			'cannotResume'         => __( 'This subscription cannot be resumed.', 'LION' ),
+			'renew'                => __( 'Renew', 'LION' ),
+			'reactivate'           => __( 'Reactivate', 'LION' ),
+			'renewing'             => __( 'Renewing', 'LION' ),
+			'cannotRenew'          => __( 'This subscription cannot be renewed.', 'LION' ),
+			'changeMySubscription' => __( 'Change My Subscription', 'LION' ),
+			'upgrade'              => __( 'Upgrade', 'LION' ),
+			'downgrade'            => __( 'Downgrade', 'LION' ),
+			'prorate'              => __( 'Prorate', 'LION' ),
 		),
 		'subscriptions' => $subscriptions,
-        'upgrades'      => $upgrades,
-        'downgrades'    => $downgrades,
+		'upgrades'      => $upgrades,
+		'downgrades'    => $downgrades,
 	) );
 }
 
@@ -320,26 +320,34 @@ function it_exchange_recurring_payments_on_add_product_to_cart( ITE_Cart_Product
 	}
 
 	$trial_enabled = $product->get_feature( 'recurring-payments', array( 'setting' => 'trial-enabled' ) );
+	$sign_up_fee   = $product->get_feature( 'recurring-payments', array( 'setting' => 'sign-up-fee' ) );
 
-	if ( ! $trial_enabled ) {
+	if ( ! $trial_enabled && $sign_up_fee == 0.0 ) {
 		return;
 	}
 
 	if ( $product instanceof IT_Exchange_Membership && function_exists( 'it_exchange_is_customer_eligible_for_trial' ) ) {
-		if ( ! it_exchange_is_customer_eligible_for_trial( $product, $cart->get_customer() ) ) {
-			return;
-		}
+		$trial_enabled = it_exchange_is_customer_eligible_for_trial( $product, $cart->get_customer() );
 	}
 
-	$fee = ITE_Fee_Line_Item::create(
-		__( 'Free Trial', 'LION' ),
-		$item->get_total() * - 1,
-		true,
-		false
-	);
-	$fee->set_param( 'is_free_trial', true );
+	if ( $trial_enabled ) {
+		$trial = ITE_Fee_Line_Item::one_time(
+			__( 'Free Trial', 'LION' ),
+			$item->get_total() * - 1
+		);
+		$trial->set_param( 'is_free_trial', true );
 
-	$item->add_item( $fee );
+		$item->add_item( $trial );
+	}
+
+	if ( $sign_up_fee != 0.00 ) {
+	    $sign_up = ITE_Fee_Line_Item::one_time(
+            $sign_up_fee > 0.00 ? __( 'Sign up Fee', 'LION' ) : __( 'Sign up Discount'),
+            $sign_up_fee
+        );
+	    $item->add_item( $sign_up );
+    }
+
 	$cart->get_repository()->save( $item );
 }
 
@@ -1014,7 +1022,7 @@ function it_exchange_recurring_payments_add_activity_on_expiration_date( IT_Exch
 			date_i18n( $format, $current->format( 'U' ) ),
 			date_i18n( $format, $previous->format( 'U' ) )
 		);
-	} elseif ( $previous )  {
+	} elseif ( $previous ) {
 		$message = sprintf(
 			__( 'Subscription expiration date updated to never from %s.', 'LION' ),
 			date_i18n( $format, $previous->format( 'U' ) )
@@ -1175,9 +1183,9 @@ function it_exchange_recurring_payments_after_payment_details_recurring_payments
 	$jquery_df = it_exchange_php_date_format_to_jquery_datepicker_format( $df );
 	?>
 
-	<div class="transaction-recurring-options clearfix spacing-wrapper bottom-border">
+    <div class="transaction-recurring-options clearfix spacing-wrapper bottom-border">
 
-		<h3><?php _e( 'Subscription Settings', 'LION' ); ?></h3>
+        <h3><?php _e( 'Subscription Settings', 'LION' ); ?></h3>
 
 		<?php foreach ( $subs as $subscription ) :
 
@@ -1192,73 +1200,73 @@ function it_exchange_recurring_payments_after_payment_details_recurring_payments
 			$route   = wp_nonce_url( $route, 'wp_rest' );
 			?>
 
-			<div class="recurring-options" data-route="<?php echo esc_attr( $route ); ?>"
-			     data-product="<?php echo $subscription->get_product()->ID; ?>">
+            <div class="recurring-options" data-route="<?php echo esc_attr( $route ); ?>"
+                 data-product="<?php echo $subscription->get_product()->ID; ?>">
 
 				<?php if ( count( $subs ) > 1 ): ?>
-					<h4><?php echo $subscription->get_product()->post_title; ?></h4>
+                    <h4><?php echo $subscription->get_product()->post_title; ?></h4>
 				<?php endif; ?>
 
 				<?php if ( $subscription->requires_subscriber_id() ): ?>
-					<p>
-						<label for="rp-sub-id-<?php echo $pid; ?>">
+                    <p>
+                        <label for="rp-sub-id-<?php echo $pid; ?>">
 							<?php _e( 'Subscription ID', 'LION' ); ?>
-							<span class="tip"
-							      title="<?php _e( 'This is the Subscription ID from the Payment Processor.', 'LION' ); ?>">i</span>
-						</label>
+                            <span class="tip"
+                                  title="<?php _e( 'This is the Subscription ID from the Payment Processor.', 'LION' ); ?>">i</span>
+                        </label>
 
-						<input type="text" id="rp-sub-id-<?php echo $pid; ?>" name="rp-sub-id[<?php echo $pid; ?>]"
-						       value="<?php echo $sub_id; ?>"/>
-					</p>
+                        <input type="text" id="rp-sub-id-<?php echo $pid; ?>" name="rp-sub-id[<?php echo $pid; ?>]"
+                               value="<?php echo $sub_id; ?>"/>
+                    </p>
 				<?php endif; ?>
 
 				<?php if ( $subscription->are_occurrences_limited() ) : ?>
-					<p>
+                    <p>
 						<?php printf( __( 'Remaining Occurrences: %d', 'LION' ), $subscription->get_remaining_occurrences() ); ?>
-					</p>
+                    </p>
 				<?php endif; ?>
 
-				<p>
-					<label for="rp-status-<?php echo $pid; ?>">
+                <p>
+                    <label for="rp-status-<?php echo $pid; ?>">
 						<?php _e( 'Subscription Status', 'LION' ); ?>
-						<span class="tip"
-						      title="<?php _e( 'This is the status of the subscription in Exchange, not the transaction. It will not change the status in the Payment gateway.', 'LION' ); ?>">i</span>
-					</label>
+                        <span class="tip"
+                              title="<?php _e( 'This is the status of the subscription in Exchange, not the transaction. It will not change the status in the Payment gateway.', 'LION' ); ?>">i</span>
+                    </label>
 
-					<select id="rp-status-<?php echo $pid; ?>" name="rp-status[<?php echo $pid; ?>]" class="rp-status">
+                    <select id="rp-status-<?php echo $pid; ?>" name="rp-status[<?php echo $pid; ?>]" class="rp-status">
 
-						<option value=""></option>
+                        <option value=""></option>
 
 						<?php foreach ( IT_Exchange_Subscription::get_statuses() as $slug => $label ): ?>
-							<option value="<?php echo $slug; ?>" <?php selected( $slug, $status ); ?> <?php disabled( $subscription->can_status_be_manually_toggled_to( $slug ), false ); ?>>
+                            <option value="<?php echo $slug; ?>" <?php selected( $slug, $status ); ?> <?php disabled( $subscription->can_status_be_manually_toggled_to( $slug ), false ); ?>>
 								<?php echo $label; ?>
-							</option>
+                            </option>
 						<?php endforeach; ?>
-					</select>
-				</p>
+                    </select>
+                </p>
 
-				<p>
-					<label for="rp-expires-<?php echo $pid; ?>">
+                <p>
+                    <label for="rp-expires-<?php echo $pid; ?>">
 						<?php _e( 'Subscription Expiration', 'LION' ); ?>
-						<span class="tip"
-						      title="<?php _e( 'Set this to change what Exchange sees as the customer expiration date, the Payment processor will still send webhooks if the payment expires or if new payments come through.', 'LION' ); ?>">i</span>
-					</label>
+                        <span class="tip"
+                              title="<?php _e( 'Set this to change what Exchange sees as the customer expiration date, the Payment processor will still send webhooks if the payment expires or if new payments come through.', 'LION' ); ?>">i</span>
+                    </label>
 
-					<input type="text" id="rp-expires-<?php echo $pid; ?>" class="datepicker rp-expires"
-					       name="rp-expires[<?php echo $pid; ?>]" value="<?php echo $expires; ?>"/>
-				</p>
-			</div>
+                    <input type="text" id="rp-expires-<?php echo $pid; ?>" class="datepicker rp-expires"
+                           name="rp-expires[<?php echo $pid; ?>]" value="<?php echo $expires; ?>"/>
+                </p>
+            </div>
 		<?php endforeach; ?>
 
 		<?php submit_button( 'Save Subscription Settings', 'secondary-button', 'recurring-payments-save', false ); ?>
 		<?php wp_nonce_field( 'transaction-recurring-options', 'transaction-recurring-options-nonce', true ) ?>
 
-		<p class="description">
+        <p class="description">
 			<?php _e( "Warning:  Changes to these settings can potentially remove this customer's access to their products.", 'LION' ); ?>
-		</p>
+        </p>
 
-		<input type="hidden" name="it_exchange_recurring-payment_date_picker_format" value="<?php echo $jquery_df; ?>">
-	</div>
+        <input type="hidden" name="it_exchange_recurring-payment_date_picker_format" value="<?php echo $jquery_df; ?>">
+    </div>
 	<?php
 }
 
@@ -1288,24 +1296,24 @@ function it_exchange_recurring_payments_render_admin_subscription_actions( IT_Ex
 	$comp   = add_query_arg( 'context', 'edit', wp_nonce_url( rest_url( "it_exchange/v1/subscriptions/{$sub_id}/comp" ), 'wp_rest' ) );
 
 	if ( $subscription->can_be_paused() ) : ?>
-		<button class="button button-secondary right" id="pause-subscription"
-		        data-route="<?php echo esc_attr( $pause ); ?>">
+        <button class="button button-secondary right" id="pause-subscription"
+                data-route="<?php echo esc_attr( $pause ); ?>">
 			<?php _e( 'Pause', 'LION' ); ?>
-		</button>
+        </button>
 	<?php endif;
 
 	if ( $subscription->can_be_resumed() ) : ?>
-		<button class="button button-secondary right" id="resume-subscription"
-		        data-route="<?php echo esc_attr( $resume ); ?>">
+        <button class="button button-secondary right" id="resume-subscription"
+                data-route="<?php echo esc_attr( $resume ); ?>">
 			<?php _e( 'Resume', 'LION' ); ?>
-		</button>
+        </button>
 	<?php endif;
 
 	if ( $subscription->can_be_cancelled() ) : ?>
-		<button class="button button-secondary right" id="cancel-subscription"
-		        data-route="<?php echo esc_attr( $cancel ); ?>">
+        <button class="button button-secondary right" id="cancel-subscription"
+                data-route="<?php echo esc_attr( $cancel ); ?>">
 			<?php _e( 'Cancel', 'LION' ); ?>
-		</button>
+        </button>
 	<?php endif;
 
 	if ( $subscription->can_be_comped() ) : ?>
@@ -1328,45 +1336,45 @@ add_action( 'it_exchange_after_payment_refund', 'it_exchange_recurring_payments_
 function it_exchange_recurring_payments_render_admin_subscription_actions_detail( IT_Exchange_Transaction $transaction ) {
 
 	?>
-	<div class="hidden spacing-wrapper bottom-border clearfix" id="subscription-pause-manager"
-	     style="background: #F5F5F5;">
+    <div class="hidden spacing-wrapper bottom-border clearfix" id="subscription-pause-manager"
+         style="background: #F5F5F5;">
 
-		<button class="button button-secondary left" id="cancel-pause-subscription">
+        <button class="button button-secondary left" id="cancel-pause-subscription">
 			<?php _e( 'Back', 'it-l10n-ithemes-exchange' ); ?>
-		</button>
+        </button>
 
-		<button class="button button-primary right" id="confirm-pause-subscription" style="margin-left: 10px;">
+        <button class="button button-primary right" id="confirm-pause-subscription" style="margin-left: 10px;">
 			<?php _e( 'Pause Subscription', 'it-l10n' ) ?>
-		</button>
-	</div>
+        </button>
+    </div>
 
-	<div class="hidden spacing-wrapper bottom-border clearfix" id="subscription-resume-manager"
-	     style="background: #F5F5F5;">
+    <div class="hidden spacing-wrapper bottom-border clearfix" id="subscription-resume-manager"
+         style="background: #F5F5F5;">
 
-		<button class="button button-secondary left" id="cancel-resume-subscription">
+        <button class="button button-secondary left" id="cancel-resume-subscription">
 			<?php _e( 'Back', 'it-l10n-ithemes-exchange' ); ?>
-		</button>
+        </button>
 
-		<button class="button button-primary right" id="confirm-resume-subscription" style="margin-left: 10px;">
+        <button class="button button-primary right" id="confirm-resume-subscription" style="margin-left: 10px;">
 			<?php _e( 'Resume Subscription', 'it-l10n' ) ?>
-		</button>
-	</div>
+        </button>
+    </div>
 
-	<div class="hidden spacing-wrapper bottom-border clearfix" id="subscription-cancellation-manager"
-	     style="background: #F5F5F5;">
+    <div class="hidden spacing-wrapper bottom-border clearfix" id="subscription-cancellation-manager"
+         style="background: #F5F5F5;">
 
-		<button class="button button-secondary left" id="cancel-cancel-subscription">
+        <button class="button button-secondary left" id="cancel-cancel-subscription">
 			<?php _e( 'Back', 'it-l10n-ithemes-exchange' ); ?>
-		</button>
+        </button>
 
-		<button class="button button-primary right" id="confirm-cancel-subscription" style="margin-left: 10px;">
+        <button class="button button-primary right" id="confirm-cancel-subscription" style="margin-left: 10px;">
 			<?php _e( 'Cancel Subscription', 'it-l10n' ) ?>
-		</button>
+        </button>
 
-		<input type="text" placeholder="<?php esc_attr_e( 'Reason (Optional)', 'LION' ); ?>"
-		       id="cancel-subscription-reason"
-		       class="right" style="text-align: left"/>
-	</div>
+        <input type="text" placeholder="<?php esc_attr_e( 'Reason (Optional)', 'LION' ); ?>"
+               id="cancel-subscription-reason"
+               class="right" style="text-align: left"/>
+    </div>
 
     <div class="hidden spacing-wrapper bottom-border clearfix" id="subscription-comp-manager"
          style="background: #F5F5F5;">
