@@ -311,6 +311,7 @@ function it_exchange_recurring_payments_add_recurring_totals_element( $totals ) 
 }
 
 add_filter( 'it_exchange_get_content_checkout_totals_elements', 'it_exchange_recurring_payments_add_recurring_totals_element' );
+add_filter( 'it_exchange_get_super-widget-checkout_after-cart-items_loops', 'it_exchange_recurring_payments_add_recurring_totals_element' );
 
 /**
  * Extend the cart theme API with the recurring totals function.
