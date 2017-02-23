@@ -1780,7 +1780,11 @@ class IT_Exchange_Subscription implements ITE_Contract_Prorate_Credit_Provider, 
 
 		$child = reset( $children );
 
-		return $child->payment_token;
+		if ( $child->payment_token ) {
+			return $child->payment_token;
+		}
+
+		return $transaction->payment_token;
 	}
 
 	/**
