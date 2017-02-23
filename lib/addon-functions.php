@@ -390,3 +390,41 @@ function it_exchange_customer_pause_subscription_limit() {
 
 	return (int) $settings['limit-pauses'];
 }
+
+/**
+ * Get the recurring total amount for a cart.
+ *
+ * @since 2.0.0
+ *
+ * @param ITE_Cart|null $cart
+ *
+ * @return float
+ */
+function it_exchange_get_recurring_total_cart_amount( ITE_Cart $cart = null ) {
+	$cart = $cart ?: it_exchange_get_current_cart( false );
+
+	if ( ! $cart ) {
+		return 0.00;
+	}
+
+	$items = $cart->get_items( 'product' )->filter( function( ITE_Cart_Product $item ) {
+		$product = $item->get_product();
+
+		return
+			$product->has_feature( 'recurring-payments' ) &&
+			$product->get_feature( 'recurring-payments' ) &&
+			$product->get_feature( 'recurring-payments', array( 'setting' => 'auto-renew' ) ) === 'on';
+	} );
+
+	if ( ! $items->count() ) {
+		return 0.00;
+	}
+
+	$total    = $cart->get_total();
+	$one_time = $cart->get_items( 'fee', true )->filter( function ( ITE_Fee_Line_Item $fee ) { return ! $fee->is_recurring(); } );
+
+	$otf_total = $one_time->total();
+	$otf_sum   = $one_time->flatten()->summary_only()->total();
+
+	return $total - ( $otf_total + $otf_sum );
+}

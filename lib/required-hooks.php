@@ -282,6 +282,92 @@ function it_exchange_recurring_payments_addon_content_purchases_fields_elements(
 add_filter( 'it_exchange_get_content_purchases_fields_elements', 'it_exchange_recurring_payments_addon_content_purchases_fields_elements' );
 
 /**
+ * Add the recurring totals element to the checkout screen.
+ *
+ * @since 2.0.0
+ *
+ * @param array $totals
+ *
+ * @return array
+ */
+function it_exchange_recurring_payments_add_recurring_totals_element( $totals ) {
+
+    $cart = it_exchange_get_current_cart() ?: it_exchange_get_requested_cart_and_check_auth();
+
+	$items = $cart->get_items( 'product' )->filter( function( ITE_Cart_Product $item ) {
+	    $product = $item->get_product();
+
+		return
+			$product->has_feature( 'recurring-payments' ) &&
+			$product->get_feature( 'recurring-payments' ) &&
+			$product->get_feature( 'recurring-payments', array( 'setting' => 'auto-renew' ) ) === 'on';
+	} );
+
+    if ( $items->count() ) {
+        $totals[] = 'totals-recurring-total';
+    }
+
+    return $totals;
+}
+
+add_filter( 'it_exchange_get_content_checkout_totals_elements', 'it_exchange_recurring_payments_add_recurring_totals_element' );
+
+/**
+ * Extend the cart theme API with the recurring totals function.
+ *
+ * @since 2.0.0
+ *
+ * @param callable $_
+ * @param string   $class_name
+ * @param string   $tag
+ *
+ * @return callable
+ */
+function it_exchange_recurring_payments_extend_cart_theme_api( $_, $class_name, $tag ) {
+
+    if ( $class_name !== 'IT_Theme_API_Cart' ) {
+        return $_;
+    }
+
+    if ( $tag !== 'recurringtotal' ) {
+        return $_;
+    }
+
+    return function( $options = array() ) {
+
+	    $cart = it_exchange_get_current_cart() ?: it_exchange_get_requested_cart_and_check_auth();
+
+	    $items = $cart->get_items( 'product' )->filter( function( ITE_Cart_Product $item ) {
+		    $product = $item->get_product();
+
+		    return
+			    $product->has_feature( 'recurring-payments' ) &&
+			    $product->get_feature( 'recurring-payments' ) &&
+			    $product->get_feature( 'recurring-payments', array( 'setting' => 'auto-renew' ) ) === 'on';
+	    } );
+
+	    if ( $options['has'] ) {
+	        return $items->count() > 0;
+        }
+
+        if ( ! $items->count() ) {
+	        return '';
+        }
+
+	    /** @var ITE_Cart_Product $item */
+	    $item    = $items->first();
+	    $product = $item->get_product();
+
+	    $amount  = it_exchange_format_price( it_exchange_get_recurring_total_cart_amount( $cart ) );
+        $profile = it_exchange_get_recurring_product_profile( $product );
+
+        return "{$amount} $profile";
+    };
+}
+
+add_filter( 'it_exchange_theme_api_get_extended_tag_functions', 'it_exchange_recurring_payments_extend_cart_theme_api', 10, 3 );
+
+/**
  * Adds Recurring Payments templates directory to iThemes Exchange template path array
  *
  * @since 1.0.0

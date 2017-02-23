@@ -519,12 +519,7 @@ class IT_Exchange_Recurring_Payments extends IT_Exchange_Product_Feature_Abstrac
 		}
 
 		// If it does support, does it have it?
-		$feature = $this->get_feature( false, $product_id, $options );
-		if ( ! empty( $feature ) ) {
-			return true;
-		} else {
-			return false;
-		}
+		return (bool) $this->get_feature( false, $product_id, $options );
 	}
 
 	/**
