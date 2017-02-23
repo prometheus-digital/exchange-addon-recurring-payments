@@ -15,7 +15,7 @@
 ?>
 
 <?php do_action( 'it_exchange_super_widget_cart_before_recurring_total_element' ); ?>
-<div class="cart-recurring-total cart-totals-row" style="font-size: 1.1em; font-weight: bold">
+<div class="cart-recurring-total cart-totals-row" style="font-size: 1em; font-weight: bold">
 	<?php do_action( 'it_exchange_super_widget_cart_begin_recurring_total_element' ); ?>
 	<?php _e( 'Recurring Total:', 'LION' ); ?> <?php it_exchange( 'cart', 'recurring-total' ); ?>
 	<?php do_action( 'it_exchange_super_widget_cart_end_recurring_total_element' ); ?>
