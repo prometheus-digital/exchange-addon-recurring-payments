@@ -293,7 +293,13 @@ class IT_Exchange_Recurring_Payments extends IT_Exchange_Product_Feature_Abstrac
 
 		it_exchange_update_product_feature( $product_id, 'recurring-payments', $max, array( 'setting' => 'max-occurrences' ) );
 
-		$sign_up_fee = it_exchange_convert_from_database_number( it_exchange_convert_to_database_number( $_POST['it_exchange_recurring_payments_sign_up_fee'] ) );
+		$_sign_up_fee = $_POST['it_exchange_recurring_payments_sign_up_fee'];
+		$sign_up_fee = it_exchange_convert_from_database_number( it_exchange_convert_to_database_number( $_sign_up_fee ) );
+
+		if ( $_sign_up_fee[0] === '-' || 0 === strpos( htmlentities( $_sign_up_fee), '&minus;' ) ) {
+		    $sign_up_fee *= -1;
+        }
+
 		it_exchange_update_product_feature( $product_id, 'recurring-payments', $sign_up_fee, array( 'setting' => 'sign-up-fee' ) );
 	}
 
