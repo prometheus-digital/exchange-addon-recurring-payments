@@ -178,14 +178,12 @@ class IT_Exchange_Recurring_Payments extends IT_Exchange_Product_Feature_Abstrac
 				} else {
 					$trial_hidden = '';
 				}
-
-				$min = $trial_enabled ? 0 : ( $product->get_feature( 'base-price' ) * -1 );
 				?>
                 <div id="sign-up-fee-settings" class="<?php echo $max_hidden; ?>">
                     <label for="it-exchange-recurring-payments-sign-up-fee">
 						<?php _e( 'Sign Up Fee', 'LION' ); ?>
                     </label>
-                    <input type="text" data-min="-<?php echo esc_attr( $min ); ?>" name="it_exchange_recurring_payments_sign_up_fee"
+                    <input type="text" name="it_exchange_recurring_payments_sign_up_fee"
                            id="it-exchange-recurring-payments-sign-up-fee" value="<?php echo esc_attr( $sign_up_fee ? it_exchange_format_price( $sign_up_fee ) : '' ); ?>">
                     <p class="description">
 						<?php _e( 'Charge a sign up fee to the customer.', 'LION' ); ?>
