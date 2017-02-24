@@ -413,7 +413,7 @@ function it_exchange_recurring_payments_on_add_product_to_cart( ITE_Cart_Product
 		return;
 	}
 
-	if ( $product instanceof IT_Exchange_Membership && function_exists( 'it_exchange_is_customer_eligible_for_trial' ) ) {
+	if ( $trial_enabled && $product instanceof IT_Exchange_Membership && function_exists( 'it_exchange_is_customer_eligible_for_trial' ) ) {
 		$trial_enabled = it_exchange_is_customer_eligible_for_trial( $product, $cart->get_customer() );
 	}
 
