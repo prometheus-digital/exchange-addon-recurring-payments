@@ -105,6 +105,8 @@ class IT_Exchange_Recurring_Payments_Email {
 	 */
 	public function register_notifications( IT_Exchange_Email_Notifications $notifications ) {
 
+		$settings = it_exchange_get_option( 'exchange_addon_recurring_payments' );
+
 		$r = $notifications->get_replacer();
 
 		$notifications
@@ -130,7 +132,11 @@ class IT_Exchange_Recurring_Payments_Email {
 						'body'    => sprintf( __( "Hello %s, \r\n\r\n Your subscription for %s has been cancelled.\r\n\r\nThank you.\r\n\r\n%s", 'LION' ),
 							$r->format_tag( 'first_name' ), $r->format_tag( 'subscription_product' ), $r->format_tag( 'company_name' ) )
 					),
-					'group'    => __( 'Recurring Payments', 'LION' )
+					'group'    => __( 'Recurring Payments', 'LION' ),
+					'previous' => array(
+						'subject' => isset( $settings['recurring-payments-cancel-subject'] ) ? $settings['recurring-payments-cancel-subject'] : '',
+						'body'    => isset( $settings['recurring-payments-cancel-body'] ) ? $settings['recurring-payments-cancel-body'] : '',
+					),
 				)
 			) )
 			->register_notification( new IT_Exchange_Customer_Email_Notification(
@@ -140,7 +146,11 @@ class IT_Exchange_Recurring_Payments_Email {
 						'body'    => sprintf( __( "Hello %s, \r\n\r\n Your subscription for %s has expired.\r\n\r\n You can renew your subscription here: %s \r\n\r\nThank you.\r\n\r\n%s", 'LION' ),
 							$r->format_tag( 'first_name' ), $r->format_tag( 'subscription_product' ), $r->format_tag( 'subscription_manage_link' ), $r->format_tag( 'company_name' ) )
 					),
-					'group'    => __( 'Recurring Payments', 'LION' )
+					'group'    => __( 'Recurring Payments', 'LION' ),
+					'previous' => array(
+						'subject' => isset( $settings['recurring-payments-deactivate-subject'] ) ? $settings['recurring-payments-deactivate-subject'] : '',
+						'body'    => isset( $settings['recurring-payments-deactivate-body'] ) ? $settings['recurring-payments-deactivate-body'] : '',
+					),
 				)
 			) );
 	}
