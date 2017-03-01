@@ -8,6 +8,7 @@
 
 namespace iThemes\Exchange\RecurringPayments\REST\v1\Subscriptions;
 
+use iThemes\Exchange\REST\Auth\AuthScope;
 use iThemes\Exchange\REST\Postable;
 use iThemes\Exchange\REST\Request;
 use iThemes\Exchange\REST\Route\Base;
@@ -92,7 +93,7 @@ class Renew extends Base implements Postable {
 	/**
 	 * @inheritDoc
 	 */
-	public function user_can_post( Request $request, \IT_Exchange_Customer $user = null ) {
+	public function user_can_post( Request $request, AuthScope $scope ) {
 		return true; // Cascades up
 	}
 

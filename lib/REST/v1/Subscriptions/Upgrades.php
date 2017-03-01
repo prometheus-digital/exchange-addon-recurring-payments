@@ -8,6 +8,7 @@
 
 namespace iThemes\Exchange\RecurringPayments\REST\v1\Subscriptions;
 
+use iThemes\Exchange\REST\Auth\AuthScope;
 use iThemes\Exchange\REST\Getable;
 use iThemes\Exchange\REST\Postable;
 use iThemes\Exchange\REST\Request;
@@ -25,7 +26,7 @@ class Upgrades extends Base implements Getable, Postable {
 	/**
 	 * Downgrades constructor.
 	 *
-	 * @param ProrateSerializer       $serializer
+	 * @param ProrateSerializer        $serializer
 	 * @param \ITE_Prorate_REST_Helper $helper
 	 */
 	public function __construct( ProrateSerializer $serializer, \ITE_Prorate_REST_Helper $helper ) {
@@ -43,7 +44,7 @@ class Upgrades extends Base implements Getable, Postable {
 	/**
 	 * @inheritDoc
 	 */
-	public function user_can_get( Request $request, \IT_Exchange_Customer $user = null ) {
+	public function user_can_get( Request $request, AuthScope $scope ) {
 		return $this->helper->permissions( $request );
 	}
 
@@ -57,7 +58,7 @@ class Upgrades extends Base implements Getable, Postable {
 	/**
 	 * @inheritDoc
 	 */
-	public function user_can_post( Request $request, \IT_Exchange_Customer $user = null ) {
+	public function user_can_post( Request $request, AuthScope $scope ) {
 		return true;
 	}
 

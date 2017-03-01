@@ -8,6 +8,7 @@
 
 namespace iThemes\Exchange\RecurringPayments\REST\v1\Subscriptions;
 
+use iThemes\Exchange\REST\Auth\AuthScope;
 use iThemes\Exchange\REST\Getable;
 use iThemes\Exchange\REST\Putable;
 use iThemes\Exchange\REST\Request;
@@ -91,15 +92,7 @@ class Subscription extends Base implements Getable, Putable {
 	/**
 	 * @inheritDoc
 	 */
-	public function user_can_get( Request $request, \IT_Exchange_Customer $user = null ) {
-
-		if ( ! $user ) {
-			return new \WP_Error(
-				'it_exchange_rest_invalid_context',
-				__( 'Sorry, you are not allowed to access this subscription.', 'LION' ),
-				array( 'status' => \WP_Http::UNAUTHORIZED )
-			);
-		}
+	public function user_can_get( Request $request, AuthScope $scope ) {
 
 		try {
 			$subscription = \IT_Exchange_Subscription::get( rawurldecode( $request->get_param( 'subscription_id', 'URL' ) ) );
@@ -117,7 +110,7 @@ class Subscription extends Base implements Getable, Putable {
 
 		$cap = $request['context'] === 'edit' ? 'edit_it_transaction' : 'read_it_transaction';
 
-		if ( ! user_can( $user->wp_user, $cap, $subscription->get_transaction()->ID ) ) {
+		if ( ! $scope->can( $cap, $subscription->get_transaction() ) ) {
 			return new \WP_Error(
 				'it_exchange_rest_invalid_context',
 				__( 'Sorry, you are not allowed to access this subscription.', 'LION' ),
@@ -218,15 +211,7 @@ class Subscription extends Base implements Getable, Putable {
 	/**
 	 * @inheritDoc
 	 */
-	public function user_can_put( Request $request, \IT_Exchange_Customer $user = null ) {
-
-		if ( ! $user ) {
-			return new \WP_Error(
-				'it_exchange_rest_invalid_context',
-				__( 'Sorry, you are not allowed to access this subscription.', 'LION' ),
-				array( 'status' => \WP_Http::UNAUTHORIZED )
-			);
-		}
+	public function user_can_put( Request $request, AuthScope $scope ) {
 
 		try {
 			$subscription = \IT_Exchange_Subscription::get( rawurldecode( $request->get_param( 'subscription_id', 'URL' ) ) );
@@ -248,29 +233,28 @@ class Subscription extends Base implements Getable, Putable {
 			return $updating_source;
 		} elseif ( $updating_source ) {
 
-			if ( ! user_can( $user->wp_user, 'read_it_transaction', $subscription->get_transaction()->ID ) ) {
+			if ( ! $scope->can( 'read_it_transaction', $subscription->get_transaction()->ID ) ) {
 				return new \WP_Error(
 					'it_exchange_rest_invalid_context',
 					__( 'Sorry, you are not allowed to access this subscription.', 'LION' ),
-					array( 'status' => \WP_Http::FORBIDDEN )
+					array( 'status' => rest_authorization_required_code() )
 				);
 			}
 
-			if ( isset( $updating_source['token'] ) && ! user_can( $user->wp_user, 'it_use_payment_token', $updating_source['token'] ) ) {
+			if ( isset( $updating_source['token'] ) && ! $scope->can( 'it_use_payment_token', $updating_source['token'] ) ) {
 				return new \WP_Error(
 					'it_exchange_rest_invalid_payment_token',
 					__( 'Sorry, you are not allowed to use this payment token.', 'LION' ),
-					array( 'status' => \WP_Http::UNAUTHORIZED )
+					array( 'status' => rest_authorization_required_code() )
 				);
 			}
-		} elseif ( ! user_can( $user->wp_user, 'edit_it_transaction', $subscription->get_transaction()->ID ) ) {
+		} elseif ( ! $scope->can( 'edit_it_transaction', $subscription->get_transaction()->ID ) ) {
 			return new \WP_Error(
 				'it_exchange_rest_invalid_context',
 				__( 'Sorry, you are not allowed to access this subscription.', 'LION' ),
-				array( 'status' => \WP_Http::FORBIDDEN )
+				array( 'status' => rest_authorization_required_code() )
 			);
 		}
-
 
 		return true;
 	}

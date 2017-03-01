@@ -8,6 +8,7 @@
 
 namespace iThemes\Exchange\RecurringPayments\REST\v1\Subscriptions;
 
+use iThemes\Exchange\REST\Auth\AuthScope;
 use iThemes\Exchange\REST\Postable;
 use iThemes\Exchange\REST\Request;
 use iThemes\Exchange\REST\Route\Base;
@@ -60,11 +61,11 @@ class Pause extends Base implements Postable {
 	/**
 	 * @inheritDoc
 	 */
-	public function user_can_post( Request $request, \IT_Exchange_Customer $user = null ) {
+	public function user_can_post( Request $request, AuthScope $scope ) {
 
 		$subscription = \IT_Exchange_Subscription::get( rawurldecode( $request->get_param( 'subscription_id', 'URL' ) ) );
 
-		if ( ! $user || ! user_can( $user->wp_user, 'it_pause_subscription', $subscription ) ) {
+		if ( ! $scope->can( 'it_pause_subscription', $subscription ) ) {
 			return new \WP_Error(
 				'it_exchange_rest_forbidden',
 				__( 'You are not allowed to pause this subscription.', 'LION' ),
@@ -82,13 +83,15 @@ class Pause extends Base implements Postable {
 			$associated[] = $subscription->get_beneficiary()->id;
 		}
 
-		if ( $request['paused_by'] && $request['paused_by'] != $user->id ) {
-			if ( ! user_can( $user->wp_user, 'edit_it_transaction', $subscription->get_transaction()->ID ) ) {
-				return new \WP_Error(
-					'it_exchange_rest_forbidden_context',
-					__( 'You are not allowed to specify a pauser besides yourself.', 'LION' ),
-					array( 'status' => 403 )
-				);
+		if ( $request['paused_by'] ) {
+			foreach ( $associated as $user_id ) {
+				if ( ! $scope->can( 'edit_user', $user_id ) ) {
+					return new \WP_Error(
+						'it_exchange_rest_forbidden_context',
+						__( 'You are not allowed to specify a pauser besides yourself.', 'LION' ),
+						array( 'status' => 403 )
+					);
+				}
 			}
 		}
 
