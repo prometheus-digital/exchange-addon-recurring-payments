@@ -74,7 +74,7 @@ class ITE_Prorate_REST_Helper {
 		if ( ! $object instanceof \ITE_Proratable ) {
 			return new \WP_Error(
 				'it_exchange_rest_invalid_prorate_request',
-				sprintf( __( '%s is not eligible for prorating.', 'LION' ), $object->__toString() ),
+				sprintf( __( '%s is not eligible for prorating.', 'LION' ), $object ? $object->__toString() : 'Object' ),
 				array( 'status' => \WP_Http::BAD_REQUEST )
 			);
 		}
