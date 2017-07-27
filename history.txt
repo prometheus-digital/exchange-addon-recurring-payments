@@ -124,3 +124,6 @@
 	Fix: t_paamayim_nekudotayim error on PHP 5.2
 1.8.5 - 2016-05-23 - Timothy Jacobs
 	Fix: Error with Guest Checkout
+1.8.6 - 2017-08-01 - AJ Morris
+	Enhancement: Updated Branding
+	Enhancement: New licensing and software update system

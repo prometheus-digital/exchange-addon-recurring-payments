@@ -12,7 +12,7 @@
  *
  * @since 1.0.0
  *
- * @param mixed  $transaction   iThemes Exchange Transaction Object or ID
+ * @param mixed  $transaction   ExchangeWP Transaction Object or ID
  * @param string $subscriber_id Payment Gateway Subscription ID
  *
  * @return string

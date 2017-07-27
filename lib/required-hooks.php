@@ -1,6 +1,6 @@
 <?php
 /**
- * iThemes Exchange Recurring Payments Add-on
+ * ExchangeWP Recurring Payments Add-on
  * Required Hooks
  * @package exchange-addon-recurring-payments
  * @since   1.0.0
@@ -110,14 +110,14 @@ function it_exchange_recurring_payments_addon_content_purchases_fields_elements(
 add_filter( 'it_exchange_get_content_purchases_fields_elements', 'it_exchange_recurring_payments_addon_content_purchases_fields_elements' );
 
 /**
- * Adds Recurring Payments templates directory to iThemes Exchange template path array
+ * Adds Recurring Payments templates directory to ExchangeWP template path array
  *
  * @since 1.0.0
  *
- * @param array $possible_template_paths iThemes Exchange's template paths to check for templates
- * @param mixed $template_names          iThemes Exchange's template names
+ * @param array $possible_template_paths ExchangeWP's template paths to check for templates
+ * @param mixed $template_names          ExchangeWP's template names
  *
- * @return array $possible_template_paths Modified iThemes Exchange's template paths to check for templates array
+ * @return array $possible_template_paths Modified ExchangeWP's template paths to check for templates array
  */
 function it_exchange_recurring_payments_addon_template_path( $possible_template_paths, $template_names ) {
 	$possible_template_paths[] = dirname( __FILE__ ) . '/templates/';
@@ -221,7 +221,7 @@ add_filter( 'it_exchange_multi_item_product_allowed', 'it_exchange_recurring_pay
  *
  * @since 1.0.0
  *
- * @param int $transaction_id iThemes Exchange Transaction ID
+ * @param int $transaction_id ExchangeWP Transaction ID
  *
  * @return void
  */
@@ -260,15 +260,15 @@ add_action( 'it_exchange_add_child_transaction_success', 'it_exchange_recurring_
 
 /**
  * Set non-auto-renewing subscriptions to active when they are created.
- * 
+ *
  * @since 1.8.4
- * 
+ *
  * @param IT_Exchange_Subscription $subscription
  */
 function it_exchange_recurring_payments_set_non_auto_renewing_subscriptions_to_active( IT_Exchange_Subscription $subscription ) {
-	
+
 	if ( it_exchange_transaction_is_cleared_for_delivery( $subscription->get_transaction() ) && ! $subscription->is_auto_renewing() ) {
-		
+
 		$method = $subscription->get_transaction()->transaction_method;
 
 		/**
@@ -276,9 +276,9 @@ function it_exchange_recurring_payments_set_non_auto_renewing_subscriptions_to_a
 		 *
 		 * The dynamic portion of this hook, `$method`, refers to the transaction method slug.
 		 * For example, offline-payments.
-		 * 
+		 *
 		 * @param bool                     $activate
-		 * @param IT_Exchange_Subscription $subscription 
+		 * @param IT_Exchange_Subscription $subscription
 		 */
 		if ( apply_filters( "it_exchange_auto_activate_non_renewing_{$method}_subscriptions", true, $subscription ) ) {
 			add_filter( 'it_exchange_subscriber_status_activity_use_gateway_actor', '__return_true' );
@@ -345,7 +345,7 @@ function it_exchange_recurring_payments_update_status( $transaction, $sub_id, $s
 	// this hook is used by payment processors, we don't want them to alter the status for complimentary subscriptions
 	if ( $subscription->get_status() === IT_Exchange_Subscription::STATUS_COMPLIMENTARY && $wh = it_exchange_doing_webhook() && $subscriber_status == IT_Exchange_Subscription::STATUS_CANCELLED ) {
 		$subscription->record_gateway_cancellation_while_complimentary( $wh );
-		
+
 		return;
 	}
 
@@ -484,9 +484,9 @@ function it_exchange_recurring_payments_handle_expired() {
 
 		$product_id  = str_replace( '_it_exchange_transaction_subscription_expires_', '', $result->meta_key );
 		$transaction = it_exchange_get_transaction( $result->post_id );
-		
+
 		if ( $expired = apply_filters( 'it_exchange_recurring_payments_handle_expired', true, $product_id, $transaction ) ) {
-			
+
 			$subscription = it_exchange_get_subscription_by_transaction( $transaction, it_exchange_get_product( $product_id ) );
 
 			if ( $subscription->get_status() === IT_Exchange_Subscription::STATUS_ACTIVE ) {
@@ -569,7 +569,7 @@ if ( has_action( 'it_exchange_recurring_payments_addon_update_transaction_subscr
 
 /**
  * Add an activity item when the subscription
- * 
+ *
  * @since 1.8.4
  *
  * @param IT_Exchange_Subscription $subscription
@@ -693,9 +693,9 @@ add_action( 'it_exchange_after_payment_details', 'it_exchange_recurring_payments
  *
  * @since CHANGEME
  *
- * @param int $product_id iThemes Exchange Product ID
+ * @param int $product_id ExchangeWP Product ID
  *
- * @return string iThemes Exchange recurring label
+ * @return string ExchangeWP recurring label
  */
 function it_exchange_recurring_payments_api_theme_product_base_price( $base_price, $product_id ) {
 	return $base_price . it_exchange_recurring_payments_addon_recurring_label( $product_id );
@@ -846,9 +846,9 @@ add_action( 'save_post_it_exchange_tran', 'it_exchange_recurring_payments_save_t
 
 /**
  * Register upgrade routines.
- * 
+ *
  * @since 1.8.4
- * 
+ *
  * @param IT_Exchange_Upgrader $upgrader
  */
 function it_exchange_recurring_payments_register_upgrades( IT_Exchange_Upgrader $upgrader ) {
@@ -869,7 +869,7 @@ function it_exchange_addon_recurring_payments_show_version_nag() {
 	if ( version_compare( $GLOBALS['it_exchange']['version'], '1.35.7', '<' ) ) {
 		?>
 		<div id="it-exchange-add-on-min-version-nag" class="it-exchange-nag">
-			<?php printf( __( 'The Recurring Payments add-on requires iThemes Exchange version 1.35.7 or greater. %sPlease upgrade Exchange%s.', 'LION' ), '<a href="' . admin_url( 'update-core.php' ) . '">', '</a>' ); ?>
+			<?php printf( __( 'The Recurring Payments add-on requires ExchangeWP version 1.35.7 or greater. %sPlease upgrade Exchange%s.', 'LION' ), '<a href="' . admin_url( 'update-core.php' ) . '">', '</a>' ); ?>
 		</div>
 		<script type="text/javascript">
 			jQuery( document ).ready( function () {

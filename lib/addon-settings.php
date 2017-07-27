@@ -3,12 +3,12 @@
  * Exchange will build your add-on's settings page for you and link to it from our add-on
  * screen. You are free to link from it elsewhere as well if you'd like... or to not use our API
  * at all. This file has all the functions related to registering the page, printing the form, and saving
- * the options. This includes the wizard settings. Additionally, we use the Exchange storage API to 
+ * the options. This includes the wizard settings. Additionally, we use the Exchange storage API to
  * save / retreive options. Add-ons are not required to do this.
 */
 
 /**
- * This is the function registered in the options array when it_exchange_register_addon 
+ * This is the function registered in the options array when it_exchange_register_addon
  * was called for recurring payments
  *
  * It tells Exchange where to find the settings page
@@ -102,6 +102,14 @@ class IT_Exchange_Recurring_Payments_Add_On {
             add_action( 'it_exchange_save_add_on_settings_recurring_payments', array( $this, 'save_settings' ) );
             do_action( 'it_exchange_save_add_on_settings_recurring_payments' );
         }
+
+        // Creates our option in the database
+        // add_action( 'admin_init', array( $this, 'exchange_recurringpayments_plugin_updater', 0 ) );
+        // add_action( 'admin_init', array( $this, 'exchange_recurringpayments_register_option' ) );
+        // add_action( 'admin_notices', array( $this, 'exchange_recurringpayments_admin_notices' ) );
+        // add_action( 'admin_init', array( $this, 'exchange_recurringpayments_deactivate_license' ) );
+        // add_action( 'admin_init', array( $this, 'exchange_recurringpayments_deactivate_license' ) );
+        // add_action( 'admin_init', array( $this, 'exchange_recurringpayments_activate_license' ) );
     }
 
     /**
@@ -130,7 +138,7 @@ class IT_Exchange_Recurring_Payments_Add_On {
             'action'  => 'admin.php?page=it-exchange-addons&add-on-settings=recurring-payments',
         );
         $form         = new ITForm( $form_values, array( 'prefix' => 'it-exchange-add-on-recurring_payments' ) );
-		
+
         if ( ! empty ( $this->status_message ) )
             ITUtility::show_status_message( $this->status_message );
         if ( ! empty( $this->error_message ) )
@@ -171,6 +179,29 @@ class IT_Exchange_Recurring_Payments_Add_On {
             <h3><?php _e( 'Recurring Payments', 'LION' ); ?></h3>
         <?php endif; ?>
         <div class="it-exchange-addon-settings it-exchange-recurring-payments-addon-settings">
+          <h4>License Key</h4>
+          <?php
+             $exchangewp_recurringpayments_options = get_option( 'it-storage-exchange_addon_recurring_payments' );
+             $license = $exchangewp_recurringpayments_options['recurringpayments_license'];
+             // var_dump($license);
+             $exstatus = trim( get_option( 'exchange_recurringpayments_license_status' ) );
+             // var_dump($exstatus);
+          ?>
+          <p>
+           <label class="description" for="exchange_recurringpayments_license_key"><?php _e('Enter your license key'); ?></label>
+           <!-- <input id="recurringpayments_license" name="it-exchange-add-on-recurringpayments-recurringpayments_license" type="text" value="<?php #esc_attr_e( $license ); ?>" /> -->
+           <?php $form->add_text_box( 'recurringpayments_license' ); ?>
+           <span>
+             <?php if( $exstatus !== false && $exstatus == 'valid' ) { ?>
+          			<span style="color:green;"><?php _e('active'); ?></span>
+          			<?php wp_nonce_field( 'exchange_recurringpayments_nonce', 'exchange_recurringpayments_nonce' ); ?>
+          			<input type="submit" class="button-secondary" name="exchange_recurringpayments_license_deactivate" value="<?php _e('Deactivate License'); ?>"/>
+          		<?php } else {
+          			wp_nonce_field( 'exchange_recurringpayments_nonce', 'exchange_recurringpayments_nonce' ); ?>
+          			<input type="submit" class="button-secondary" name="exchange_recurringpayments_license_activate" value="<?php _e('Activate License'); ?>"/>
+          		<?php } ?>
+           </span>
+          </p>
             <h4><?php _e( 'Recurring Payment Cancelled Email', 'LION' ); ?></h4>
             <p>
                 <label for="recurring-payments-cancel-subject"><?php _e( 'Email Subject', 'LION' ); ?> <span class="tip" title="<?php _e( 'The subject you want users who have cancelled their subscriptions to receive.', 'LION' ); ?>">i</span></label>
@@ -181,7 +212,7 @@ class IT_Exchange_Recurring_Payments_Add_On {
                 <?php
                 if ( $wp_version >= 3.3 && function_exists( 'wp_editor' ) ) {
                     echo wp_editor( $settings['recurring-payments-cancel-body'], 'recurring-payments-cancel-body', array( 'textarea_name' => 'it-exchange-add-on-recurring_payments-recurring-payments-cancel-body', 'textarea_rows' => 10, 'textarea_cols' => 30, 'editor_class' => 'large-text' ) );
-					
+
 					//We do this for some ITForm trickery... just to add recurring-payments-cancel-body to the used inputs field
 					$form->get_text_area( 'recurring-payments-cancel-body', array( 'rows' => 10, 'cols' => 30, 'class' => 'large-text' ) );
                 } else {
@@ -189,7 +220,7 @@ class IT_Exchange_Recurring_Payments_Add_On {
 				}
 				?>
             </p>
-            
+
             <h4><?php _e( 'Recurring Payment Expired Email', 'LION' ); ?></h4>
             <p>
                 <label for="recurring-payments-deactivate-subject"><?php _e( 'Email Subject', 'LION' ); ?> <span class="tip" title="<?php _e( 'The subject you want users who have cancelled their subscriptions to receive.', 'LION' ); ?>">i</span></label>
@@ -200,7 +231,7 @@ class IT_Exchange_Recurring_Payments_Add_On {
                 <?php
                 if ( $wp_version >= 3.3 && function_exists( 'wp_editor' ) ) {
                     echo wp_editor( $settings['recurring-payments-deactivate-body'], 'recurring-payments-deactivate-body', array( 'textarea_name' => 'it-exchange-add-on-recurring_payments-recurring-payments-deactivate-body', 'textarea_rows' => 10, 'textarea_cols' => 30, 'editor_class' => 'large-text' ) );
-					
+
 					//We do this for some ITForm trickery... just to add recurring-payments-cancel-body to the used inputs field
 					$form->get_text_area( 'recurring-payments-deactivate-body', array( 'rows' => 10, 'cols' => 30, 'class' => 'large-text' ) );
                 } else {
@@ -208,12 +239,12 @@ class IT_Exchange_Recurring_Payments_Add_On {
 				}
 				?>
             </p>
-        
+
             <p class="description">
-            <?php 
-            _e( 'Enter the email that is sent to administrator after a customer completes a successful purchase. HTML is accepted. Available shortcode functions:', 'LION' ); 
+            <?php
+            _e( 'Enter the email that is sent to administrator after a customer completes a successful purchase. HTML is accepted. Available shortcode functions:', 'LION' );
             echo '<br />';
-            printf( __( 'You call these shortcode functions like this: %s', 'LION' ), '[it_exchange_email show=order_table option=purchase_message]' ); 
+            printf( __( 'You call these shortcode functions like this: %s', 'LION' ), '[it_exchange_email show=order_table option=purchase_message]' );
             echo '<ul>';
             echo '<li>name - ' . __( "The buyer's first name", 'LION' ) . '</li>';
             echo '<li>fullname - ' . __( "The buyer's full name, first and last", 'LION' ) . '</li>';
@@ -253,6 +284,183 @@ class IT_Exchange_Recurring_Payments_Add_On {
         } else {
             $this->status_message = __( 'Settings not saved.', 'LION' );
         }
+        if( isset( $_POST['exchange_recurringpayments_license_activate'] ) ) {
+
+      		// run a quick security check
+      	 	if( ! check_admin_referer( 'exchange_recurringpayments_nonce', 'exchange_recurringpayments_nonce' ) )
+      			return; // get out if we didn't click the Activate button
+
+      		// retrieve the license from the database
+      		// $license = trim( get_option( 'exchange_recurringpayments_license_key' ) );
+         $exchangewp_recurringpayments_options = get_option( 'it-storage-exchange_addon_recurring_payments' );
+         $license = trim( $exchangewp_recurringpayments_options['recurringpayments_license'] );
+
+      		// data to send in our API request
+      		$api_params = array(
+      			'edd_action' => 'activate_license',
+      			'license'    => $license,
+      			'item_name'  => urlencode( 'recurring-payments' ), // the name of our product in EDD
+      			'url'        => home_url()
+      		);
+
+      		// Call the custom API.
+      		$response = wp_remote_post( 'https://exchangewp.com', array( 'timeout' => 15, 'sslverify' => false, 'body' => $api_params ) );
+
+      		// make sure the response came back okay
+      		if ( is_wp_error( $response ) || 200 !== wp_remote_retrieve_response_code( $response ) ) {
+
+      			if ( is_wp_error( $response ) ) {
+      				$message = $response->get_error_message();
+      			} else {
+      				$message = __( 'An error occurred, please try again.' );
+      			}
+
+      		} else {
+
+      			$license_data = json_decode( wp_remote_retrieve_body( $response ) );
+
+      			if ( false === $license_data->success ) {
+
+      				switch( $license_data->error ) {
+
+      					case 'expired' :
+
+      						$message = sprintf(
+      							__( 'Your license key expired on %s.' ),
+      							date_i18n( get_option( 'date_format' ), strtotime( $license_data->expires, current_time( 'timestamp' ) ) )
+      						);
+      						break;
+
+      					case 'revoked' :
+
+      						$message = __( 'Your license key has been disabled.' );
+      						break;
+
+      					case 'missing' :
+
+      						$message = __( 'Invalid license.' );
+      						break;
+
+      					case 'invalid' :
+      					case 'site_inactive' :
+
+      						$message = __( 'Your license is not active for this URL.' );
+      						break;
+
+      					case 'item_name_mismatch' :
+
+      						$message = sprintf( __( 'This appears to be an invalid license key for %s.' ), 'recurringpayments' );
+      						break;
+
+      					case 'no_activations_left':
+
+      						$message = __( 'Your license key has reached its activation limit.' );
+      						break;
+
+      					default :
+
+      						$message = __( 'An error occurred, please try again.' );
+      						break;
+      				}
+
+      			}
+
+      		}
+
+      		// Check if anything passed on a message constituting a failure
+      		if ( ! empty( $message ) ) {
+      			// $base_url = admin_url( 'admin.php?page=' . 'it-exchange-addons&add-on-settings=recurring-payments' );
+      			// $redirect = add_query_arg( array( 'sl_activation' => 'false', 'message' => urlencode( $message ) ), $base_url );
+
+      			// wp_redirect( $redirect );
+      			exit();
+      		}
+
+      		//$license_data->license will be either "valid" or "invalid"
+      		update_option( 'exchange_recurringpayments_license_status', $license_data->license );
+      		// wp_redirect( admin_url( 'admin.php?page=' . 'it-exchange-addons&add-on-settings=recurring-payments' ) );
+      		exit();
+      	}
+
+         // deactivate here
+         // listen for our activate button to be clicked
+      	if( isset( $_POST['exchange_recurringpayments_license_deactivate'] ) ) {
+
+      		// run a quick security check
+      	 	if( ! check_admin_referer( 'exchange_recurringpayments_nonce', 'exchange_recurringpayments_nonce' ) )
+      			return; // get out if we didn't click the Activate button
+
+         $exchangewp_recurringpayments_options = get_option( 'it-storage-exchange_addon_recurring_payments' );
+         $license = $exchangewp_recurringpayments_options['recurringpayments_license'];
+
+      		// data to send in our API request
+      		$api_params = array(
+      			'edd_action' => 'deactivate_license',
+      			'license'    => $license,
+      			'item_name'  => urlencode( 'recurring-payments' ), // the name of our product in EDD
+      			'url'        => home_url()
+      		);
+      		// Call the custom API.
+      		$response = wp_remote_post( 'https://exchangewp.com', array( 'timeout' => 15, 'sslverify' => false, 'body' => $api_params ) );
+
+      		// make sure the response came back okay
+      		if ( is_wp_error( $response ) || 200 !== wp_remote_retrieve_response_code( $response ) ) {
+
+      			if ( is_wp_error( $response ) ) {
+      				$message = $response->get_error_message();
+      			} else {
+      				$message = __( 'An error occurred, please try again.' );
+      			}
+
+      			// $base_url = admin_url( 'admin.php?page=' . 'it-exchange-addons&add-on-settings=recurring-payments' );
+      			// $redirect = add_query_arg( array( 'sl_activation' => 'false', 'message' => urlencode( $message ) ), $base_url );
+
+      			// wp_redirect( 'admin.php?page=it-exchange-addons&add-on-settings=recurring-payments' );
+      			exit();
+      		}
+
+      		// decode the license data
+      		$license_data = json_decode( wp_remote_retrieve_body( $response ) );
+      		// $license_data->license will be either "deactivated" or "failed"
+      		if( $license_data->license == 'deactivated' ) {
+      			delete_option( 'exchange_recurringpayments_license_status' );
+      		}
+
+      		// wp_redirect( admin_url( 'admin.php?page=' . 'it-exchange-addons&add-on-settings=recurring-payments' ) );
+      		exit();
+
+      	}
+
+        return;
+
+      }
+
+    /**
+    * This is a means of catching errors from the activation method above and displaying it to the customer
+    *
+    * @since 1.2.2
+    */
+    function exchange_recurringpayments_admin_notices() {
+      if ( isset( $_GET['sl_activation'] ) && ! empty( $_GET['message'] ) ) {
+
+      	switch( $_GET['sl_activation'] ) {
+
+      		case 'false':
+      			$message = urldecode( $_GET['message'] );
+      			?>
+      			<div class="error">
+      				<p><?php echo $message; ?></p>
+      			</div>
+      			<?php
+      			break;
+
+      		case 'true':
+      		default:
+      			// Developers can put a custom success message here for when activation is successful if they way.
+      			break;
+
+      	}
+      }
     }
 
     /**

@@ -1,6 +1,6 @@
 <?php
 /**
- * iThemes Exchange Recurring Payments Add-on
+ * ExchangeWP Recurring Payments Add-on
  * @package exchange-addon-recurring-payments
  * @since   1.0.0
  */
