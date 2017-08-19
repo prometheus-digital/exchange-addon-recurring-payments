@@ -1,6 +1,6 @@
 <?php
 /**
- * iThemes Exchange Recurring Payments Add-on
+ * ExchangeWP Recurring Payments Add-on
  * Generic functions
  * @package exchange-addon-recurring-payments
  * @since   1.0.0
@@ -11,7 +11,7 @@
  *
  * @since 1.0.0
  *
- * @param object $customer    iThemes Exchange Customer Object
+ * @param object $customer    ExchangeWP Customer Object
  * @param string $status      Subscription Status
  * @param object $transaction Transaction
  */
@@ -46,7 +46,7 @@ function it_exchange_recurring_payments_customer_notification( $customer, $statu
  *
  * @since 1.0.0
  *
- * @param IT_Exchange_Transaction $transaction iThemes Exchange Transaction Object
+ * @param IT_Exchange_Transaction $transaction ExchangeWP Transaction Object
  *
  * @return void
  */
@@ -66,9 +66,9 @@ function it_exchange_recurring_payments_addon_update_expirations( $transaction )
  *
  * @since CHANGEME
  *
- * @param int $product_id iThemes Exchange Product ID
+ * @param int $product_id ExchangeWP Product ID
  *
- * @return string iThemes Exchange recurring label
+ * @return string ExchangeWP recurring label
  */
 function it_exchange_recurring_payments_addon_recurring_label( $product_id ) {
 

@@ -32,7 +32,7 @@ add_action( 'it_exchange_transition_subscription_status', 'it_exchange_recurring
  *
  * @deprecated 1.8
  *
- * @param mixed  $transaction       iThemes Exchange Transaction Object or ID
+ * @param mixed  $transaction       ExchangeWP Transaction Object or ID
  * @param string $subscriber_id     Payment Gateway Subscription ID
  * @param string $subscriber_status Payment Gateway Subscription status
  *

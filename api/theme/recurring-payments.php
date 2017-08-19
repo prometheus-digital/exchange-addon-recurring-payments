@@ -7,7 +7,7 @@
 */
 
 class IT_Theme_API_Recurring_Payments implements IT_Theme_API {
-	
+
 	/**
 	 * API context
 	 * @var string $_context
@@ -35,7 +35,7 @@ class IT_Theme_API_Recurring_Payments implements IT_Theme_API {
 	 * @since 1.0.0
 	*/
 	public $_customer = false;
-	
+
 	/**
 	 * Maps api tags to methods
 	 * @var array $_tag_map
@@ -73,10 +73,10 @@ class IT_Theme_API_Recurring_Payments implements IT_Theme_API {
 	}
 
 	/**
-	 * Returns the context. Also helps to confirm we are an iThemes Exchange theme API class
+	 * Returns the context. Also helps to confirm we are an ExchangeWP theme API class
 	 *
 	 * @since 1.0.0
-	 * 
+	 *
 	 * @return string
 	*/
 	function get_api_context() {
@@ -99,7 +99,7 @@ class IT_Theme_API_Recurring_Payments implements IT_Theme_API {
 		if ( it_exchange_get_recurring_payments_addon_transaction_subscription_id( $this->_transaction ) ) {
 			$output .= $options['before'];
 			$subscription_status = $this->_transaction->get_transaction_meta( 'subscriber_status' );
-			
+
 			switch( $subscription_status ) {
 				case 'deactivated' :
 					$output .= __( 'Subscription deactivated', 'LION' );
@@ -164,7 +164,7 @@ class IT_Theme_API_Recurring_Payments implements IT_Theme_API {
 		$output = '';
 		if ( $this->_transaction->has_children() ) {
 			$payment_transactions = $this->_transaction->get_children();
-			
+
 			$output .= $options['before'];
 			$output .= '<ul class="' . $options['class'] . '">';
 			foreach ( $payment_transactions as $transaction ) {
