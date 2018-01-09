@@ -1,7 +1,7 @@
 <?php
 /*
  * Plugin Name: ExchangeWP - Recurring Payments Add-on
- * Version: 1.8.6
+ * Version: 1.8.7
  * Description: Adds the recurring payments abilities to ExchangeWP
  * Plugin URI: https://exchangewp.com/downloads/recurring-payments/
  * Author: ExchangeWP
@@ -18,7 +18,7 @@
 */
 
 define( 'ITE_RECURRING_PAYMENTS_PLUGIN_PATH', plugin_dir_path( __FILE__ ) );
-define( 'ITE_RECURRING_PAYMENTS_VERSION', '1.8.6' );
+define( 'ITE_RECURRING_PAYMENTS_VERSION', '1.8.7' );
 
 /**
  * This registers our plugin as a recurring payments addon
@@ -87,7 +87,7 @@ register_deactivation_hook( __FILE__, 'it_exchange_recurring_payments_deactivati
  		$license = $license_key['exchange_license'];
 
  		$edd_updater = new EDD_SL_Plugin_Updater( 'https://exchangewp.com', __FILE__, array(
- 				'version' 		=> '0.0.1', 				// current version number
+ 				'version' 		=> '1.8.7', 				// current version number
  				'license' 		=> $license, 				// license key (used get_option above to retrieve from DB)
  				'item_id'		 	=> 355, 					  // name of this plugin
  				'author' 	  	=> 'ExchangeWP',    // author of this plugin
