@@ -127,3 +127,5 @@
 1.8.6 - 2017-08-01 - AJ Morris
 	Enhancement: Updated Branding
 	Enhancement: New licensing and software update system
+1.8.7 - 2018-01-08 - AJ Morris
+	Enhancement: Single licensing system
